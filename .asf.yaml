@@ -5,10 +5,10 @@ github:
     rebase: true
   labels:
     - flink
-    - big-data
-    - java
-    - scala
-    - python
+    - elasticsearch
+    - connector
+    - datastream
+    - table
     - sql
   collaborators:
     - flinkbot
