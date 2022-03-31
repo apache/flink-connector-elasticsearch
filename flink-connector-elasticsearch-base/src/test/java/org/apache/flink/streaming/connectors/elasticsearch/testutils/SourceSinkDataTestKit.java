@@ -26,7 +26,8 @@ import org.apache.flink.streaming.connectors.elasticsearch.RequestIndexer;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.client.Client;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.junit.Assert;
@@ -59,8 +60,7 @@ public class SourceSinkDataTestKit {
         private volatile boolean running = true;
 
         @Override
-        public void run(SourceFunction.SourceContext<Tuple2<Integer, String>> ctx)
-                throws Exception {
+        public void run(SourceContext<Tuple2<Integer, String>> ctx) throws Exception {
             for (int i = 0; i < NUM_ELEMENTS && running; i++) {
                 ctx.collect(Tuple2.of(i, DATA_PREFIX + i));
             }
@@ -136,10 +136,13 @@ public class SourceSinkDataTestKit {
      * @param client The client to use to connect to Elasticsearch
      * @param index The index to check
      */
-    public static void verifyProducedSinkData(Client client, String index) {
+    public static void verifyProducedSinkData(RestHighLevelClient client, String index)
+            throws IOException {
         for (int i = 0; i < NUM_ELEMENTS; i++) {
             GetResponse response =
-                    client.get(new GetRequest(index, TYPE_NAME, Integer.toString(i))).actionGet();
+                    client.get(
+                            new GetRequest(index, TYPE_NAME, Integer.toString(i)),
+                            RequestOptions.DEFAULT);
             Assert.assertEquals(DATA_PREFIX + i, response.getSource().get(DATA_FIELD_NAME));
         }
     }
