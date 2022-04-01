@@ -236,6 +236,11 @@ under the License.
 			<scope>test</scope>
 		</dependency>
 
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpcore-nio</artifactId>
+		</dependency>
+
 	</dependencies>
 
 	<!-- this section defines the module versions that are used if nothing else is specified. -->
@@ -585,6 +590,14 @@ under the License.
 				<groupId>org.apache.httpcomponents</groupId>
 				<artifactId>httpclient</artifactId>
 				<version>4.5.13</version>
+			</dependency>
+
+			<!-- define the version to fix the dependency convergence issue in
+			elasticsearch-rest-high-level-client 7.10.2 -->
+			<dependency>
+				<groupId>org.apache.httpcomponents</groupId>
+				<artifactId>httpcore-nio</artifactId>
+				<version>4.4.12</version>
 			</dependency>
 
 			<dependency>
