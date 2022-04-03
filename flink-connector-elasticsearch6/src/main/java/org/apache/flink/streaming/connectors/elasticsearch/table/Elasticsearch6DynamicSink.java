@@ -53,7 +53,12 @@ import java.util.Objects;
 /**
  * A {@link DynamicTableSink} that describes how to create a {@link ElasticsearchSink} from a
  * logical description.
+ *
+ * @deprecated Please use {@link
+ *     org.apache.flink.connector.elasticsearch.sink.Elasticsearch6SinkBuilder} to build a {@link
+ *     org.apache.flink.connector.elasticsearch.sink.ElasticsearchSink} instead.
  */
+@Deprecated
 @PublicEvolving
 final class Elasticsearch6DynamicSink implements DynamicTableSink {
     @VisibleForTesting

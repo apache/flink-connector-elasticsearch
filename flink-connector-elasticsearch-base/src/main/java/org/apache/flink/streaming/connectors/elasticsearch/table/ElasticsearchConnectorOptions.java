@@ -30,7 +30,12 @@ import java.util.List;
 
 import static org.apache.flink.configuration.description.TextElement.text;
 
-/** Options for the Elasticsearch connector. */
+/**
+ * Options for the Elasticsearch connector.
+ *
+ * @deprecated This has been deprecated and will be removed in the future.
+ */
+@Deprecated
 @PublicEvolving
 public class ElasticsearchConnectorOptions {
 
