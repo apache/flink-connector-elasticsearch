@@ -163,6 +163,11 @@ under the License.
 			<artifactId>flink-architecture-tests-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.flink</groupId>
+			<artifactId>flink-architecture-tests-production</artifactId>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
