@@ -64,8 +64,7 @@ import java.util.Map;
 
 import static org.apache.flink.streaming.connectors.elasticsearch.table.TestContext.context;
 import static org.apache.flink.table.api.Expressions.row;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /** IT tests for {@link Elasticsearch6DynamicSink}. */
 public class Elasticsearch6DynamicSinkITCase extends TestLogger {
@@ -159,7 +158,7 @@ public class Elasticsearch6DynamicSinkITCase extends TestLogger {
         expectedMap.put("e", 2);
         expectedMap.put("f", "2003-10-20");
         expectedMap.put("g", "2012-12-12 12:12:12");
-        assertThat(response, equalTo(expectedMap));
+        assertThat(response).isEqualTo(expectedMap);
     }
 
     @Test
@@ -226,7 +225,7 @@ public class Elasticsearch6DynamicSinkITCase extends TestLogger {
         expectedMap.put("e", 2);
         expectedMap.put("f", "2003-10-20");
         expectedMap.put("g", "2012-12-12 12:12:12");
-        assertThat(response, equalTo(expectedMap));
+        assertThat(response).isEqualTo(expectedMap);
     }
 
     @Test
@@ -324,7 +323,7 @@ public class Elasticsearch6DynamicSinkITCase extends TestLogger {
         HashSet<Map<Object, Object>> expectedSet = new HashSet<>();
         expectedSet.add(expectedMap1);
         expectedSet.add(expectedMap2);
-        assertThat(resultSet, equalTo(expectedSet));
+        assertThat(resultSet).isEqualTo(expectedSet);
     }
 
     @Test
@@ -372,7 +371,7 @@ public class Elasticsearch6DynamicSinkITCase extends TestLogger {
         Map<Object, Object> expectedMap = new HashMap<>();
         expectedMap.put("a", 1);
         expectedMap.put("b", "2012-12-12 12:12:12");
-        assertThat(response, equalTo(expectedMap));
+        assertThat(response).isEqualTo(expectedMap);
     }
 
     private static class MockContext implements DynamicTableSink.Context {

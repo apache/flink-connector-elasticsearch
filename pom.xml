@@ -96,7 +96,6 @@ under the License.
 
 		<mockito.version>2.21.0</mockito.version>
 		<powermock.version>2.0.9</powermock.version>
-		<hamcrest.version>1.3</hamcrest.version>
 
 		<py4j.version>0.10.9.3</py4j.version>
 		<beam.version>2.27.0</beam.version>
@@ -187,14 +186,6 @@ under the License.
 					<artifactId>mockito-core</artifactId>
 				</exclusion>
 			</exclusions>
-		</dependency>
-
-		<dependency>
-			<groupId>org.hamcrest</groupId>
-			<artifactId>hamcrest-all</artifactId>
-			<version>${hamcrest.version}</version>
-			<type>jar</type>
-			<scope>test</scope>
 		</dependency>
 
 		<dependency>
@@ -417,13 +408,6 @@ under the License.
 				<groupId>org.apache.avro</groupId>
 				<artifactId>avro</artifactId>
 				<version>${avro.version}</version>
-			</dependency>
-
-			<!-- For dependency convergence -->
-			<dependency>
-				<groupId>org.hamcrest</groupId>
-				<artifactId>hamcrest-core</artifactId>
-				<version>${hamcrest.version}</version>
 			</dependency>
 
 			<dependency>
@@ -1890,8 +1874,6 @@ under the License.
 						<ignoredUsedUndeclaredDependencies combine.children="append">
 							<!-- allow using transitive Flink dependencies for brevity -->
 							<dependency>org.apache.flink:*</dependency>
-							<!-- False positive since we use hamcrest-all -->
-							<dependency>org.hamcrest:hamcrest-core</dependency>
 							<!-- transitive powermock test dependencies; excluded for brevity -->
 							<dependency>org.powermock:powermock-core</dependency>
 							<dependency>org.powermock:powermock-reflect</dependency>
@@ -1921,7 +1903,6 @@ under the License.
 							<dependency>org.mockito:mockito-core</dependency>
 							<dependency>org.powermock:powermock-api-mockito2</dependency>
 							<dependency>org.powermock:powermock-module-junit4</dependency>
-							<dependency>org.hamcrest:hamcrest-all</dependency>
 						</ignoredUnusedDeclaredDependencies>
 					</configuration>
 				</plugin>

@@ -31,16 +31,16 @@ import org.apache.flink.table.connector.sink.SinkV2Provider;
 import org.apache.flink.types.RowKind;
 import org.apache.flink.util.TestLoggerExtension;
 
-import org.junit.jupiter.api.Assertions;
+import org.assertj.core.api.ThrowableAssert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.function.Executable;
 
 import java.util.Arrays;
 import java.util.Collections;
 
 import static org.apache.flink.table.factories.FactoryUtil.SINK_PARALLELISM;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /** Tests for validation in {@link ElasticsearchDynamicSinkFactoryBase}. */
 @ExtendWith(TestLoggerExtension.class)
@@ -50,9 +50,11 @@ abstract class ElasticsearchDynamicSinkFactoryBaseTest {
 
     abstract TestContext createPrefilledTestContext();
 
-    void assertValidationException(String expectedMessage, Executable executable) {
-        ValidationException thrown = Assertions.assertThrows(ValidationException.class, executable);
-        Assertions.assertEquals(expectedMessage, thrown.getMessage());
+    void assertValidationException(
+            String expectedMessage, ThrowableAssert.ThrowingCallable executable) {
+        assertThatThrownBy(executable)
+                .isInstanceOf(ValidationException.class)
+                .hasMessage(expectedMessage);
     }
 
     @Test
