@@ -21,6 +21,7 @@ package org.apache.flink.connector.elasticsearch.table;
 import org.apache.flink.api.common.time.Deadline;
 import org.apache.flink.api.connector.sink2.Sink;
 import org.apache.flink.connector.elasticsearch.ElasticsearchUtil;
+import org.apache.flink.runtime.testutils.MiniClusterResourceConfiguration;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.DataTypes;
 import org.apache.flink.table.api.EnvironmentSettings;
@@ -35,6 +36,7 @@ import org.apache.flink.table.data.GenericRowData;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.data.StringData;
 import org.apache.flink.table.data.TimestampData;
+import org.apache.flink.test.junit5.MiniClusterExtension;
 import org.apache.flink.types.RowKind;
 import org.apache.flink.util.TestLoggerExtension;
 
@@ -46,6 +48,7 @@ import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.SearchHits;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -66,6 +69,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 /** IT tests for {@link ElasticsearchDynamicSink}. */
 @ExtendWith(TestLoggerExtension.class)
 abstract class ElasticsearchDynamicSinkBaseITCase {
+
+    private static final int PARALLELISM = 4;
+
+    @RegisterExtension
+    private static final MiniClusterExtension MINI_CLUSTER_RESOURCE =
+            new MiniClusterExtension(
+                    new MiniClusterResourceConfiguration.Builder()
+                            .setNumberTaskManagers(1)
+                            .setNumberSlotsPerTaskManager(PARALLELISM)
+                            .build());
 
     abstract String getElasticsearchHttpHostAddress();
 
@@ -126,7 +139,7 @@ abstract class ElasticsearchDynamicSinkBaseITCase {
         final Sink<RowData> sink = sinkProvider.createSink();
         StreamExecutionEnvironment environment =
                 StreamExecutionEnvironment.getExecutionEnvironment();
-        environment.setParallelism(4);
+        environment.setParallelism(PARALLELISM);
 
         rowData.setRowKind(RowKind.UPDATE_AFTER);
         environment.<RowData>fromElements(rowData).sinkTo(sink);
