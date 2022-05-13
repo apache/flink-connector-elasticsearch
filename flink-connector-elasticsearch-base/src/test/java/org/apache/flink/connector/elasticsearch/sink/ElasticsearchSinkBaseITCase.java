@@ -22,9 +22,10 @@ import org.apache.flink.api.common.restartstrategy.RestartStrategies;
 import org.apache.flink.api.common.state.CheckpointListener;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.connector.base.DeliveryGuarantee;
+import org.apache.flink.runtime.testutils.MiniClusterResourceConfiguration;
 import org.apache.flink.streaming.api.datastream.DataStream;
-import org.apache.flink.streaming.api.environment.LocalStreamEnvironment;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.test.junit5.MiniClusterExtension;
 import org.apache.flink.util.TestLoggerExtension;
 
 import org.apache.flink.shaded.guava30.com.google.common.collect.Lists;
@@ -40,6 +41,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -58,6 +60,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 /** Tests for {@link ElasticsearchSink}. */
 @ExtendWith(TestLoggerExtension.class)
 abstract class ElasticsearchSinkBaseITCase {
+
+    @RegisterExtension
+    private static final MiniClusterExtension MINI_CLUSTER_RESOURCE =
+            new MiniClusterExtension(
+                    new MiniClusterResourceConfiguration.Builder()
+                            .setNumberTaskManagers(1)
+                            .setNumberSlotsPerTaskManager(3)
+                            .build());
+
     protected static final Logger LOG = LoggerFactory.getLogger(ElasticsearchSinkBaseITCase.class);
     protected static final String ELASTICSEARCH_PASSWORD = "test-password";
     protected static final String ELASTICSEARCH_USER = "elastic";
@@ -168,7 +179,7 @@ abstract class ElasticsearchSinkBaseITCase {
                         .setDeliveryGuarantee(deliveryGuarantee)
                         .build();
 
-        final StreamExecutionEnvironment env = new LocalStreamEnvironment();
+        final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.enableCheckpointing(100L);
         if (!allowRestarts) {
             env.setRestartStrategy(RestartStrategies.noRestart());
