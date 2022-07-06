@@ -226,17 +226,60 @@ To use fault tolerant Elasticsearch Sinks, checkpointing of the topology needs t
 
 {{< tabs "d00d1e93-4844-40d7-b0ec-9ec37e73145e" >}}
 {{< tab "Java" >}}
+
+Elasticsearch 6:
 ```java
 final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 env.enableCheckpointing(5000); // checkpoint every 5000 msecs
+
+Elasticsearch6SinkBuilder sinkBuilder = new Elasticsearch6SinkBuilder<String>()
+    .setDeliveryGuarantee(DeliveryGuarantee.AT_LEAST_ONCE)
+    .setHosts(new HttpHost("127.0.0.1", 9200, "http"))
+    .setEmitter(
+    (element, context, indexer) -> 
+    indexer.add(createIndexRequest(element)));
 ```
+
+Elasticsearch 7:
+```java
+final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+env.enableCheckpointing(5000); // checkpoint every 5000 msecs
+
+Elasticsearch7SinkBuilder sinkBuilder = new Elasticsearch7SinkBuilder<String>()
+    .setDeliveryGuarantee(DeliveryGuarantee.AT_LEAST_ONCE)
+    .setHosts(new HttpHost("127.0.0.1", 9200, "http"))
+    .setEmitter(
+    (element, context, indexer) -> 
+    indexer.add(createIndexRequest(element)));
+```
+
 {{< /tab >}}
 {{< tab "Scala" >}}
+
 Elasticsearch 6:
 ```scala
 val env = StreamExecutionEnvironment.getExecutionEnvironment()
 env.enableCheckpointing(5000) // checkpoint every 5000 msecs
+
+val sinkBuilder = new Elasticsearch6SinkBuilder[String]
+  .setDeliveryGuarantee(DeliveryGuarantee.AT_LEAST_ONCE)
+  .setHosts(new HttpHost("127.0.0.1", 9200, "http"))
+  .setEmitter((element: String, context: SinkWriter.Context, indexer: RequestIndexer) =>
+  indexer.add(createIndexRequest(element)))
 ```
+
+Elasticsearch 7:
+```scala
+val env = StreamExecutionEnvironment.getExecutionEnvironment()
+env.enableCheckpointing(5000) // checkpoint every 5000 msecs
+
+val sinkBuilder = new Elasticsearch7SinkBuilder[String]
+  .setDeliveryGuarantee(DeliveryGuarantee.AT_LEAST_ONCE)
+  .setHosts(new HttpHost("127.0.0.1", 9200, "http"))
+  .setEmitter((element: String, context: SinkWriter.Context, indexer: RequestIndexer) =>
+  indexer.add(createIndexRequest(element)))
+```
+
 {{< /tab >}}
 {{< /tabs >}}
 
