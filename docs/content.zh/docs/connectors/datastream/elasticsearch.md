@@ -273,7 +273,13 @@ val sinkBuilder = new Elasticsearch7SinkBuilder[String]
 {{< /tabs >}}
 
 <p style="border-radius: 5px; padding: 5px" class="bg-info">
-Using UpdateRequests with deterministic ids and the upsert method it is possible to achieve exactly-once semantics in Elasticsearch when AT_LEAST_ONCE delivery is configured for the connector.
+<b>重要提示</b>: 默认情况下不启用 Checkpoint, 但默认传输保证 AT_LEAST_ONCE 语义。
+这会导致 sink 去缓存请求，直到它结束或 BulkProcessor 自动刷新。
+默认情况下，BulkProcessor 将在 1000 个添加操作后刷新。要将 Processor 配置为更频繁地刷新，请参阅 <a href="#配置内部批量处理器">BulkProcessor 配置部分</a>。
+</p>
+
+<p style="border-radius: 5px; padding: 5px" class="bg-info">
+当连接器配置 AT_LEAST_ONCE delivery 时，使用有确切 id 的 UpdateRequests 和 upsert 方法可以在 Elasticsearch 中实现精确一次性（exactly-once）语义。
 </p>
 
 ### 处理失败的 Elasticsearch 请求
