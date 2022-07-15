@@ -197,6 +197,82 @@ def createIndexRequest(element: (String)): IndexRequest = {
   Requests.indexRequest.index("my-index").source(mapAsJavaMap(json))
 }
 ```
+
+{{< /tab >}}
+{{< tab "Python" >}}
+
+Elasticsearch 6 static index:
+```python
+from pyflink.datastream.connectors.elasticsearch import Elasticsearch6SinkBuilder, ElasticsearchEmitter
+
+env = StreamExecutionEnvironment.get_execution_environment()
+env.add_jars(ELASTICSEARCH_SQL_CONNECTOR_PATH)
+
+input = ...
+
+# The set_bulk_flush_max_actions instructs the sink to emit after every element, otherwise they would be buffered
+es6_sink = Elasticsearch6SinkBuilder() \
+    .set_bulk_flush_max_actions(1) \
+    .set_emitter(ElasticsearchEmitter.static_index('foo', 'id', 'bar')) \
+    .set_hosts(['localhost:9200']) \
+    .build()
+
+input.sink_to(es6_sink).name('es6 sink')
+```
+
+Elasticsearch 6 dynamic index:
+```python
+from pyflink.datastream.connectors.elasticsearch import Elasticsearch6SinkBuilder, ElasticsearchEmitter
+
+env = StreamExecutionEnvironment.get_execution_environment()
+env.add_jars(ELASTICSEARCH_SQL_CONNECTOR_PATH)
+
+input = ...
+
+es_sink = Elasticsearch6SinkBuilder() \
+    .set_emitter(ElasticsearchEmitter.dynamic_index('name', 'id', 'bar')) \
+    .set_hosts(['localhost:9200']) \
+    .build()
+
+input.sink_to(es6_sink).name('es6 dynamic index sink')
+```
+
+Elasticsearch 7 static index:
+```python
+from pyflink.datastream.connectors.elasticsearch import Elasticsearch7SinkBuilder, ElasticsearchEmitter
+
+env = StreamExecutionEnvironment.get_execution_environment()
+env.add_jars(ELASTICSEARCH_SQL_CONNECTOR_PATH)
+
+input = ...
+
+# The set_bulk_flush_max_actions instructs the sink to emit after every element, otherwise they would be buffered
+es7_sink = Elasticsearch7SinkBuilder() \
+    .set_bulk_flush_max_actions(1) \
+    .set_emitter(ElasticsearchEmitter.static('foo', 'id')) \
+    .set_hosts(['localhost:9200']) \
+    .build()
+
+input.sink_to(es7_sink).name('es7 sink')
+```
+
+Elasticsearch 7 dynamic index:
+```python
+from pyflink.datastream.connectors.elasticsearch import Elasticsearch7SinkBuilder, ElasticsearchEmitter
+
+env = StreamExecutionEnvironment.get_execution_environment()
+env.add_jars(ELASTICSEARCH_SQL_CONNECTOR_PATH)
+
+input = ...
+
+es7_sink = Elasticsearch7SinkBuilder() \
+    .set_emitter(ElasticsearchEmitter.dynamic_index('name', 'id')) \
+    .set_hosts(['localhost:9200']) \
+    .build()
+
+input.sink_to(es7_sink).name('es7 dynamic index sink')
+```
+
 {{< /tab >}}
 {{< /tabs >}}
 
@@ -237,6 +313,16 @@ Elasticsearch 6:
 val env = StreamExecutionEnvironment.getExecutionEnvironment()
 env.enableCheckpointing(5000) // checkpoint every 5000 msecs
 ```
+
+{{< /tab >}}
+{{< tab "Python" >}}
+
+```python
+env = StreamExecutionEnvironment.get_execution_environment()
+# checkpoint every 5000 msecs
+env.enable_checkpointing(5000)
+```
+
 {{< /tab >}}
 {{< /tabs >}}
 
@@ -249,7 +335,6 @@ By default, the BulkProcessor will flush after 1000 added Actions. To configure 
 <p style="border-radius: 5px; padding: 5px" class="bg-info">
 Using UpdateRequests with deterministic ids and the upsert method it is possible to achieve exactly-once semantics in Elasticsearch when AT_LEAST_ONCE delivery is configured for the connector.
 </p>
-
 
 ### Handling Failing Elasticsearch Requests
 
@@ -319,6 +404,38 @@ input.sinkTo(
     .setBulkFlushBackoffStrategy(FlushBackoffType.EXPONENTIAL, 5, 1000)
     .build())
 ```
+
+{{< /tab >}}
+{{< tab "Python" >}}
+
+Elasticsearch 6:
+```python
+input = ...
+
+# This enables an exponential backoff retry mechanism, with a maximum of 5 retries and an initial delay of 1000 milliseconds
+es_sink = Elasticsearch6SinkBuilder() \
+    .set_bulk_flush_backoff_strategy(FlushBackoffType.CONSTANT, 5, 1000) \
+    .set_emitter(ElasticsearchEmitter.static_index('foo', 'id', 'bar')) \
+    .set_hosts(['localhost:9200']) \
+    .build()
+
+input.sink_to(es_sink).name('es6 sink')
+```
+
+Elasticsearch 7:
+```python
+input = ...
+
+# This enables an exponential backoff retry mechanism, with a maximum of 5 retries and an initial delay of 1000 milliseconds
+es7_sink = Elasticsearch7SinkBuilder() \
+    .set_bulk_flush_backoff_strategy(FlushBackoffType.EXPONENTIAL, 5, 1000) \
+    .set_emitter(ElasticsearchEmitter.static_index('foo', 'id')) \
+    .set_hosts(['localhost:9200']) \
+    .build()
+
+input.sink_to(es7_sink).name('es7 sink')
+```
+
 {{< /tab >}}
 {{< /tabs >}}
 
