@@ -38,7 +38,7 @@ import org.elasticsearch.common.unit.TimeValue;
  *
  * <pre>{@code
  * ElasticsearchSink<String> sink = new Elasticsearch7SinkBuilder<String>()
- *     .setHosts(new HttpHost("localhost:9200")
+ *     .setHosts(new HttpHost("localhost:9200"))
  *     .setEmitter((element, context, indexer) -> {
  *          indexer.add(
  *              new IndexRequest("my-index")
