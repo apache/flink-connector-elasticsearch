@@ -53,6 +53,8 @@ of the Elasticsearch installation:
   </tbody>
 </table>
 
+{{< py_download_link "elastic" >}}
+
 Note that the streaming connectors are currently not part of the binary
 distribution. See [here]({{< ref "docs/dev/configuration/overview" >}}) for information
 about how to package the program with the libraries for cluster execution.
