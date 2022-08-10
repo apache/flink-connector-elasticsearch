@@ -67,8 +67,9 @@ class RowElasticsearchSinkFunction implements ElasticsearchSinkFunction<RowData>
     }
 
     @Override
-    public void open() {
+    public void open() throws Exception {
         indexGenerator.open();
+        serializationSchema.open(null);
     }
 
     @Override
