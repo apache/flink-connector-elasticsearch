@@ -99,6 +99,7 @@ under the License.
 			 to the jvm (-Xmx) and the available memory on the machine running the test -->
 		<flink.forkCountITCase>2</flink.forkCountITCase>
 		<flink.forkCountUnitTest>4</flink.forkCountUnitTest>
+		<flink.surefire.baseArgLine>-XX:+UseG1GC -Xms256m</flink.surefire.baseArgLine>
 	</properties>
 
 	<dependencies>
@@ -953,7 +954,7 @@ under the License.
 								<include>${test.unit.pattern}</include>
 							</includes>
 							<forkCount>${flink.forkCountUnitTest}</forkCount>
-							<argLine>-Xms256m -Xmx${flink.XmxUnitTest} -XX:+UseG1GC</argLine>
+							<argLine>${flink.surefire.baseArgLine} -Xmx${flink.XmxUnitTest}</argLine>
 						</configuration>
 					</execution>
 					<!--execute all the integration tests-->
@@ -974,7 +975,7 @@ under the License.
 								<exclude>**/*$*</exclude>
 							</excludes>
 							<forkCount>${flink.forkCountITCase}</forkCount>
-							<argLine>-Xms256m -Xmx${flink.XmxITCase} -XX:+UseG1GC</argLine>
+							<argLine>${flink.surefire.baseArgLine} -Xmx${flink.XmxITCase}</argLine>
 							<reuseForks>false</reuseForks>
 						</configuration>
 					</execution>
