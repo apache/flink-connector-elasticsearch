@@ -92,6 +92,13 @@ under the License.
 		<flink.convergence.phase>validate</flink.convergence.phase>
 		<test.randomization.seed/>
 		<test.unit.pattern>**/*Test.*</test.unit.pattern>
+
+		<flink.XmxITCase>2048m</flink.XmxITCase>
+		<flink.XmxUnitTest>1024m</flink.XmxUnitTest>
+		<!-- Number of forkCounts for ITCase and UnitTest should take into account allocated memory
+			 to the jvm (-Xmx) and the available memory on the machine running the test -->
+		<flink.forkCountITCase>2</flink.forkCountITCase>
+		<flink.forkCountUnitTest>4</flink.forkCountUnitTest>
 	</properties>
 
 	<dependencies>
@@ -945,6 +952,8 @@ under the License.
 							<includes>
 								<include>${test.unit.pattern}</include>
 							</includes>
+							<forkCount>${flink.forkCountUnitTest}</forkCount>
+							<argLine>-Xms256m -Xmx${flink.XmxUnitTest} -XX:+UseG1GC</argLine>
 						</configuration>
 					</execution>
 					<!--execute all the integration tests-->
@@ -964,6 +973,8 @@ under the License.
 								     e.g., 'org.apache.flink.api.scala.typeutils.Foo$Bar$Foobar'. -->
 								<exclude>**/*$*</exclude>
 							</excludes>
+							<forkCount>${flink.forkCountITCase}</forkCount>
+							<argLine>-Xms256m -Xmx${flink.XmxITCase} -XX:+UseG1GC</argLine>
 							<reuseForks>false</reuseForks>
 						</configuration>
 					</execution>
