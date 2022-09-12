@@ -45,4 +45,4 @@ jobs:
           maven-version: 3.8.5
 
       - name: Compile and test flink-connector-elasticsearch
-        run: mvn clean install -Dscala-2.12 -Dflink.convergence.phase=install -Pcheck-convergence -U -B ${{ env.MVN_CONNECTION_OPTIONS }}
+        run: mvn clean install -Dscala-2.12 -Dflink.convergence.phase=install -Pcheck-convergence -U -B ${{ env.MVN_CONNECTION_OPTIONS }} -Dlog4j.configurationFile=file://$(pwd)/tools/ci/log4j.properties
