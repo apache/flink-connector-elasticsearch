@@ -80,7 +80,7 @@ under the License.
 		<archunit.version>0.22.0</archunit.version>
 		<testcontainers.version>1.16.2</testcontainers.version>
 		<mockito.version>2.21.0</mockito.version>
-		<spotless.version>2.4.2</spotless.version>
+		<spotless.version>2.13.0</spotless.version>
 
 		<japicmp.skip>false</japicmp.skip>
 		<japicmp.referenceVersion>1.14.0</japicmp.referenceVersion>
