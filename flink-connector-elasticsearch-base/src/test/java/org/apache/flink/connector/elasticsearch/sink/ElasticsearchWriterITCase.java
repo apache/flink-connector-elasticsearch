@@ -238,7 +238,7 @@ class ElasticsearchWriterITCase {
 
             writer.blockingFlushAllActions();
 
-            assertThat(recordsSend.isPresent()).isTrue();
+            assertThat(recordsSend).isPresent();
             assertThat(recordsSend.get().getCount()).isEqualTo(3L);
         }
     }
@@ -259,7 +259,7 @@ class ElasticsearchWriterITCase {
 
             writer.blockingFlushAllActions();
 
-            assertThat(currentSendTime.isPresent()).isTrue();
+            assertThat(currentSendTime).isPresent();
             assertThat(currentSendTime.get().getValue()).isGreaterThan(0L);
         }
     }
