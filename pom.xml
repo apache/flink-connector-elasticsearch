@@ -78,7 +78,7 @@ under the License.
 		<junit5.version>5.8.1</junit5.version>
 		<assertj.version>3.21.0</assertj.version>
 		<archunit.version>0.22.0</archunit.version>
-		<testcontainers.version>1.16.2</testcontainers.version>
+		<testcontainers.version>1.17.2</testcontainers.version>
 		<mockito.version>2.21.0</mockito.version>
 		<spotless.version>2.13.0</spotless.version>
 
