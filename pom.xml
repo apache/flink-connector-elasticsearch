@@ -28,9 +28,9 @@ under the License.
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>org.apache.flink</groupId>
-	<artifactId>flink-connectors</artifactId>
+	<artifactId>flink-connector-elasticsearch-parent</artifactId>
 	<version>1.16-SNAPSHOT</version>
-	<name>Flink : Connectors : </name>
+	<name>Flink : Connectors : Elasticsearch : Parent</name>
 	<packaging>pom</packaging>
 	<url>https://flink.apache.org</url>
 	<inceptionYear>2022</inceptionYear>
@@ -1165,7 +1165,7 @@ under the License.
 							<property>rootDir</property>
 							<project>
 								<groupId>org.apache.flink</groupId>
-								<artifactId>flink-connectors</artifactId>
+								<artifactId>flink-connector-elasticsearch-parent</artifactId>
 							</project>
 						</configuration>
 					</execution>
