@@ -42,8 +42,8 @@ abstract class TestClientBase {
             try {
                 final GetResponse response = getResponse(index, id);
                 assertThat(response.isExists())
-                        .isFalse()
-                        .as(String.format("Id %s is unexpectedly present.", id));
+                        .as(String.format("Id %s is unexpectedly present.", id))
+                        .isFalse();
             } catch (ElasticsearchStatusException e) {
                 assertThat(e.status().getStatus()).isEqualTo(404);
             }

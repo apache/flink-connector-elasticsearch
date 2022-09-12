@@ -123,7 +123,7 @@ abstract class ElasticsearchSinkBaseITCase {
             runTest(index, false, TestEmitter::jsonEmitter, deliveryGuarantee, null);
         } catch (IllegalStateException e) {
             failure = true;
-            assertThat(deliveryGuarantee).isEqualTo(DeliveryGuarantee.EXACTLY_ONCE);
+            assertThat(deliveryGuarantee).isSameAs(DeliveryGuarantee.EXACTLY_ONCE);
         } finally {
             assertThat(failure).isEqualTo(deliveryGuarantee == DeliveryGuarantee.EXACTLY_ONCE);
         }
