@@ -63,7 +63,6 @@ under the License.
 
 		<flink.version>1.16-SNAPSHOT</flink.version>
 		<flink.shaded.version>15.0</flink.shaded.version>
-		<flink.shaded.jackson.version>2.12.4</flink.shaded.jackson.version>
 
 		<!-- Overwrite default values from parent pom.
 			 Intellij is (sometimes?) using those values to choose target language level
@@ -71,8 +70,6 @@ under the License.
 		<target.java.version>1.8</target.java.version>
 		<maven.compiler.source>${target.java.version}</maven.compiler.source>
 		<maven.compiler.target>${target.java.version}</maven.compiler.target>
-		<scala.version>2.12.7</scala.version>
-		<scala.binary.version>2.12</scala.binary.version>
 
 		<junit4.version>4.13.2</junit4.version>
 		<junit5.version>5.8.1</junit5.version>
@@ -83,7 +80,7 @@ under the License.
 		<spotless.version>2.13.0</spotless.version>
 
 		<japicmp.skip>false</japicmp.skip>
-		<japicmp.referenceVersion>1.14.0</japicmp.referenceVersion>
+		<japicmp.referenceVersion>1.15.0</japicmp.referenceVersion>
 		<japicmp.outputDir>tools/japicmp-output</japicmp.outputDir>
 
 		<slf4j.version>1.7.36</slf4j.version>
@@ -210,45 +207,6 @@ under the License.
 	<dependencyManagement>
 
 		<dependencies>
-
-			<!-- Flink shaded dependencies -->
-			<dependency>
-				<groupId>org.apache.flink</groupId>
-				<artifactId>flink-shaded-asm-9</artifactId>
-				<version>9.2-${flink.shaded.version}</version>
-			</dependency>
-
-			<dependency>
-				<groupId>org.apache.flink</groupId>
-				<artifactId>flink-shaded-guava</artifactId>
-				<version>30.1.1-jre-${flink.shaded.version}</version>
-			</dependency>
-
-			<dependency>
-				<groupId>org.apache.flink</groupId>
-				<artifactId>flink-shaded-jackson</artifactId>
-				<version>${flink.shaded.jackson.version}-${flink.shaded.version}</version>
-			</dependency>
-
-			<dependency>
-				<groupId>org.apache.flink</groupId>
-				<artifactId>flink-shaded-jackson-module-jsonSchema</artifactId>
-				<version>${flink.shaded.jackson.version}-${flink.shaded.version}</version>
-			</dependency>
-
-			<dependency>
-				<groupId>org.apache.flink</groupId>
-				<artifactId>flink-shaded-netty</artifactId>
-				<version>4.1.70.Final-${flink.shaded.version}</version>
-			</dependency>
-
-			<dependency>
-				<groupId>org.apache.flink</groupId>
-				<artifactId>flink-shaded-netty-tcnative-dynamic</artifactId>
-				<version>2.0.44.Final-${flink.shaded.version}</version>
-				<scope>test</scope>
-			</dependency>
-
 			<!-- Flink dependencies -->
 
 			<dependency>
@@ -336,12 +294,6 @@ under the License.
 				<version>${log4j.version}</version>
 			</dependency>
 
-			<dependency>
-				<groupId>org.apache.commons</groupId>
-				<artifactId>commons-lang3</artifactId>
-				<version>3.3.2</version>
-			</dependency>
-
 			<!-- For dependency convergence -->
 			<dependency>
 				<groupId>com.fasterxml.jackson</groupId>
@@ -373,13 +325,7 @@ under the License.
 				<scope>test</scope>
 			</dependency>
 
-			<dependency>
-				<groupId>org.xerial.snappy</groupId>
-				<artifactId>snappy-java</artifactId>
-				<version>1.1.8.3</version>
-			</dependency>
-
-			<!-- kryo used in different versions by Flink an chill -->
+			<!-- For dependency convergence -->
 			<dependency>
 				<groupId>com.esotericsoftware.kryo</groupId>
 				<artifactId>kryo</artifactId>
@@ -391,18 +337,6 @@ under the License.
 				<groupId>org.objenesis</groupId>
 				<artifactId>objenesis</artifactId>
 				<version>2.1</version>
-			</dependency>
-
-			<dependency>
-				<groupId>org.scala-lang</groupId>
-				<artifactId>scala-compiler</artifactId>
-				<version>${scala.version}</version>
-			</dependency>
-
-			<dependency>
-				<groupId>org.scala-lang</groupId>
-				<artifactId>scala-library</artifactId>
-				<version>${scala.version}</version>
 			</dependency>
 
 			<dependency>
@@ -1026,10 +960,10 @@ under the License.
 							<rules>
 								<bannedDependencies>
 									<excludes>
-										<exclude>org.apache.flink:flink-table-planner_${scala.binary.version}</exclude>
+										<exclude>org.apache.flink:flink-table-planner_*</exclude>
 									</excludes>
 									<includes>
-										<include>org.apache.flink:flink-table-planner_${scala.binary.version}:*:*:test</include>
+										<include>org.apache.flink:flink-table-planner_*:*:*:test</include>
 									</includes>
 									<message>
 										Direct dependencies on flink-table-planner are not allowed.
@@ -1356,18 +1290,6 @@ under the License.
 								<exclude>@org.apache.flink.annotation.Experimental</exclude>
 								<exclude>@org.apache.flink.annotation.PublicEvolving</exclude>
 								<exclude>@org.apache.flink.annotation.Internal</exclude>
-								<exclude>org.apache.flink.streaming.api.datastream.DataStream#DataStream(org.apache.flink.streaming.api.environment.StreamExecutionEnvironment,org.apache.flink.streaming.api.transformations.StreamTransformation)</exclude>
-								<exclude>org.apache.flink.streaming.api.environment.LegacyLocalStreamEnvironment</exclude>
-								<exclude>org.apache.flink.streaming.api.functions.sink.RichSinkFunction#invoke(java.lang.Object)</exclude>
-								<exclude>org.apache.flink.streaming.api.functions.sink.SinkFunction</exclude>
-								<exclude>org.apache.flink.api.java.hadoop.mapred.HadoopInputFormat</exclude>
-								<exclude>org.apache.flink.api.java.hadoop.mapred.HadoopOutputFormat</exclude>
-								<exclude>org.apache.flink.api.java.hadoop.mapreduce.HadoopInputFormat</exclude>
-								<exclude>org.apache.flink.api.java.hadoop.mapreduce.HadoopOutputFormat</exclude>
-								<exclude>org.apache.flink.api.scala.hadoop.mapred.HadoopInputFormat</exclude>
-								<exclude>org.apache.flink.api.scala.hadoop.mapred.HadoopOutputFormat</exclude>
-								<exclude>org.apache.flink.api.scala.hadoop.mapreduce.HadoopInputFormat</exclude>
-								<exclude>org.apache.flink.api.scala.hadoop.mapreduce.HadoopOutputFormat</exclude>
 							</excludes>
 							<accessModifier>public</accessModifier>
 							<breakBuildOnModifications>false</breakBuildOnModifications>
