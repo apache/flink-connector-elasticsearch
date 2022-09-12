@@ -31,10 +31,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.sql.Timestamp;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -42,6 +42,9 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assume.assumeThat;
+
 /** Tests for {@link IndexGeneratorFactory}. */
 public class IndexGeneratorFactoryTest extends TestLogger {
 
@@ -71,7 +74,10 @@ public class IndexGeneratorFactoryTest extends TestLogger {
                         (int) LocalDate.parse("2020-03-18").toEpochDay(),
                         (int) (LocalTime.parse("12:12:14").toNanoOfDay() / 1_000_000L),
                         TimestampData.fromLocalDateTime(LocalDateTime.parse("2020-03-18T12:12:14")),
-                        TimestampData.fromInstant(Instant.parse("2020-03-18T12:12:14Z")),
+                        TimestampData.fromInstant(
+                                LocalDateTime.of(2020, 3, 18, 3, 12, 14, 1000)
+                                        .atZone(ZoneId.of("Asia/Shanghai"))
+                                        .toInstant()),
                         true));
         rows.add(
                 GenericRowData.of(
@@ -81,7 +87,10 @@ public class IndexGeneratorFactoryTest extends TestLogger {
                         (int) LocalDate.parse("2020-03-19").toEpochDay(),
                         (int) (LocalTime.parse("12:22:21").toNanoOfDay() / 1_000_000L),
                         TimestampData.fromLocalDateTime(LocalDateTime.parse("2020-03-19T12:22:14")),
-                        TimestampData.fromInstant(Instant.parse("2020-03-19T12:12:14Z")),
+                        TimestampData.fromInstant(
+                                LocalDateTime.of(2020, 3, 19, 20, 22, 14, 1000)
+                                        .atZone(ZoneId.of("America/Los_Angeles"))
+                                        .toInstant()),
                         false));
     }
 
@@ -194,12 +203,26 @@ public class IndexGeneratorFactoryTest extends TestLogger {
     }
 
     @Test
-    public void testDynamicIndexDefaultFormatTimestampWithLocalTimeZone() {
+    public void testDynamicIndexDefaultFormatTimestampWithLocalTimeZoneUTC() {
+        assumeThat(ZoneId.systemDefault(), is(ZoneId.of("UTC")));
+
         IndexGenerator indexGenerator =
                 IndexGeneratorFactory.createIndexGenerator("my-index-{local_timestamp|}", schema);
         indexGenerator.open();
         assertThat(indexGenerator.generate(rows.get(0))).isEqualTo("my-index-2020_03_17_19_12_14Z");
         assertThat(indexGenerator.generate(rows.get(1))).isEqualTo("my-index-2020_03_20_03_22_14Z");
+    }
+
+    @Test
+    public void testDynamicIndexDefaultFormatTimestampWithLocalTimeZoneWithSpecificTimeZone() {
+        IndexGenerator indexGenerator =
+                IndexGeneratorFactory.createIndexGenerator(
+                        "my-index-{local_timestamp|}", schema, ZoneId.of("Europe/Berlin"));
+        indexGenerator.open();
+        assertThat(indexGenerator.generate(rows.get(0)))
+                .isEqualTo("my-index-2020_03_17_20_12_14+01");
+        assertThat(indexGenerator.generate(rows.get(1)))
+                .isEqualTo("my-index-2020_03_20_04_22_14+01");
     }
 
     @Test
