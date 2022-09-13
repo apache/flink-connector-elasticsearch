@@ -51,7 +51,7 @@ jobs:
             && wget -q -c ${{ env.FLINK_URL }} -O - | tar -xz \
             && popd
           
-          mvn clean install -U -B \
+          mvn clean install -U -B --no-transfer-progress \
             -Dscala-2.12 \
             -Prun-end-to-end-tests -DdistDir=$(pwd)/../flink-1.16-SNAPSHOT \
             -Dflink.convergence.phase=install -Pcheck-convergence \
