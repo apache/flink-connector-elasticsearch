@@ -830,6 +830,7 @@ under the License.
 						<!-- Build files -->
 						<exclude>**/*.iml</exclude>
 						<!-- Generated content -->
+						<exclude>tools/japicmp-output/**</exclude>
 						<exclude>out/**</exclude>
 						<exclude>**/target/**</exclude>
 						<exclude>docs/layouts/shortcodes/generated/**</exclude>
