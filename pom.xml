@@ -55,6 +55,7 @@ under the License.
 		<module>flink-connector-elasticsearch-base</module>
 		<module>flink-connector-elasticsearch6</module>
 		<module>flink-connector-elasticsearch7</module>
+		<module>flink-connector-elasticsearch-e2e-tests</module>
 	</modules>
 
 	<properties>
@@ -1314,7 +1315,7 @@ under the License.
 							<dependency>
 								<groupId>org.apache.flink</groupId>
 								<artifactId>flink-annotations</artifactId>
-								<version>${project.version}</version>
+								<version>${flink.version}</version>
 							</dependency>
 						</dependencies>
 					</configuration>
