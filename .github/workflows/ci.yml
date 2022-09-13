@@ -39,10 +39,10 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      - name: Set Maven 3.8.5
+      - name: Set Maven 3.8.6
         uses: stCarolas/setup-maven@v4.2
         with:
-          maven-version: 3.8.5
+          maven-version: 3.8.6
 
       - name: Compile and test flink-connector-elasticsearch
         run: mvn clean install -Dscala-2.12 -Dflink.convergence.phase=install -Pcheck-convergence -U -B ${{ env.MVN_CONNECTION_OPTIONS }} -Dlog4j.configurationFile=file://$(pwd)/tools/ci/log4j.properties
