@@ -26,6 +26,7 @@ jobs:
         jdk: [8, 11]
     env:
       MVN_CONNECTION_OPTIONS: -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.httpconnectionManager.ttlSeconds=120
+      FLINK_URL: https://s3.amazonaws.com/flink-nightly/flink-1.16-SNAPSHOT-bin-scala_2.12.tgz
     steps:
       - run: echo "Running CI pipeline for JDK version ${{ matrix.jdk }}"
 
@@ -45,4 +46,14 @@ jobs:
           maven-version: 3.8.6
 
       - name: Compile and test flink-connector-elasticsearch
-        run: mvn clean install -Dscala-2.12 -Dflink.convergence.phase=install -Pcheck-convergence -U -B ${{ env.MVN_CONNECTION_OPTIONS }} -Dlog4j.configurationFile=file://$(pwd)/tools/ci/log4j.properties
+        run: |
+          pushd .. \
+            && wget -q -c ${{ env.FLINK_URL }} -O - | tar -xz \
+            && popd
+          
+          mvn clean install -U -B \
+            -Dscala-2.12 \
+            -Prun-end-to-end-tests -DdistDir=$(pwd)/../flink-1.16-SNAPSHOT \
+            -Dflink.convergence.phase=install -Pcheck-convergence \
+            ${{ env.MVN_CONNECTION_OPTIONS }} \
+            -Dlog4j.configurationFile=file://$(pwd)/tools/ci/log4j.properties
