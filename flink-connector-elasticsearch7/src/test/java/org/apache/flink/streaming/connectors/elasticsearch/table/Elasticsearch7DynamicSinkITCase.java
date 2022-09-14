@@ -20,6 +20,7 @@ package org.apache.flink.streaming.connectors.elasticsearch.table;
 
 import org.apache.flink.api.common.time.Deadline;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
+import org.apache.flink.connector.elasticsearch.test.DockerImageVersions;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.table.api.DataTypes;
@@ -37,7 +38,6 @@ import org.apache.flink.table.data.TimestampData;
 import org.apache.flink.table.types.DataType;
 import org.apache.flink.table.types.logical.LogicalType;
 import org.apache.flink.types.RowKind;
-import org.apache.flink.util.DockerImageVersions;
 import org.apache.flink.util.TestLogger;
 
 import org.apache.http.HttpHost;

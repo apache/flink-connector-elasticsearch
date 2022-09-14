@@ -46,6 +46,19 @@ under the License.
 		</dependency>
 		<dependency>
 			<groupId>org.apache.flink</groupId>
+			<artifactId>flink-connector-elasticsearch-base</artifactId>
+			<version>${project.version}</version>
+			<type>test-jar</type>
+			<exclusions>
+				<!-- Prevent this from interfering with dependency tree -->
+				<exclusion>
+					<groupId>*</groupId>
+					<artifactId>*</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.flink</groupId>
 			<artifactId>flink-connector-elasticsearch6</artifactId>
 			<version>${project.version}</version>
 		</dependency>

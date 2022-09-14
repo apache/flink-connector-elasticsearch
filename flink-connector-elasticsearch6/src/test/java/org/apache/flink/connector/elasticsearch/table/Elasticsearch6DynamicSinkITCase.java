@@ -19,7 +19,7 @@
 package org.apache.flink.connector.elasticsearch.table;
 
 import org.apache.flink.connector.elasticsearch.ElasticsearchUtil;
-import org.apache.flink.util.DockerImageVersions;
+import org.apache.flink.connector.elasticsearch.test.DockerImageVersions;
 
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.search.SearchRequest;
