@@ -20,10 +20,10 @@ package org.apache.flink.streaming.connectors.elasticsearch7;
 
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.connector.elasticsearch.ElasticsearchUtil;
+import org.apache.flink.connector.elasticsearch.test.DockerImageVersions;
 import org.apache.flink.streaming.connectors.elasticsearch.ElasticsearchSinkBase;
 import org.apache.flink.streaming.connectors.elasticsearch.ElasticsearchSinkFunction;
 import org.apache.flink.streaming.connectors.elasticsearch.ElasticsearchSinkTestBase;
-import org.apache.flink.util.DockerImageVersions;
 
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;

@@ -17,9 +17,9 @@
 
 package org.apache.flink.streaming.tests;
 
+import org.apache.flink.connector.elasticsearch.test.DockerImageVersions;
 import org.apache.flink.connector.testframe.junit.annotations.TestContext;
 import org.apache.flink.tests.util.TestUtils;
-import org.apache.flink.util.DockerImageVersions;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

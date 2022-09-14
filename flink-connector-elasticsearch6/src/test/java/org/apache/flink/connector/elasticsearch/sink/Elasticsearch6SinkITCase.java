@@ -19,7 +19,7 @@ package org.apache.flink.connector.elasticsearch.sink;
 
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.connector.elasticsearch.ElasticsearchUtil;
-import org.apache.flink.util.DockerImageVersions;
+import org.apache.flink.connector.elasticsearch.test.DockerImageVersions;
 
 import org.elasticsearch.client.RestHighLevelClient;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
