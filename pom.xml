@@ -786,7 +786,7 @@ under the License.
 					<dependency>
 						<groupId>org.apache.flink</groupId>
 						<artifactId>flink-ci-tools</artifactId>
-						<version>1.16-SNAPSHOT</version>
+						<version>${flink.version}</version>
 					</dependency>
 				</dependencies>
 			</plugin>
