@@ -46,13 +46,13 @@ jobs:
         with:
           maven-version: 3.8.6
 
+      - name: Download Flink binary
+        working-directory: ./..
+        run: wget -q -c ${{ env.FLINK_URL }} -O - | tar -xz
+
       - name: Compile and test flink-connector-elasticsearch
         timeout-minutes: 20
-        run: |
-          pushd .. \
-            && wget -q -c ${{ env.FLINK_URL }} -O - | tar -xz \
-            && popd
-          
+        run: |          
           mvn clean install -U -B --no-transfer-progress \
             -Dscala-2.12 \
             -Prun-end-to-end-tests -DdistDir=$(pwd)/../flink-1.16-SNAPSHOT \
