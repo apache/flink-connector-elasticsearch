@@ -41,10 +41,11 @@ import java.util.stream.Collectors;
 import static org.apache.flink.table.api.Expressions.$;
 import static org.junit.Assert.assertEquals;
 
+/** Base class for end to end Elasticsearch lookup. */
 public abstract class ElasticsearchLookupE2ECase {
     protected EnvironmentSettings streamSettings;
-    protected static final String dim = "testTable1";
-    protected static final String es_index = "es1";
+    protected static final String DIM = "testTable1";
+    protected static final String ES_INDEX = "es1";
     // prepare a source collection.
     private static final List<Row> srcData = new ArrayList<>();
     private static final RowTypeInfo testTypeInfo =
@@ -79,7 +80,7 @@ public abstract class ElasticsearchLookupE2ECase {
 
         tEnv.executeSql(
                 "CREATE TABLE "
-                        + dim
+                        + DIM
                         + " ("
                         + " id int,"
                         + " name string,"
@@ -87,9 +88,9 @@ public abstract class ElasticsearchLookupE2ECase {
                         + ") WITH ("
                         + getEsOptions()
                         + ")");
-        tEnv.executeSql("insert into " + dim + " values (1, 'rick')");
-        tEnv.executeSql("insert into " + dim + " values (2, 'john')");
-        tEnv.executeSql("insert into " + dim + " values (3, 'ted')");
+        tEnv.executeSql("insert into " + DIM + " values (1, 'rick')");
+        tEnv.executeSql("insert into " + DIM + " values (2, 'john')");
+        tEnv.executeSql("insert into " + DIM + " values (3, 'ted')");
 
         // prepare a source table
         String srcTableName = "src";
@@ -106,7 +107,7 @@ public abstract class ElasticsearchLookupE2ECase {
                         + " id,"
                         + " name"
                         + " FROM src JOIN "
-                        + dim
+                        + DIM
                         + " FOR SYSTEM_TIME AS OF src.proc as h ON src.a = h.id";
         Iterator<Row> collected = tEnv.executeSql(dimJoinQuery).collect();
         List<String> result =

@@ -20,6 +20,7 @@ package org.apache.flink.streaming.tests;
 
 import org.apache.flink.util.DockerImageVersions;
 
+/** End-to-end test for Elasticsearch6 lookup. */
 public class Elasticsearch6LookupE2ECase extends ElasticsearchLookupE2ECase {
     @Override
     String getElasticsearchContainerName() {
@@ -35,7 +36,7 @@ public class Elasticsearch6LookupE2ECase extends ElasticsearchLookupE2ECase {
                 + "',"
                 + "'document-type' = '_doc',"
                 + "'index' = '"
-                + es_index
+                + ES_INDEX
                 + "',"
                 + "'lookup.cache' = 'partial',"
                 + "'lookup.partial-cache.max-rows' = '100'";
