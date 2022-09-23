@@ -114,12 +114,11 @@ public class Elasticsearch6DynamicSinkITCase extends TestLogger {
 
         String index = "writing-documents";
         String myType = "MyType";
-        Elasticsearch6DynamicSinkFactory sinkFactory = new Elasticsearch6DynamicSinkFactory();
+        Elasticsearch6DynamicTableFactory factory = new Elasticsearch6DynamicTableFactory();
 
         SinkFunctionProvider sinkRuntimeProvider =
                 (SinkFunctionProvider)
-                        sinkFactory
-                                .createDynamicTableSink(
+                        factory.createDynamicTableSink(
                                         context()
                                                 .withSchema(schema)
                                                 .withOption(
