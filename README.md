@@ -20,7 +20,7 @@ Prerequisites:
 ```
 git clone https://github.com/apache/flink-connector-elasticsearch.git
 cd flink-connector-elasticsearch
-./mvn clean package -DskipTests
+mvn clean package -DskipTests
 ```
 
 The resulting jars can be found in the `target` directory of the respective module.
