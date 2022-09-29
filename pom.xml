@@ -20,9 +20,9 @@ under the License.
 	xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
 	<parent>
-		<groupId>org.apache</groupId>
-		<artifactId>apache</artifactId>
-		<version>20</version>
+		<groupId>io.github.zentol.flink</groupId>
+		<artifactId>flink-connector-parent</artifactId>
+		<version>1.0</version>
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
@@ -32,16 +32,7 @@ under the License.
 	<version>3.0-SNAPSHOT</version>
 	<name>Flink : Connectors : Elasticsearch : Parent</name>
 	<packaging>pom</packaging>
-	<url>https://flink.apache.org</url>
 	<inceptionYear>2022</inceptionYear>
-
-	<licenses>
-		<license>
-			<name>The Apache Software License, Version 2.0</name>
-			<url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
-			<distribution>repo</distribution>
-		</license>
-	</licenses>
 
 	<scm>
 		<url>https://github.com/apache/flink-connector-elasticsearch</url>
@@ -51,15 +42,6 @@ under the License.
 		</developerConnection>
 	</scm>
 
-	<pluginRepositories>
-		<pluginRepository>
-			<!-- Allows exec-maven-plugin to resolve snapshot plugin dependencies -->
-			<id>apache.snapshots.https</id>
-			<name>${distMgmtSnapshotsName}</name>
-			<url>${distMgmtSnapshotsUrl}</url>
-		</pluginRepository>
-	</pluginRepositories>
-
 	<modules>
 		<module>flink-connector-elasticsearch-base</module>
 		<module>flink-connector-elasticsearch6</module>
@@ -68,18 +50,8 @@ under the License.
 	</modules>
 
 	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-
 		<flink.version>1.16-SNAPSHOT</flink.version>
 		<flink.shaded.version>15.0</flink.shaded.version>
-
-		<!-- Overwrite default values from parent pom.
-			 Intellij is (sometimes?) using those values to choose target language level
-			 and thus is changing back to java 1.6 on each maven re-import -->
-		<target.java.version>1.8</target.java.version>
-		<maven.compiler.source>${target.java.version}</maven.compiler.source>
-		<maven.compiler.target>${target.java.version}</maven.compiler.target>
 
 		<junit4.version>4.13.2</junit4.version>
 		<junit5.version>5.8.1</junit5.version>
@@ -87,26 +59,16 @@ under the License.
 		<archunit.version>0.22.0</archunit.version>
 		<testcontainers.version>1.17.2</testcontainers.version>
 		<mockito.version>2.21.0</mockito.version>
-		<spotless.version>2.13.0</spotless.version>
 
 		<japicmp.skip>false</japicmp.skip>
 		<japicmp.referenceVersion>1.15.0</japicmp.referenceVersion>
-		<japicmp.outputDir>tools/japicmp-output</japicmp.outputDir>
 
 		<slf4j.version>1.7.36</slf4j.version>
 		<log4j.version>2.17.2</log4j.version>
 
-		<flink.convergence.phase>validate</flink.convergence.phase>
 		<test.randomization.seed/>
-		<test.unit.pattern>**/*Test.*</test.unit.pattern>
 
-		<flink.XmxITCase>2048m</flink.XmxITCase>
-		<flink.XmxUnitTest>1024m</flink.XmxUnitTest>
-		<!-- Number of forkCounts for ITCase and UnitTest should take into account allocated memory
-			 to the jvm (-Xmx) and the available memory on the machine running the test -->
-		<flink.forkCountITCase>2</flink.forkCountITCase>
-		<flink.forkCountUnitTest>4</flink.forkCountUnitTest>
-		<flink.surefire.baseArgLine>-XX:+UseG1GC -Xms256m</flink.surefire.baseArgLine>
+		<flink.parent.artifactId>flink-connector-elasticsearch-parent</flink.parent.artifactId>
 	</properties>
 
 	<dependencies>
@@ -408,380 +370,15 @@ under the License.
 				<module>flink-sql-connector-elasticsearch7</module>
 			</modules>
 		</profile>
-
-		<profile>
-			<id>java11</id>
-			<activation>
-				<jdk>[11,)</jdk>
-			</activation>
-
-			<build>
-				<pluginManagement>
-					<plugins>
-						<plugin>
-							<groupId>org.codehaus.mojo</groupId>
-							<artifactId>build-helper-maven-plugin</artifactId>
-							<version>1.7</version>
-						</plugin>
-						<plugin>
-							<groupId>org.apache.maven.plugins</groupId>
-							<artifactId>maven-shade-plugin</artifactId>
-							<version>3.2.4</version>
-						</plugin>
-						<plugin>
-							<groupId>io.github.zentol.japicmp</groupId>
-							<artifactId>japicmp-maven-plugin</artifactId>
-							<dependencies>
-								<dependency>
-									<groupId>javax.xml.bind</groupId>
-									<artifactId>jaxb-api</artifactId>
-									<version>2.3.0</version>
-								</dependency>
-								<dependency>
-									<groupId>com.sun.xml.bind</groupId>
-									<artifactId>jaxb-impl</artifactId>
-									<version>2.3.1</version>
-								</dependency>
-								<dependency>
-									<groupId>com.sun.xml.bind</groupId>
-									<artifactId>jaxb-core</artifactId>
-									<version>2.3.0</version>
-								</dependency>
-								<dependency>
-									<groupId>javax.activation</groupId>
-									<artifactId>activation</artifactId>
-									<version>1.1.1</version>
-								</dependency>
-							</dependencies>
-						</plugin>
-						<plugin>
-							<groupId>org.apache.maven.plugins</groupId>
-							<artifactId>maven-javadoc-plugin</artifactId>
-							<configuration>
-								<additionalJOptions>
-									<additionalJOption>--add-exports=java.base/sun.net.util=ALL-UNNAMED</additionalJOption>
-								</additionalJOptions>
-							</configuration>
-						</plugin>
-					</plugins>
-				</pluginManagement>
-			</build>
-		</profile>
-
-		<profile>
-			<id>java17</id>
-			<activation>
-				<jdk>[17,)</jdk>
-			</activation>
-
-			<build>
-				<pluginManagement>
-					<plugins>
-						<plugin>
-							<groupId>com.diffplug.spotless</groupId>
-							<artifactId>spotless-maven-plugin</artifactId>
-							<configuration>
-								<!-- Current google format does not run on Java 17.
-									 Don't upgrade it in this profile because it formats code differently.
-									 Re-evaluate once support for Java 8 is dropped. -->
-								<skip>true</skip>
-							</configuration>
-						</plugin>
-					</plugins>
-				</pluginManagement>
-			</build>
-		</profile>
-
-		<profile>
-			<id>java11-target</id>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-compiler-plugin</artifactId>
-						<configuration>
-							<source>11</source>
-							<target>11</target>
-							<compilerArgs combine.children="append">
-								<arg>--add-exports=java.base/sun.net.util=ALL-UNNAMED</arg>
-								<arg>--add-exports=java.management/sun.management=ALL-UNNAMED</arg>
-								<arg>--add-exports=java.rmi/sun.rmi.registry=ALL-UNNAMED</arg>
-								<arg>--add-exports=java.security.jgss/sun.security.krb5=ALL-UNNAMED</arg>
-							</compilerArgs>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-
-		<profile>
-			<id>java17-target</id>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-compiler-plugin</artifactId>
-						<configuration>
-							<source>17</source>
-							<target>17</target>
-							<compilerArgs combine.children="append">
-								<arg>--add-exports=java.base/sun.net.util=ALL-UNNAMED</arg>
-								<arg>--add-exports=java.management/sun.management=ALL-UNNAMED</arg>
-								<arg>--add-exports=java.rmi/sun.rmi.registry=ALL-UNNAMED</arg>
-								<arg>--add-exports=java.security.jgss/sun.security.krb5=ALL-UNNAMED</arg>
-							</compilerArgs>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-
-		<profile>
-			<id>fast</id>
-			<activation>
-				<property>
-					<name>fast</name>
-				</property>
-			</activation>
-			<build>
-				<pluginManagement>
-					<plugins>
-						<plugin>
-							<groupId>org.apache.rat</groupId>
-							<artifactId>apache-rat-plugin</artifactId>
-							<configuration>
-								<skip>true</skip>
-							</configuration>
-						</plugin>
-						<plugin>
-							<groupId>org.apache.maven.plugins</groupId>
-							<artifactId>maven-checkstyle-plugin</artifactId>
-							<configuration>
-								<skip>true</skip>
-							</configuration>
-						</plugin>
-						<plugin>
-							<groupId>com.diffplug.spotless</groupId>
-							<artifactId>spotless-maven-plugin</artifactId>
-							<configuration>
-								<skip>true</skip>
-							</configuration>
-						</plugin>
-						<plugin>
-							<groupId>org.scalastyle</groupId>
-							<artifactId>scalastyle-maven-plugin</artifactId>
-							<configuration>
-								<skip>true</skip>
-							</configuration>
-						</plugin>
-						<plugin>
-							<groupId>org.apache.maven.plugins</groupId>
-							<artifactId>maven-enforcer-plugin</artifactId>
-							<configuration>
-								<skip>true</skip>
-							</configuration>
-						</plugin>
-						<plugin>
-							<groupId>org.apache.maven.plugins</groupId>
-							<artifactId>maven-javadoc-plugin</artifactId>
-							<configuration>
-								<skip>true</skip>
-							</configuration>
-						</plugin>
-						<plugin>
-							<groupId>io.github.zentol.japicmp</groupId>
-							<artifactId>japicmp-maven-plugin</artifactId>
-							<configuration>
-								<skip>true</skip>
-							</configuration>
-						</plugin>
-					</plugins>
-				</pluginManagement>
-			</build>
-		</profile>
-
-		<profile>
-			<id>check-convergence</id>
-			<activation>
-				<property>
-					<name>check-convergence</name>
-				</property>
-			</activation>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-enforcer-plugin</artifactId>
-						<executions>
-							<execution>
-								<id>dependency-convergence</id>
-								<phase>${flink.convergence.phase}</phase>
-							</execution>
-						</executions>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-
-		<profile>
-			<!-- used for SNAPSHOT and regular releases -->
-			<id>docs-and-source</id>
-			<activation>
-				<property>
-					<name>docs-and-source</name>
-				</property>
-			</activation>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-source-plugin</artifactId>
-						<version>2.2.1</version><!--$NO-MVN-MAN-VER$-->
-						<executions>
-							<execution>
-								<id>attach-sources</id>
-								<goals>
-									<goal>jar</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-javadoc-plugin</artifactId>
-						<configuration>
-							<quiet>true</quiet>
-						</configuration>
-						<executions>
-							<execution>
-								<id>attach-javadocs</id>
-								<goals>
-									<goal>jar</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-
-		<profile>
-			<id>release</id>
-			<activation>
-				<property>
-					<name>release</name>
-				</property>
-			</activation>
-			<properties>
-				<target.java.version>1.8</target.java.version>
-			</properties>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-gpg-plugin</artifactId>
-						<version>1.4</version>
-						<executions>
-							<execution>
-								<id>sign-artifacts</id>
-								<phase>verify</phase>
-								<goals>
-									<goal>sign</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-enforcer-plugin</artifactId>
-						<executions>
-							<execution>
-								<id>enforce-maven</id>
-								<goals>
-									<goal>enforce</goal>
-								</goals>
-								<configuration>
-									<rules>
-										<requireMavenVersion>
-											<!-- maven version must be lower than 3.3. See FLINK-3158 -->
-											<version>(,3.3)</version>
-										</requireMavenVersion>
-										<requireJavaVersion>
-											<version>1.8.0</version>
-										</requireJavaVersion>
-									</rules>
-								</configuration>
-							</execution>
-						</executions>
-					</plugin>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-javadoc-plugin</artifactId>
-						<executions>
-							<execution>
-								<id>attach-javadocs</id>
-								<goals>
-									<goal>jar</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
-				</plugins>
-				<pluginManagement>
-					<plugins>
-						<plugin>
-							<groupId>org.apache.maven.plugins</groupId>
-							<artifactId>maven-release-plugin</artifactId>
-							<version>2.1</version>
-							<configuration>
-								<mavenExecutorId>forked-path</mavenExecutorId>
-								<useReleaseProfile>false</useReleaseProfile>
-								<arguments>${arguments} -Psonatype-oss-release</arguments>
-							</configuration>
-						</plugin>
-					</plugins>
-				</pluginManagement>
-			</build>
-		</profile>
 	</profiles>
 
 	<build>
 		<plugins>
-			<!--
-			We need to include this here because some of our modules have transitive dependencies
-			on jdbm1, which is of type "bundle". This only works if you include the
-			maven-bundle-plugin (see https://issues.apache.org/jira/browse/DIRSHARED-134). We need
-			the plugin in the root pom because Javadoc aggregation runs only in the root pom and
-			not the specific poms. Not having this here was the cause for FLINK-7702.
-			-->
-			<plugin>
-				<groupId>org.apache.felix</groupId>
-				<artifactId>maven-bundle-plugin</artifactId>
-				<version>3.0.1</version>
-				<inherited>true</inherited>
-				<extensions>true</extensions>
-			</plugin>
 
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>exec-maven-plugin</artifactId>
-				<version>3.1.0</version>
 				<inherited>false</inherited>
-				<executions>
-					<execution>
-						<id>check-license</id>
-						<!-- manually called -->
-						<phase>none</phase>
-						<goals>
-							<goal>java</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<mainClass>org.apache.flink.tools.ci.licensecheck.LicenseChecker</mainClass>
-					<includePluginDependencies>true</includePluginDependencies>
-					<includeProjectDependencies>false</includeProjectDependencies>
-				</configuration>
 				<dependencies>
 					<dependency>
 						<groupId>org.apache.flink</groupId>
@@ -794,17 +391,6 @@ under the License.
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
-				<version>2.4</version><!--$NO-MVN-MAN-VER$-->
-				<configuration>
-					<archive>
-						<!-- Globally exclude maven metadata, because it may accidentally bundle files we don't intend to -->
-						<addMavenDescriptor>false</addMavenDescriptor>
-						<manifest>
-							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-							<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
-						</manifest>
-					</archive>
-				</configuration>
 			</plugin>
 
 			<plugin>
@@ -816,77 +402,7 @@ under the License.
 			<plugin>
 				<groupId>org.apache.rat</groupId>
 				<artifactId>apache-rat-plugin</artifactId>
-				<version>0.13</version>
 				<inherited>false</inherited>
-				<executions>
-					<execution>
-						<phase>verify</phase>
-						<goals>
-							<goal>check</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<consoleOutput>true</consoleOutput>
-					<excludeSubProjects>false</excludeSubProjects>
-					<numUnapprovedLicenses>0</numUnapprovedLicenses>
-					<licenses>
-						<!-- Enforce this license:
-							Licensed to the Apache Software Foundation (ASF) under one
-							or more contributor license agreements.  See the NOTICE file
-							distributed with this work for additional information
-							regarding copyright ownership.  The ASF licenses this file
-							to you under the Apache License, Version 2.0 (the
-							"License"); you may not use this file except in compliance
-							with the License.  You may obtain a copy of the License at
-							  http://www.apache.org/licenses/LICENSE-2.0
-							Unless required by applicable law or agreed to in writing,
-							software distributed under the License is distributed on an
-							"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-							KIND, either express or implied.  See the License for the
-							specific language governing permissions and limitations
-							under the License.
-						-->
-						<license implementation="org.apache.rat.analysis.license.SimplePatternBasedLicense">
-							<licenseFamilyCategory>AL2 </licenseFamilyCategory>
-							<licenseFamilyName>Apache License 2.0</licenseFamilyName>
-							<notes />
-							<patterns>
-								<pattern>Licensed to the Apache Software Foundation (ASF) under one</pattern>
-							</patterns>
-						</license>
-					</licenses>
-					<licenseFamilies>
-						<licenseFamily implementation="org.apache.rat.license.SimpleLicenseFamily">
-							<familyName>Apache License 2.0</familyName>
-						</licenseFamily>
-					</licenseFamilies>
-					<excludes>
-						<!-- Additional files like .gitignore etc.-->
-						<exclude>**/.*/**</exclude>
-						<exclude>**/*.prefs</exclude>
-						<exclude>**/*.log</exclude>
-
-						<!-- Test Data. -->
-						<exclude>**/src/test/resources/*-data</exclude>
-						<exclude>out/test/flink-avro/avro/user.avsc</exclude>
-
-						<!-- ArchUnit violation stores  -->
-						<exclude>**/archunit-violations/**</exclude>
-
-						<!-- Administrative files in the main trunk. -->
-						<exclude>**/README.md</exclude>
-						<exclude>.github/**</exclude>
-						<!-- Build files -->
-						<exclude>**/*.iml</exclude>
-						<!-- Generated content -->
-						<exclude>tools/japicmp-output/**</exclude>
-						<exclude>out/**</exclude>
-						<exclude>**/target/**</exclude>
-						<exclude>docs/layouts/shortcodes/generated/**</exclude>
-						<exclude>docs/static/generated/**</exclude>
-					</excludes>
-				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -901,484 +417,25 @@ under the License.
 				<artifactId>maven-compiler-plugin</artifactId>
 			</plugin>
 
-			<!--surefire for unit tests and integration tests-->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<version>3.0.0-M5</version>
-				<configuration>
-					<!-- enables TCP/IP communication between surefire and forked JVM-->
-					<forkNode implementation="org.apache.maven.plugin.surefire.extensions.SurefireForkNodeFactory"/>
-					<trimStackTrace>false</trimStackTrace>
-					<systemPropertyVariables>
-						<forkNumber>0${surefire.forkNumber}</forkNumber>
-						<!-- $$ ensures that surefire resolves this to the current forkNumber,
-						 	instead of maven during initialization -->
-						<mvn.forkNumber>$${surefire.forkNumber}</mvn.forkNumber>
-						<checkpointing.randomization>true</checkpointing.randomization>
-						<buffer-debloat.randomization>true</buffer-debloat.randomization>
-						<user.country>US</user.country>
-						<user.language>en</user.language>
-						<!-- force the use of the Changelog State Backend in tests on mini-cluster
-							on: enable CheckpointingOptions.ENABLE_STATE_CHANGE_LOG on cluster level
-							random: enable it randomly, unless explicitly set
-							unset: don't alter the configuration
-						-->
-						<checkpointing.changelog>random</checkpointing.changelog>
-						<project.basedir>${project.basedir}</project.basedir>
-						<!--suppress MavenModelInspection -->
-						<test.randomization.seed>${test.randomization.seed}</test.randomization.seed>
-						<junit.jupiter.extensions.autodetection.enabled>true</junit.jupiter.extensions.autodetection.enabled>
-					</systemPropertyVariables>
-					<argLine>-Xms256m -Xmx2048m -XX:+UseG1GC</argLine>
-				</configuration>
-				<executions>
-					<!--execute all the unit tests-->
-					<execution>
-						<id>default-test</id>
-						<phase>test</phase>
-						<goals>
-							<goal>test</goal>
-						</goals>
-						<configuration>
-							<includes>
-								<include>${test.unit.pattern}</include>
-							</includes>
-							<forkCount>${flink.forkCountUnitTest}</forkCount>
-							<argLine>${flink.surefire.baseArgLine} -Xmx${flink.XmxUnitTest}</argLine>
-						</configuration>
-					</execution>
-					<!--execute all the integration tests-->
-					<execution>
-						<id>integration-tests</id>
-						<phase>integration-test</phase>
-						<goals>
-							<goal>test</goal>
-						</goals>
-						<configuration>
-							<includes>
-								<include>**/*.*</include>
-							</includes>
-							<excludes>
-								<exclude>${test.unit.pattern}</exclude>
-								<!-- Exclude classes generated by Scala that surefire rejects
-								     e.g., 'org.apache.flink.api.scala.typeutils.Foo$Bar$Foobar'. -->
-								<exclude>**/*$*</exclude>
-							</excludes>
-							<forkCount>${flink.forkCountITCase}</forkCount>
-							<argLine>${flink.surefire.baseArgLine} -Xmx${flink.XmxITCase}</argLine>
-							<reuseForks>false</reuseForks>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-eclipse-plugin</artifactId>
-				<version>2.8</version>
-				<configuration>
-					<classpathContainers>
-						<classpathContainer>
-							org.eclipse.jdt.launching.JRE_CONTAINER
-						</classpathContainer>
-					</classpathContainers>
-					<downloadSources>true</downloadSources>
-					<downloadJavadocs>true</downloadJavadocs>
-				</configuration>
 			</plugin>
 
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-enforcer-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>enforce-maven</id>
-						<goals>
-							<goal>enforce</goal>
-						</goals>
-						<configuration>
-							<rules>
-								<requireMavenVersion>
-									<!-- enforce at least mvn version 3.1.1 (see FLINK-12447) -->
-									<version>[3.1.1,)</version>
-								</requireMavenVersion>
-								<requireJavaVersion>
-									<version>${target.java.version}</version>
-								</requireJavaVersion>
-							</rules>
-						</configuration>
-					</execution>
-					<execution>
-						<id>forbid-direct-table-planner-dependencies</id>
-						<goals>
-							<goal>enforce</goal>
-						</goals>
-						<configuration>
-							<rules>
-								<bannedDependencies>
-									<excludes>
-										<exclude>org.apache.flink:flink-table-planner_*</exclude>
-									</excludes>
-									<includes>
-										<include>org.apache.flink:flink-table-planner_*:*:*:test</include>
-									</includes>
-									<message>
-										Direct dependencies on flink-table-planner are not allowed.
-										You should depend on either Table API modules or flink-table-planner-loader.
-									</message>
-								</bannedDependencies>
-							</rules>
-						</configuration>
-					</execution>
-					<execution>
-						<id>dependency-convergence</id>
-						<!-- disabled by default as it interacts badly with shade-plugin -->
-						<phase>none</phase>
-						<goals>
-							<goal>enforce</goal>
-						</goals>
-						<configuration>
-							<rules>
-								<dependencyConvergence/>
-							</rules>
-						</configuration>
-					</execution>
-				</executions>
 			</plugin>
 
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
-				<configuration>
-					<!-- This section contains the core configuration that is applied to every jar that we create.-->
-					<filters combine.children="append">
-						<filter>
-							<artifact>*</artifact>
-							<excludes>
-								<!-- Globally exclude log4j.properties from our JAR files. -->
-								<exclude>log4j.properties</exclude>
-								<exclude>log4j2.properties</exclude>
-								<exclude>log4j-test.properties</exclude>
-								<exclude>log4j2-test.properties</exclude>
-								<!-- Do not copy the signatures in the META-INF folder.
-								Otherwise, this might cause SecurityExceptions when using the JAR. -->
-								<exclude>META-INF/*.SF</exclude>
-								<exclude>META-INF/*.DSA</exclude>
-								<exclude>META-INF/*.RSA</exclude>
-								<!-- META-INF/maven can contain 2 things:
-									- For archetypes, it contains an archetype-metadata.xml.
-									- For other jars, it contains the pom for all dependencies under the respective <groupId>/<artifactId>/ directory.
-
-								 	We want to exclude the poms because they may be under an incompatible license,
-								 	however the archetype metadata is required and we need to keep that around.
-
-								 	This pattern excludes directories under META-INF/maven.
-								 	('?*/**' does not work because '**' also matches zero directories;
-								 	everything that matches '?*' also matches '?*/**')
-
-									The initial '**' allows the pattern to also work for multi-release jars that may contain such entries under
-									'META-INF/versions/11/META-INF/maven/'.
-								 	-->
-								<exclude>**/META-INF/maven/?*/?*/**</exclude>
-							</excludes>
-						</filter>
-					</filters>
-					<transformers combine.children="append">
-						<!-- The service transformer is needed to merge META-INF/services files -->
-						<transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
-						<!-- The ApacheNoticeResourceTransformer collects and aggregates NOTICE files -->
-						<transformer implementation="org.apache.maven.plugins.shade.resource.ApacheNoticeResourceTransformer">
-							<projectName>Apache Flink</projectName>
-							<encoding>UTF-8</encoding>
-						</transformer>
-					</transformers>
-				</configuration>
-				<executions>
-					<execution>
-						<id>shade-flink</id>
-						<phase>package</phase>
-						<goals>
-							<goal>shade</goal>
-						</goals>
-						<configuration>
-							<shadeTestJar>false</shadeTestJar>
-							<shadedArtifactAttached>false</shadedArtifactAttached>
-							<createDependencyReducedPom>true</createDependencyReducedPom>
-							<dependencyReducedPomLocation>${project.basedir}/target/dependency-reduced-pom.xml</dependencyReducedPomLocation>
-							<!-- Filters MUST be appended; merging filters does not work properly, see MSHADE-305 -->
-							<filters combine.children="append">
-								<!-- drop entries into META-INF and NOTICE files for the dummy artifact -->
-								<filter>
-									<artifact>org.apache.flink:flink-shaded-force-shading</artifact>
-									<excludes>
-										<exclude>**</exclude>
-									</excludes>
-								</filter>
-								<!-- io.netty:netty brings its own LICENSE.txt which we don't need -->
-								<filter>
-									<artifact>io.netty:netty</artifact>
-									<excludes>
-										<exclude>META-INF/LICENSE.txt</exclude>
-									</excludes>
-								</filter>
-							</filters>
-							<artifactSet>
-								<includes>
-									<!-- Unfortunately, the next line is necessary for now to force the execution
-									of the Shade plugin upon all sub modules. This will generate effective poms,
-									i.e. poms which do not contain properties which are derived from this root pom.
-									In particular, the Scala version properties are defined in the root pom and without
-									shading, the root pom would have to be Scala suffixed and thereby all other modules.
-									Removing this exclusion will also cause compilation errors in at least
-									1 module (flink-connector-elasticsearch5), for unknown reasons.
-									-->
-									<include>org.apache.flink:flink-shaded-force-shading</include>
-								</includes>
-							</artifactSet>
-						</configuration>
-					</execution>
-				</executions>
 			</plugin>
 
-			<!-- generate configuration docs -->
 			<plugin>
 				<groupId>org.commonjava.maven.plugins</groupId>
 				<artifactId>directory-maven-plugin</artifactId>
-				<version>0.1</version>
-				<executions>
-					<execution>
-						<id>directories</id>
-						<goals>
-							<goal>directory-of</goal>
-						</goals>
-						<phase>initialize</phase>
-						<configuration>
-							<property>rootDir</property>
-							<project>
-								<groupId>org.apache.flink</groupId>
-								<artifactId>flink-connector-elasticsearch-parent</artifactId>
-							</project>
-						</configuration>
-					</execution>
-				</executions>
 			</plugin>
 		</plugins>
-
-		<pluginManagement>
-			<plugins>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-compiler-plugin</artifactId>
-					<version>3.8.0</version>
-					<configuration>
-						<source>${target.java.version}</source>
-						<target>${target.java.version}</target>
-						<!-- The semantics of this option are reversed, see MCOMPILER-209. -->
-						<useIncrementalCompilation>false</useIncrementalCompilation>
-						<compilerArgs>
-							<!-- Prevents recompilation due to missing package-info.class, see MCOMPILER-205 -->
-							<arg>-Xpkginfo:always</arg>
-						</compilerArgs>
-					</configuration>
-				</plugin>
-
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-checkstyle-plugin</artifactId>
-					<version>3.1.2</version>
-					<dependencies>
-						<dependency>
-							<groupId>com.puppycrawl.tools</groupId>
-							<artifactId>checkstyle</artifactId>
-							<!-- Note: match version with docs/flinkDev/ide_setup.md -->
-							<version>8.14</version>
-						</dependency>
-					</dependencies>
-					<executions>
-						<execution>
-							<id>validate</id>
-							<phase>validate</phase>
-							<goals>
-								<goal>check</goal>
-							</goals>
-						</execution>
-					</executions>
-					<configuration>
-						<suppressionsLocation>/tools/maven/suppressions.xml</suppressionsLocation>
-						<includeTestSourceDirectory>true</includeTestSourceDirectory>
-						<configLocation>/tools/maven/checkstyle.xml</configLocation>
-						<logViolationsToConsole>true</logViolationsToConsole>
-						<failOnViolation>true</failOnViolation>
-					</configuration>
-				</plugin>
-
-				<plugin>
-					<groupId>com.diffplug.spotless</groupId>
-					<artifactId>spotless-maven-plugin</artifactId>
-					<version>${spotless.version}</version>
-					<configuration>
-						<java>
-							<googleJavaFormat>
-								<version>1.7</version>
-								<style>AOSP</style>
-							</googleJavaFormat>
-
-							<!-- \# refers to the static imports -->
-							<importOrder>
-								<order>org.apache.flink,org.apache.flink.shaded,,javax,java,scala,\#</order>
-							</importOrder>
-
-							<removeUnusedImports />
-						</java>
-					</configuration>
-					<executions>
-						<execution>
-							<id>spotless-check</id>
-							<phase>validate</phase>
-							<goals>
-								<goal>check</goal>
-							</goals>
-						</execution>
-					</executions>
-				</plugin>
-
-
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-javadoc-plugin</artifactId>
-					<version>2.9.1</version><!--$NO-MVN-MAN-VER$-->
-					<configuration>
-						<quiet>true</quiet>
-						<detectOfflineLinks>false</detectOfflineLinks>
-						<additionalJOptions combine.children="append">
-							<additionalJOption>-Xdoclint:none</additionalJOption>
-						</additionalJOptions>
-					</configuration>
-				</plugin>
-
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-enforcer-plugin</artifactId>
-					<version>3.0.0-M1</version>
-				</plugin>
-
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-dependency-plugin</artifactId>
-					<version>3.2.0</version>
-					<configuration>
-						<ignoredUsedUndeclaredDependencies combine.children="append">
-							<!-- allow using transitive Flink dependencies for brevity -->
-							<dependency>org.apache.flink:*</dependency>
-						</ignoredUsedUndeclaredDependencies>
-						<ignoredUnusedDeclaredDependencies combine.children="append">
-							<!-- build dependency, required for shading; does not contain any classes -->
-							<dependency>org.apache.flink:force-shading</dependency>
-							<!-- compile dependencies; defined in root pom for brevity -->
-							<dependency>com.google.code.findbugs:jsr305</dependency>
-							<dependency>org.scala-lang:scala-compiler</dependency>
-							<!-- logging dependencies; defined in root pom for brevity
-									some modules may not use any logging, but that's not a problem
-									implementations are loaded via reflection and are always detected as unused -->
-							<dependency>org.slf4j:slf4j-api</dependency>
-							<!-- log4j1 -->
-							<dependency>log4j:log4j</dependency>
-							<dependency>org.slf4j:slf4j-log4j12</dependency>
-							<!-- log4j2 -->
-							<dependency>org.apache.logging.log4j:log4j-slf4j-impl</dependency>
-							<dependency>org.apache.logging.log4j:log4j-api</dependency>
-							<dependency>org.apache.logging.log4j:log4j-core</dependency>
-							<dependency>org.apache.logging.log4j:log4j-1.2-api</dependency>
-							<!-- test dependencies; defined in root pom for brevity -->
-							<dependency>org.apache.flink:flink-test-utils-junit</dependency>
-							<dependency>junit:junit</dependency>
-							<dependency>org.mockito:mockito-core</dependency>
-						</ignoredUnusedDeclaredDependencies>
-					</configuration>
-				</plugin>
-
-				<!-- Pin the version of the maven shade plugin -->
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-shade-plugin</artifactId>
-					<version>3.1.1</version>
-				</plugin>
-
-				<plugin>
-					<!-- Inherited from Apache parent, but not actually used. Disable to reduce noise. -->
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-site-plugin</artifactId>
-					<executions>
-						<execution>
-							<id>attach-descriptor</id>
-							<phase>none</phase>
-						</execution>
-					</executions>
-				</plugin>
-
-				<!-- Configuration for the binary compatibility checker -->
-				<plugin>
-					<groupId>io.github.zentol.japicmp</groupId>
-					<artifactId>japicmp-maven-plugin</artifactId>
-					<version>0.16.0_m325</version>
-					<configuration>
-						<oldVersion>
-							<dependency>
-								<groupId>org.apache.flink</groupId>
-								<artifactId>${project.artifactId}</artifactId>
-								<version>${japicmp.referenceVersion}</version>
-								<type>${project.packaging}</type>
-							</dependency>
-						</oldVersion>
-						<newVersion>
-							<file>
-								<path>${project.build.directory}/${project.artifactId}-${project.version}.${project.packaging}</path>
-							</file>
-						</newVersion>
-						<parameter>
-							<onlyModified>true</onlyModified>
-							<includes>
-								<include>@org.apache.flink.annotation.Public</include>
-								<!-- The following line is un-commented by tools/releasing/update_japicmp_configuration.sh
-								 	as part of the release process -->
-								<!--<include>@org.apache.flink.annotation.PublicEvolving</include>-->
-							</includes>
-							<excludes>
-								<exclude>@org.apache.flink.annotation.Experimental</exclude>
-								<exclude>@org.apache.flink.annotation.PublicEvolving</exclude>
-								<exclude>@org.apache.flink.annotation.Internal</exclude>
-							</excludes>
-							<accessModifier>public</accessModifier>
-							<breakBuildOnModifications>false</breakBuildOnModifications>
-							<breakBuildOnBinaryIncompatibleModifications>true</breakBuildOnBinaryIncompatibleModifications>
-							<breakBuildOnSourceIncompatibleModifications>true</breakBuildOnSourceIncompatibleModifications>
-							<onlyBinaryIncompatible>false</onlyBinaryIncompatible>
-							<includeSynthetic>true</includeSynthetic>
-							<ignoreMissingClasses>false</ignoreMissingClasses>
-							<skipPomModules>true</skipPomModules>
-							<!-- Don't break build on newly added maven modules -->
-							<ignoreNonResolvableArtifacts>true</ignoreNonResolvableArtifacts>
-						</parameter>
-						<projectBuildDir>${rootDir}/${japicmp.outputDir}/${project.artifactId}</projectBuildDir>
-						<dependencies>
-							<dependency>
-								<groupId>org.apache.flink</groupId>
-								<artifactId>flink-annotations</artifactId>
-								<version>${flink.version}</version>
-							</dependency>
-						</dependencies>
-					</configuration>
-					<executions>
-						<execution>
-							<phase>verify</phase>
-							<goals>
-								<goal>cmp</goal>
-							</goals>
-						</execution>
-					</executions>
-				</plugin>
-
-			</plugins>
-		</pluginManagement>
 	</build>
 </project>
