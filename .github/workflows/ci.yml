@@ -24,7 +24,7 @@ jobs:
     strategy:
       matrix:
         jdk: [8, 11]
-    timeout-minutes: 30
+    timeout-minutes: 40
     env:
       MVN_COMMON_OPTIONS: -U -B --no-transfer-progress
       MVN_CONNECTION_OPTIONS: -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.httpconnectionManager.ttlSeconds=120
@@ -54,7 +54,7 @@ jobs:
         run: wget -q -c ${{ env.FLINK_URL }} -O - | tar -xz
 
       - name: Compile and test flink-connector-elasticsearch
-        timeout-minutes: 20
+        timeout-minutes: 30
         run: |          
           set -o pipefail
 
