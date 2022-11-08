@@ -28,7 +28,8 @@ jobs:
     env:
       MVN_COMMON_OPTIONS: -U -B --no-transfer-progress
       MVN_CONNECTION_OPTIONS: -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.httpconnectionManager.ttlSeconds=120
-      FLINK_URL: https://s3.amazonaws.com/flink-nightly/flink-1.16-SNAPSHOT-bin-scala_2.12.tgz
+      FLINK_CACHE_DIR: "/tmp/cache/flink"
+      FLINK_URL: https://dist.apache.org/repos/dist/release/flink/flink-1.16.0/flink-1.16.0-bin-scala_2.12.tgz
       MVN_BUILD_OUTPUT_FILE: "/tmp/mvn_build_output.out"
       MVN_VALIDATION_DIR: "/tmp/flink-validation-deployment"
     steps:
@@ -49,8 +50,16 @@ jobs:
         with:
           maven-version: 3.8.6
 
+      - name: Cache Flink binary
+        uses: actions/cache@v3
+        id: cache-flink
+        with:
+          path: ${{ env.FLINK_CACHE_DIR }}
+          key: ${{ env.FLINK_URL }}
+
       - name: Download Flink binary
-        working-directory: ./..
+        working-directory: ${{ env.FLINK_CACHE_DIR }}
+        if: steps.cache-flink.outputs.cache-hit != 'true'
         run: wget -q -c ${{ env.FLINK_URL }} -O - | tar -xz
 
       - name: Compile and test flink-connector-elasticsearch
@@ -61,7 +70,7 @@ jobs:
           mvn clean deploy ${MVN_COMMON_OPTIONS} \
             -DaltDeploymentRepository=validation_repository::default::file:${{ env.MVN_VALIDATION_DIR }} \
             -Dscala-2.12 \
-            -Prun-end-to-end-tests -DdistDir=$(pwd)/../flink-1.16-SNAPSHOT \
+            -Prun-end-to-end-tests -DdistDir=${{ env.FLINK_CACHE_DIR }}/flink-1.16.0 \
             -Dflink.convergence.phase=install -Pcheck-convergence \
             ${{ env.MVN_CONNECTION_OPTIONS }} \
             -Dlog4j.configurationFile=file://$(pwd)/tools/ci/log4j.properties \
