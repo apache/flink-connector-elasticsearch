@@ -50,6 +50,9 @@ jobs:
         with:
           maven-version: 3.8.6
 
+      - name: Create cache dirs
+        run: mkdir -p ${{ env.FLINK_CACHE_DIR }}
+
       - name: Cache Flink binary
         uses: actions/cache@v3
         id: cache-flink
