@@ -16,8 +16,22 @@
 # limitations under the License.
 ################################################################################
 
-name: Build flink-connector-elasticsearch
-on: [push, pull_request]
+on:
+  workflow_call:
+    inputs:
+      flink_url:
+        description: "Url to Flink binary."
+        required: true
+        type: string
+      flink_version:
+        description: "Flink version to test against."
+        required: true
+        type: string
+      cache_flink_binary:
+        description: "Whether to cache the Flink binary. Should be false for SNAPSHOT URLs, true otherwise."
+        required: true
+        type: boolean
+
 jobs:
   compile_and_test:
     runs-on: ubuntu-latest
@@ -26,10 +40,9 @@ jobs:
         jdk: [8, 11]
     timeout-minutes: 40
     env:
-      MVN_COMMON_OPTIONS: -U -B --no-transfer-progress
+      MVN_COMMON_OPTIONS: -U -B --no-transfer-progress -Dflink.version=${{ inputs.flink_version }}
       MVN_CONNECTION_OPTIONS: -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.httpconnectionManager.ttlSeconds=120
       FLINK_CACHE_DIR: "/tmp/cache/flink"
-      FLINK_URL: https://dist.apache.org/repos/dist/release/flink/flink-1.16.0/flink-1.16.0-bin-scala_2.12.tgz
       MVN_BUILD_OUTPUT_FILE: "/tmp/mvn_build_output.out"
       MVN_VALIDATION_DIR: "/tmp/flink-validation-deployment"
     steps:
@@ -54,16 +67,17 @@ jobs:
         run: mkdir -p ${{ env.FLINK_CACHE_DIR }}
 
       - name: Cache Flink binary
+        if: ${{ inputs.cache_flink_binary == 'true' }}
         uses: actions/cache@v3
         id: cache-flink
         with:
           path: ${{ env.FLINK_CACHE_DIR }}
-          key: ${{ env.FLINK_URL }}
+          key: ${{ inputs.flink_url }}
 
       - name: Download Flink binary
         working-directory: ${{ env.FLINK_CACHE_DIR }}
         if: steps.cache-flink.outputs.cache-hit != 'true'
-        run: wget -q -c ${{ env.FLINK_URL }} -O - | tar -xz
+        run: wget -q -c ${{ inputs.flink_url }} -O - | tar -xz
 
       - name: Compile and test flink-connector-elasticsearch
         timeout-minutes: 30
@@ -73,7 +87,7 @@ jobs:
           mvn clean deploy ${MVN_COMMON_OPTIONS} \
             -DaltDeploymentRepository=validation_repository::default::file:${{ env.MVN_VALIDATION_DIR }} \
             -Dscala-2.12 \
-            -Prun-end-to-end-tests -DdistDir=${{ env.FLINK_CACHE_DIR }}/flink-1.16.0 \
+            -Prun-end-to-end-tests -DdistDir=${{ env.FLINK_CACHE_DIR }}/flink-${{ inputs.flink_version }} \
             -Dflink.convergence.phase=install -Pcheck-convergence \
             ${{ env.MVN_CONNECTION_OPTIONS }} \
             -Dlog4j.configurationFile=file://$(pwd)/tools/ci/log4j.properties \
