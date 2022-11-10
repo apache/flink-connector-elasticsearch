@@ -1,4 +1,3 @@
 [submodule "tools/releasing/shared"]
 	path = tools/releasing/shared
-	url = https://github.com/zentol/flink-connector-shared-utils
-	branch = release_utils
+	url = https://github.com/apache/flink-connector-shared-utils
