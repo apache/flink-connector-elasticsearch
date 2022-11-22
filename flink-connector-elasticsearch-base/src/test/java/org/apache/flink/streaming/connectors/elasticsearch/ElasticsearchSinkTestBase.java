@@ -27,9 +27,7 @@ import org.apache.flink.test.util.AbstractTestBase;
 import org.elasticsearch.client.RestHighLevelClient;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -46,30 +44,16 @@ public abstract class ElasticsearchSinkTestBase<C extends AutoCloseable, A>
 
     protected abstract RestHighLevelClient getClient();
 
-    protected abstract String getClusterName();
-
     /** Tests that the Elasticsearch sink works properly with json. */
     public void runElasticsearchSinkTest() throws Exception {
         runElasticSearchSinkTest(
                 "elasticsearch-sink-test-json-index", SourceSinkDataTestKit::getJsonSinkFunction);
     }
 
-    /** Tests that the Elasticsearch sink works properly with cbor. */
-    public void runElasticsearchSinkCborTest() throws Exception {
-        runElasticSearchSinkTest(
-                "elasticsearch-sink-test-cbor-index", SourceSinkDataTestKit::getCborSinkFunction);
-    }
-
     /** Tests that the Elasticsearch sink works properly with smile. */
     public void runElasticsearchSinkSmileTest() throws Exception {
         runElasticSearchSinkTest(
                 "elasticsearch-sink-test-smile-index", SourceSinkDataTestKit::getSmileSinkFunction);
-    }
-
-    /** Tests that the Elasticsearch sink works properly with yaml. */
-    public void runElasticsearchSinkYamlTest() throws Exception {
-        runElasticSearchSinkTest(
-                "elasticsearch-sink-test-yaml-index", SourceSinkDataTestKit::getYamlSinkFunction);
     }
 
     private void runElasticSearchSinkTest(
@@ -81,9 +65,7 @@ public abstract class ElasticsearchSinkTestBase<C extends AutoCloseable, A>
         DataStreamSource<Tuple2<Integer, String>> source =
                 env.addSource(new SourceSinkDataTestKit.TestDataSourceFunction());
 
-        source.addSink(
-                createElasticsearchSinkForEmbeddedNode(
-                        1, getClusterName(), functionFactory.apply(index)));
+        source.addSink(createElasticsearchSinkForEmbeddedNode(1, functionFactory.apply(index)));
 
         env.execute("Elasticsearch Sink Test");
 
@@ -103,10 +85,7 @@ public abstract class ElasticsearchSinkTestBase<C extends AutoCloseable, A>
         assertThatThrownBy(
                         () ->
                                 createElasticsearchSink(
-                                        1,
-                                        getClusterName(),
-                                        null,
-                                        SourceSinkDataTestKit.getJsonSinkFunction("test")))
+                                        1, null, SourceSinkDataTestKit.getJsonSinkFunction("test")))
                 .isInstanceOfAny(IllegalArgumentException.class, NullPointerException.class);
     }
 
@@ -118,7 +97,6 @@ public abstract class ElasticsearchSinkTestBase<C extends AutoCloseable, A>
                         () ->
                                 createElasticsearchSink(
                                         1,
-                                        getClusterName(),
                                         Collections.emptyList(),
                                         SourceSinkDataTestKit.getJsonSinkFunction("test")))
                 .isInstanceOf(IllegalArgumentException.class);
@@ -134,7 +112,6 @@ public abstract class ElasticsearchSinkTestBase<C extends AutoCloseable, A>
         source.addSink(
                 createElasticsearchSinkForNode(
                         1,
-                        "invalid-cluster-name",
                         SourceSinkDataTestKit.getJsonSinkFunction("test"),
                         "123.123.123.123")); // incorrect ip address
 
@@ -142,22 +119,9 @@ public abstract class ElasticsearchSinkTestBase<C extends AutoCloseable, A>
                 .isInstanceOf(JobExecutionException.class);
     }
 
-    /** Utility method to create a user config map. */
-    protected Map<String, String> createUserConfig(int bulkFlushMaxActions, String clusterName) {
-        Map<String, String> userConfig = new HashMap<>();
-        userConfig.put("cluster.name", clusterName);
-        userConfig.put(
-                ElasticsearchSinkBase.CONFIG_KEY_BULK_FLUSH_MAX_ACTIONS,
-                String.valueOf(bulkFlushMaxActions));
-        userConfig.put("transport.tcp.connect_timeout", "5s");
-
-        return userConfig;
-    }
-
     /** Creates a version-specific Elasticsearch sink, using arbitrary transport addresses. */
     protected abstract ElasticsearchSinkBase<Tuple2<Integer, String>, C> createElasticsearchSink(
             int bulkFlushMaxActions,
-            String clusterName,
             List<A> addresses,
             ElasticsearchSinkFunction<Tuple2<Integer, String>> elasticsearchSinkFunction);
 
@@ -166,14 +130,12 @@ public abstract class ElasticsearchSinkTestBase<C extends AutoCloseable, A>
      * node.
      *
      * <p>This case is singled out from {@link
-     * ElasticsearchSinkTestBase#createElasticsearchSink(int, String, List,
-     * ElasticsearchSinkFunction)} because the Elasticsearch Java API to do so is incompatible
-     * across different versions.
+     * ElasticsearchSinkTestBase#createElasticsearchSink(int, List, ElasticsearchSinkFunction)}
+     * because the Elasticsearch Java API to do so is incompatible across different versions.
      */
     protected abstract ElasticsearchSinkBase<Tuple2<Integer, String>, C>
             createElasticsearchSinkForEmbeddedNode(
                     int bulkFlushMaxActions,
-                    String clusterName,
                     ElasticsearchSinkFunction<Tuple2<Integer, String>> elasticsearchSinkFunction)
                     throws Exception;
 
@@ -183,7 +145,6 @@ public abstract class ElasticsearchSinkTestBase<C extends AutoCloseable, A>
     protected abstract ElasticsearchSinkBase<Tuple2<Integer, String>, C>
             createElasticsearchSinkForNode(
                     int bulkFlushMaxActions,
-                    String clusterName,
                     ElasticsearchSinkFunction<Tuple2<Integer, String>> elasticsearchSinkFunction,
                     String ipAddress)
                     throws Exception;

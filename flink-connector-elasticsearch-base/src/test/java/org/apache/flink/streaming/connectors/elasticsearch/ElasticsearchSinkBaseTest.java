@@ -593,7 +593,7 @@ public class ElasticsearchSinkBaseTest {
         private static final long serialVersionUID = -4272760730959041699L;
 
         @Override
-        public Client createClient(Map<String, String> clientConfig) {
+        public Client createClient() {
             return mock(Client.class);
         }
 

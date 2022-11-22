@@ -142,15 +142,6 @@ public abstract class ElasticsearchSinkBase<T, C extends AutoCloseable> extends 
     // ------------------------------------------------------------------------
 
     /**
-     * The config map that contains configuration for the bulk flushing behaviours.
-     *
-     * <p>For {@link org.elasticsearch.client.transport.TransportClient} based implementations, this
-     * config map would also contain Elasticsearch-shipped configuration, and therefore this config
-     * map would also be forwarded when creating the Elasticsearch client.
-     */
-    private final Map<String, String> userConfig;
-
-    /**
      * The function that is used to construct multiple {@link ActionRequest ActionRequests} from
      * each incoming element.
      */
@@ -296,8 +287,6 @@ public abstract class ElasticsearchSinkBase<T, C extends AutoCloseable> extends 
         } else {
             bulkProcessorFlushBackoffPolicy = null;
         }
-
-        this.userConfig = userConfig;
     }
 
     /**
@@ -313,7 +302,7 @@ public abstract class ElasticsearchSinkBase<T, C extends AutoCloseable> extends 
 
     @Override
     public void open(Configuration parameters) throws Exception {
-        client = callBridge.createClient(userConfig);
+        client = callBridge.createClient();
         callBridge.verifyClientConnection(client);
         bulkProcessor = buildBulkProcessor(new BulkProcessorListener());
         requestIndexer =

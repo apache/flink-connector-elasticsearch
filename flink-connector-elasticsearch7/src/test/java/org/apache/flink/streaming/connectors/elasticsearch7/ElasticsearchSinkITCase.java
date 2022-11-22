@@ -49,11 +49,6 @@ public class ElasticsearchSinkITCase
                     DockerImageVersions.ELASTICSEARCH_7, LOG);
 
     @Override
-    protected String getClusterName() {
-        return "docker-cluster";
-    }
-
-    @Override
     protected final RestHighLevelClient getClient() {
         return new RestHighLevelClient(
                 RestClient.builder(HttpHost.create(elasticsearchContainer.getHttpHostAddress())));
@@ -88,7 +83,6 @@ public class ElasticsearchSinkITCase
     protected ElasticsearchSinkBase<Tuple2<Integer, String>, RestHighLevelClient>
             createElasticsearchSink(
                     int bulkFlushMaxActions,
-                    String clusterName,
                     List<HttpHost> httpHosts,
                     ElasticsearchSinkFunction<Tuple2<Integer, String>> elasticsearchSinkFunction) {
 
@@ -103,12 +97,10 @@ public class ElasticsearchSinkITCase
     protected ElasticsearchSinkBase<Tuple2<Integer, String>, RestHighLevelClient>
             createElasticsearchSinkForEmbeddedNode(
                     int bulkFlushMaxActions,
-                    String clusterName,
                     ElasticsearchSinkFunction<Tuple2<Integer, String>> elasticsearchSinkFunction) {
 
         return createElasticsearchSinkForNode(
                 bulkFlushMaxActions,
-                clusterName,
                 elasticsearchSinkFunction,
                 elasticsearchContainer.getHttpHostAddress());
     }
@@ -117,7 +109,6 @@ public class ElasticsearchSinkITCase
     protected ElasticsearchSinkBase<Tuple2<Integer, String>, RestHighLevelClient>
             createElasticsearchSinkForNode(
                     int bulkFlushMaxActions,
-                    String clusterName,
                     ElasticsearchSinkFunction<Tuple2<Integer, String>> elasticsearchSinkFunction,
                     String hostAddress) {
 
