@@ -74,11 +74,6 @@ public class SourceSinkDataTestKit {
         }
     }
 
-    public static ElasticsearchSinkFunction<Tuple2<Integer, String>> getCborSinkFunction(
-            String index) {
-        return new TestElasticsearchSinkFunction(index, XContentFactory::cborBuilder);
-    }
-
     public static ElasticsearchSinkFunction<Tuple2<Integer, String>> getJsonSinkFunction(
             String index) {
         return new TestElasticsearchSinkFunction(index, XContentFactory::jsonBuilder);
@@ -87,11 +82,6 @@ public class SourceSinkDataTestKit {
     public static ElasticsearchSinkFunction<Tuple2<Integer, String>> getSmileSinkFunction(
             String index) {
         return new TestElasticsearchSinkFunction(index, XContentFactory::smileBuilder);
-    }
-
-    public static ElasticsearchSinkFunction<Tuple2<Integer, String>> getYamlSinkFunction(
-            String index) {
-        return new TestElasticsearchSinkFunction(index, XContentFactory::yamlBuilder);
     }
 
     private static class TestElasticsearchSinkFunction
