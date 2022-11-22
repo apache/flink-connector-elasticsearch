@@ -27,7 +27,6 @@ import javax.annotation.Nullable;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -49,10 +48,9 @@ public interface ElasticsearchApiCallBridge<C extends AutoCloseable> extends Ser
     /**
      * Creates an Elasticsearch client implementing {@link AutoCloseable}.
      *
-     * @param clientConfig The configuration to use when constructing the client.
      * @return The created client.
      */
-    C createClient(Map<String, String> clientConfig);
+    C createClient();
 
     /**
      * Creates a {@link BulkProcessor.Builder} for creating the bulk processor.

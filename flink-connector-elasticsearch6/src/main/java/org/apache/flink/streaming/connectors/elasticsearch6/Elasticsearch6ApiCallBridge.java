@@ -38,7 +38,6 @@ import javax.annotation.Nullable;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 /** Implementation of {@link ElasticsearchApiCallBridge} for Elasticsearch 6 and later versions. */
@@ -63,7 +62,7 @@ public class Elasticsearch6ApiCallBridge
     }
 
     @Override
-    public RestHighLevelClient createClient(Map<String, String> clientConfig) {
+    public RestHighLevelClient createClient() {
         RestClientBuilder builder =
                 RestClient.builder(httpHosts.toArray(new HttpHost[httpHosts.size()]));
         restClientFactory.configureRestClientBuilder(builder);
