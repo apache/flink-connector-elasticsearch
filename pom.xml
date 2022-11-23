@@ -317,6 +317,13 @@ under the License.
 
 			<!-- For dependency convergence  -->
 			<dependency>
+				<groupId>org.apache.commons</groupId>
+				<artifactId>commons-compress</artifactId>
+				<version>1.22</version>
+			</dependency>
+
+			<!-- For dependency convergence -->
+			<dependency>
 				<groupId>org.objenesis</groupId>
 				<artifactId>objenesis</artifactId>
 				<version>2.1</version>
