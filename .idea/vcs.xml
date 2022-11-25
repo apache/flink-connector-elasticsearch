@@ -13,7 +13,7 @@
 				</IssueNavigationLink>
 				<IssueNavigationLink>
 					<option name="issueRegexp" value="#(\d+)" />
-					<option name="linkRegexp" value="https://github.com/apache/flink/pull/$1" />
+					<option name="linkRegexp" value="https://github.com/apache/flink-connector-elasticsearch/pull/$1" />
 				</IssueNavigationLink>
 			</list>
 		</option>
