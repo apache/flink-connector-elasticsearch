@@ -65,13 +65,21 @@ import java.util.Map;
 import static org.apache.flink.streaming.connectors.elasticsearch.table.TestContext.context;
 import static org.apache.flink.table.api.Expressions.row;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.testcontainers.containers.wait.strategy.Wait.forHttp;
 
 /** IT tests for {@link Elasticsearch6DynamicSink}. */
 public class Elasticsearch6DynamicSinkITCase extends TestLogger {
 
     @ClassRule
     public static ElasticsearchContainer elasticsearchContainer =
-            new ElasticsearchContainer(DockerImageName.parse(DockerImageVersions.ELASTICSEARCH_6));
+            new ElasticsearchContainer(DockerImageName.parse(DockerImageVersions.ELASTICSEARCH_6))
+                    .waitingFor(
+                            forHttp(
+                                    "/")
+                                    .withMethod("HEAD")
+                                    .forStatusCode(200)
+                                    .forPort(9200)
+                                    .withStartupTimeout(Duration.ofMinutes(5)));
 
     @SuppressWarnings("deprecation")
     protected final RestHighLevelClient getClient() {
@@ -230,11 +238,8 @@ public class Elasticsearch6DynamicSinkITCase extends TestLogger {
 
     @Test
     public void testWritingDocumentsNoPrimaryKey() throws Exception {
-        EnvironmentSettings settings = EnvironmentSettings.inStreamingMode();
-        settings.getConfiguration().setString("restart-strategy", "fixed-delay");
-        settings.getConfiguration().setInteger("restart-strategy.fixed-delay.attempts", 3);
-        // default fixed delay is 1 seconds
-        TableEnvironment tableEnvironment = TableEnvironment.create(settings);
+        TableEnvironment tableEnvironment =
+                TableEnvironment.create(EnvironmentSettings.inStreamingMode());
 
         String index = "no-primary-key";
         String myType = "MyType";
