@@ -155,6 +155,20 @@ Connector Options
       </td>
     </tr>
     <tr>
+      <td><h5>sink.delivery-guarantee</h5></td>
+      <td>optional</td>
+      <td>no</td>
+      <td style="word-wrap: break-word;">AT_LEAST_ONCE</td>
+      <td>String</td>
+      <td>Optional delivery guarantee when committing. Valid values are:
+      <ul>
+        <li><code>EXACTLY_ONCE</code>: records are only delivered exactly-once also under failover scenarios.</li>
+        <li><code>AT_LEAST_ONCE</code>: records are ensured to be delivered but it may happen that the same record is delivered multiple times.</li>
+        <li><code>NONE</code>:  records are delivered on a best effort basis.</li>
+      </ul>
+      </td>
+    </tr>
+    <tr>
       <td><h5>sink.flush-on-checkpoint</h5></td>
       <td>optional</td>
       <td></td>
@@ -233,6 +247,30 @@ Connector Options
       <td style="word-wrap: break-word;">(none)</td>
       <td>String</td>
       <td>Prefix string to be added to every REST communication, e.g., <code>'/v1'</code>.</td>
+    </tr>
+    <tr>
+      <td><h5>connection.request-timeout</h5></td>
+      <td>optional</td>
+      <td>yes</td>
+      <td style="word-wrap: break-word;">(none)</td>
+      <td>Duration</td>
+      <td>The timeout for requesting a connection from the connection manager.</td>
+    </tr>
+    <tr>
+      <td><h5>connection.timeout</h5></td>
+      <td>optional</td>
+      <td>yes</td>
+      <td style="word-wrap: break-word;">(none)</td>
+      <td>Duration</td>
+      <td>The timeout for establishing a connection.</td>
+    </tr>
+    <tr>
+      <td><h5>socket.timeout</h5></td>
+      <td>optional</td>
+      <td>yes</td>
+      <td style="word-wrap: break-word;">(none)</td>
+      <td>Duration</td>
+      <td>The socket timeout (SO_TIMEOUT) for waiting for data or, put differently, a maximum period inactivity between two consecutive data packets.</td>
     </tr>
     <tr>
       <td><h5>format</h5></td>
