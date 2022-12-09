@@ -74,8 +74,7 @@ public class Elasticsearch6DynamicSinkITCase extends TestLogger {
     public static ElasticsearchContainer elasticsearchContainer =
             new ElasticsearchContainer(DockerImageName.parse(DockerImageVersions.ELASTICSEARCH_6))
                     .waitingFor(
-                            forHttp(
-                                    "/")
+                            forHttp("/")
                                     .withMethod("HEAD")
                                     .forStatusCode(200)
                                     .forPort(9200)
