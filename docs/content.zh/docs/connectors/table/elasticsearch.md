@@ -144,6 +144,19 @@ CREATE TABLE myUserTable (
       </td>
     </tr>
     <tr>
+      <td><h5>sink.delivery-guarantee</h5></td>
+      <td>optional</td>
+      <td style="word-wrap: break-word;">AT_LEAST_ONCE</td>
+      <td>String</td>
+      <td>Optional delivery guarantee when committing. Valid values are:
+      <ul>
+        <li><code>EXACTLY_ONCE</code>: records are only delivered exactly-once also under failover scenarios.</li>
+        <li><code>AT_LEAST_ONCE</code>: records are ensured to be delivered but it may happen that the same record is delivered multiple times.</li>
+        <li><code>NONE</code>:  records are delivered on a best effort basis.</li>
+      </ul>
+      </td>
+    </tr>
+    <tr>
       <td><h5>sink.flush-on-checkpoint</h5></td>
       <td>optional</td>
       <td style="word-wrap: break-word;">true</td>
