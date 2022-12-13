@@ -79,7 +79,7 @@ jobs:
         if: steps.cache-flink.outputs.cache-hit != 'true'
         run: wget -q -c ${{ inputs.flink_url }} -O - | tar -xz
 
-      - name: Compile and test flink-connector-elasticsearch
+      - name: Compile and test
         timeout-minutes: 30
         run: |          
           set -o pipefail
