@@ -78,7 +78,7 @@ public class Elasticsearch6DynamicSinkITCase extends TestLogger {
                                     .withMethod("HEAD")
                                     .forStatusCode(200)
                                     .forPort(9200)
-                                    .withStartupTimeout(Duration.ofMinutes(5)));
+                                    .withStartupTimeout(Duration.ofMinutes(2)));
 
     @SuppressWarnings("deprecation")
     protected final RestHighLevelClient getClient() {
