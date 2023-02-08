@@ -28,5 +28,3 @@ jobs:
     uses: ./.github/workflows/ci.yml
     with:
       flink_version: ${{ matrix.flink }}
-      flink_url: https://s3.amazonaws.com/flink-nightly/flink-${{ matrix.flink }}-bin-scala_2.12.tgz
-      cache_flink_binary: false
