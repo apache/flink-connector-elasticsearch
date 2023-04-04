@@ -57,7 +57,6 @@ under the License.
 		<junit4.version>4.13.2</junit4.version>
 		<junit5.version>5.8.1</junit5.version>
 		<assertj.version>3.21.0</assertj.version>
-		<archunit.version>0.22.0</archunit.version>
 		<testcontainers.version>1.17.2</testcontainers.version>
 		<mockito.version>2.21.0</mockito.version>
 
@@ -336,20 +335,6 @@ under the License.
 				<version>${testcontainers.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
-			</dependency>
-
-			<dependency>
-				<groupId>com.tngtech.archunit</groupId>
-				<artifactId>archunit</artifactId>
-				<version>${archunit.version}</version>
-				<scope>test</scope>
-			</dependency>
-
-			<dependency>
-				<groupId>com.tngtech.archunit</groupId>
-				<artifactId>archunit-junit5</artifactId>
-				<version>${archunit.version}</version>
-				<scope>test</scope>
 			</dependency>
 
 		</dependencies>
