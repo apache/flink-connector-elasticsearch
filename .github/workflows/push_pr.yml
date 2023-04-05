@@ -20,6 +20,6 @@ name: Build flink-connector-elasticsearch
 on: [push, pull_request]
 jobs:
   compile_and_test:
-    uses: ./.github/workflows/ci.yml
+    uses: apache/flink-connector-shared-utils/.github/workflows/ci.yml@ci_utils
     with:
       flink_version: 1.16.0
