@@ -42,11 +42,11 @@ under the License.
   <tbody>
     <tr>
         <td>6.x</td>
-        <td>{{< artifact flink-connector-elasticsearch6 >}}</td>
+        <td>{{< connector_artifact flink-connector-elasticsearch6 3.0.0 >}}</td>
     </tr>
     <tr>
         <td>7.x</td>
-        <td>{{< artifact flink-connector-elasticsearch7 >}}</td>
+        <td>{{< connector_artifact flink-connector-elasticsearch7 3.0.0 >}}</td>
     </tr>
   </tbody>
 </table>
