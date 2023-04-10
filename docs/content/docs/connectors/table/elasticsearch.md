@@ -38,7 +38,7 @@ If no primary key is defined on the DDL, the connector can only operate in appen
 Dependencies
 ------------
 
-{{< sql_download_table "elastic" >}}
+{{< sql_connector_download_table "elastic" 3.0.0 >}}
 
 The Elasticsearch connector is not part of the binary distribution.
 See how to link with it for cluster execution [here]({{< ref "docs/dev/configuration/overview" >}}).
