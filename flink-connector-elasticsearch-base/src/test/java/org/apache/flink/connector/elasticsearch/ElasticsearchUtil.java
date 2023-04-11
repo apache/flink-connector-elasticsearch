@@ -29,6 +29,8 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 import org.testcontainers.utility.DockerImageName;
 
+import java.util.Optional;
+
 /** Collection of utility methods for Elasticsearch tests. */
 @Internal
 public class ElasticsearchUtil {
@@ -87,6 +89,10 @@ public class ElasticsearchUtil {
         public DynamicTableSink.DataStructureConverter createDataStructureConverter(
                 DataType consumedDataType) {
             return null;
+        }
+
+        public Optional<int[][]> getTargetColumns() {
+            return Optional.empty();
         }
     }
 }
