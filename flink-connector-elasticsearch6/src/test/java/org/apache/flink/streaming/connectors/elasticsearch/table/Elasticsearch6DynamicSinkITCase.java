@@ -61,6 +61,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.apache.flink.streaming.connectors.elasticsearch.table.TestContext.context;
 import static org.apache.flink.table.api.Expressions.row;
@@ -401,6 +402,10 @@ public class Elasticsearch6DynamicSinkITCase extends TestLogger {
         public DynamicTableSink.DataStructureConverter createDataStructureConverter(
                 DataType consumedDataType) {
             return null;
+        }
+
+        public Optional<int[][]> getTargetColumns() {
+            return Optional.empty();
         }
     }
 }

@@ -43,6 +43,7 @@ import org.mockito.Mockito;
 
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
@@ -270,6 +271,10 @@ public class Elasticsearch6DynamicSinkTest extends TestLogger {
         public DynamicTableSink.DataStructureConverter createDataStructureConverter(
                 DataType consumedDataType) {
             return null;
+        }
+
+        public Optional<int[][]> getTargetColumns() {
+            return Optional.empty();
         }
     }
 
