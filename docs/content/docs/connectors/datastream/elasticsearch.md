@@ -53,7 +53,7 @@ of the Elasticsearch installation:
   </tbody>
 </table>
 
-{{< py_download_link "elastic" >}}
+{{< py_connector_download_link "elastic" 3.0.0 >}}
 
 Note that the streaming connectors are currently not part of the binary
 distribution. See [here]({{< ref "docs/dev/configuration/overview" >}}) for information
