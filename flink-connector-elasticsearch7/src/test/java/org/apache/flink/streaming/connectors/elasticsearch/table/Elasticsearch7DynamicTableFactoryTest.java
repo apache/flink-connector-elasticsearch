@@ -20,6 +20,7 @@ package org.apache.flink.streaming.connectors.elasticsearch.table;
 
 import org.apache.flink.api.common.typeutils.base.VoidSerializer;
 import org.apache.flink.table.api.DataTypes;
+import org.apache.flink.table.api.TableSchema;
 import org.apache.flink.table.api.ValidationException;
 import org.apache.flink.table.catalog.Column;
 import org.apache.flink.table.catalog.ResolvedSchema;
@@ -76,6 +77,91 @@ public class Elasticsearch7DynamicTableFactoryTest extends TestLogger {
                 "Could not parse host 'wrong-host' in option 'hosts'. It should follow the format 'http://host_name:port'.");
         sinkFactory.createDynamicTableSink(
                 context().withOption("index", "MyIndex").withOption("hosts", "wrong-host").build());
+    }
+
+    @Test
+    public void validateWrongScrollMaxSize() {
+        Elasticsearch7DynamicTableFactory tableFactory = new Elasticsearch7DynamicTableFactory();
+
+        thrown.expect(ValidationException.class);
+        thrown.expectMessage(
+                "'scan.scroll.max-size' must be at least 1. Got: 0");
+        tableFactory.createDynamicTableSource(
+                context()
+                        .withSchema(ResolvedSchema.of(Column.physical("a", DataTypes.TIME())))
+                        .withOption(ElasticsearchConnectorOptions.INDEX_OPTION.key(), "MyIndex")
+                        .withOption(ElasticsearchConnectorOptions.HOSTS_OPTION.key(), "http://localhost:1234")
+                        .withOption(ElasticsearchConnectorOptions.SCROLL_MAX_SIZE_OPTION.key(), "0")
+                        .build()
+        );
+    }
+
+    @Test
+    public void validateWrongScrollTimeout() {
+        Elasticsearch7DynamicTableFactory tableFactory = new Elasticsearch7DynamicTableFactory();
+
+        thrown.expect(ValidationException.class);
+        thrown.expectMessage(
+                "'scan.scroll.timeout' must be at least 1. Got: 0");
+        tableFactory.createDynamicTableSource(
+                context()
+                        .withSchema(ResolvedSchema.of(Column.physical("a", DataTypes.TIME())))
+                        .withOption(ElasticsearchConnectorOptions.INDEX_OPTION.key(), "MyIndex")
+                        .withOption(ElasticsearchConnectorOptions.HOSTS_OPTION.key(), "http://localhost:1234")
+                        .withOption(ElasticsearchConnectorOptions.SCROLL_TIMEOUT_OPTION.key(), "0")
+                        .build()
+        );
+    }
+
+    @Test
+    public void validateWrongCacheMaxSize() {
+        Elasticsearch7DynamicTableFactory tableFactory = new Elasticsearch7DynamicTableFactory();
+
+        thrown.expect(ValidationException.class);
+        thrown.expectMessage(
+                "'lookup.cache.max-rows' must be at least 1. Got: 0");
+        tableFactory.createDynamicTableSource(
+                context()
+                        .withSchema(ResolvedSchema.of(Column.physical("a", DataTypes.TIME())))
+                        .withOption(ElasticsearchConnectorOptions.INDEX_OPTION.key(), "MyIndex")
+                        .withOption(ElasticsearchConnectorOptions.HOSTS_OPTION.key(), "http://localhost:1234")
+                        .withOption(ElasticsearchConnectorOptions.LOOKUP_CACHE_MAX_ROWS.key(), "0")
+                        .build()
+        );
+    }
+
+    @Test
+    public void validateWrongCacheTTL() {
+        Elasticsearch7DynamicTableFactory tableFactory = new Elasticsearch7DynamicTableFactory();
+
+        thrown.expect(ValidationException.class);
+        thrown.expectMessage(
+                "'lookup.cache.ttl' must be at least 1. Got: 0");
+        tableFactory.createDynamicTableSource(
+                context()
+                        .withSchema(ResolvedSchema.of(Column.physical("a", DataTypes.TIME())))
+                        .withOption(ElasticsearchConnectorOptions.INDEX_OPTION.key(), "MyIndex")
+                        .withOption(ElasticsearchConnectorOptions.HOSTS_OPTION.key(), "http://localhost:1234")
+                        .withOption(ElasticsearchConnectorOptions.LOOKUP_CACHE_TTL.key(), "0")
+                        .build()
+        );
+    }
+
+    @Test
+    public void validateWrongMaxRetries() {
+        Elasticsearch7DynamicTableFactory tableFactory = new Elasticsearch7DynamicTableFactory();
+
+        thrown.expect(ValidationException.class);
+        thrown.expectMessage(
+                "'lookup.max-retries' must be at least 1. Got: 0");
+        tableFactory.createDynamicTableSource(
+                context()
+                        .withSchema(ResolvedSchema.of(Column.physical("a", DataTypes.TIME())))
+                        .withOption(ElasticsearchConnectorOptions.INDEX_OPTION.key(), "MyIndex")
+                        .withOption(ElasticsearchConnectorOptions.HOSTS_OPTION.key(), "http://localhost:1234")
+                        .withOption(ElasticsearchConnectorOptions.LOOKUP_MAX_RETRIES.key(), "0")
+                        .build()
+        );
     }
 
     @Test
