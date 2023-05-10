@@ -37,6 +37,7 @@ import org.apache.flink.table.data.StringData;
 import org.apache.flink.table.data.TimestampData;
 import org.apache.flink.table.types.DataType;
 import org.apache.flink.table.types.logical.LogicalType;
+import org.apache.flink.test.util.AbstractTestBase;
 import org.apache.flink.types.RowKind;
 import org.apache.flink.util.TestLogger;
 
@@ -63,22 +64,15 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 
+import static org.apache.flink.streaming.connectors.elasticsearch.table.Elasticsearch7DynamicTableTestBase.elasticsearchContainer;
 import static org.apache.flink.streaming.connectors.elasticsearch.table.TestContext.context;
 import static org.apache.flink.table.api.Expressions.row;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /** IT tests for {@link Elasticsearch7DynamicSink}. */
-public class Elasticsearch7DynamicSinkITCase extends TestLogger {
+public class Elasticsearch7DynamicSinkITCase extends Elasticsearch7DynamicTableTestBase {
 
-    @ClassRule
-    public static ElasticsearchContainer elasticsearchContainer =
-            new ElasticsearchContainer(DockerImageName.parse(DockerImageVersions.ELASTICSEARCH_7));
 
-    @SuppressWarnings("deprecation")
-    protected final RestHighLevelClient getClient() {
-        return new RestHighLevelClient(
-                RestClient.builder(HttpHost.create(elasticsearchContainer.getHttpHostAddress())));
-    }
 
     @Test
     public void testWritingDocuments() throws Exception {
@@ -107,7 +101,7 @@ public class Elasticsearch7DynamicSinkITCase extends TestLogger {
                                 LocalDateTime.parse("2012-12-12T12:12:12")));
 
         String index = "writing-documents";
-        Elasticsearch7DynamicSinkFactory sinkFactory = new Elasticsearch7DynamicSinkFactory();
+        Elasticsearch7DynamicTableFactory sinkFactory = new Elasticsearch7DynamicTableFactory();
 
         SinkFunctionProvider sinkRuntimeProvider =
                 (SinkFunctionProvider)

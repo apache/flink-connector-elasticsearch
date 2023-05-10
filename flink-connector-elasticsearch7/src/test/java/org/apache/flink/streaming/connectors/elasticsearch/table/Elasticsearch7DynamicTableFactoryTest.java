@@ -35,13 +35,13 @@ import java.util.Collections;
 
 import static org.apache.flink.streaming.connectors.elasticsearch.table.TestContext.context;
 
-/** Tests for validation in {@link Elasticsearch7DynamicSinkFactory}. */
-public class Elasticsearch7DynamicSinkFactoryTest extends TestLogger {
+/** Tests for validation in {@link Elasticsearch7DynamicTableFactory}. */
+public class Elasticsearch7DynamicTableFactoryTest extends TestLogger {
     @Rule public ExpectedException thrown = ExpectedException.none();
 
     @Test
     public void validateEmptyConfiguration() {
-        Elasticsearch7DynamicSinkFactory sinkFactory = new Elasticsearch7DynamicSinkFactory();
+        Elasticsearch7DynamicTableFactory sinkFactory = new Elasticsearch7DynamicTableFactory();
 
         thrown.expect(ValidationException.class);
         thrown.expectMessage(
@@ -56,7 +56,7 @@ public class Elasticsearch7DynamicSinkFactoryTest extends TestLogger {
 
     @Test
     public void validateWrongIndex() {
-        Elasticsearch7DynamicSinkFactory sinkFactory = new Elasticsearch7DynamicSinkFactory();
+        Elasticsearch7DynamicTableFactory sinkFactory = new Elasticsearch7DynamicTableFactory();
 
         thrown.expect(ValidationException.class);
         thrown.expectMessage("'index' must not be empty");
@@ -69,7 +69,7 @@ public class Elasticsearch7DynamicSinkFactoryTest extends TestLogger {
 
     @Test
     public void validateWrongHosts() {
-        Elasticsearch7DynamicSinkFactory sinkFactory = new Elasticsearch7DynamicSinkFactory();
+        Elasticsearch7DynamicTableFactory sinkFactory = new Elasticsearch7DynamicTableFactory();
 
         thrown.expect(ValidationException.class);
         thrown.expectMessage(
@@ -80,7 +80,7 @@ public class Elasticsearch7DynamicSinkFactoryTest extends TestLogger {
 
     @Test
     public void validateWrongFlushSize() {
-        Elasticsearch7DynamicSinkFactory sinkFactory = new Elasticsearch7DynamicSinkFactory();
+        Elasticsearch7DynamicTableFactory sinkFactory = new Elasticsearch7DynamicTableFactory();
 
         thrown.expect(ValidationException.class);
         thrown.expectMessage(
@@ -99,7 +99,7 @@ public class Elasticsearch7DynamicSinkFactoryTest extends TestLogger {
 
     @Test
     public void validateWrongRetries() {
-        Elasticsearch7DynamicSinkFactory sinkFactory = new Elasticsearch7DynamicSinkFactory();
+        Elasticsearch7DynamicTableFactory sinkFactory = new Elasticsearch7DynamicTableFactory();
 
         thrown.expect(ValidationException.class);
         thrown.expectMessage("'sink.bulk-flush.backoff.max-retries' must be at least 1. Got: 0");
@@ -118,7 +118,7 @@ public class Elasticsearch7DynamicSinkFactoryTest extends TestLogger {
 
     @Test
     public void validateWrongMaxActions() {
-        Elasticsearch7DynamicSinkFactory sinkFactory = new Elasticsearch7DynamicSinkFactory();
+        Elasticsearch7DynamicTableFactory sinkFactory = new Elasticsearch7DynamicTableFactory();
 
         thrown.expect(ValidationException.class);
         thrown.expectMessage("'sink.bulk-flush.max-actions' must be at least 1. Got: -2");
@@ -136,7 +136,7 @@ public class Elasticsearch7DynamicSinkFactoryTest extends TestLogger {
 
     @Test
     public void validateWrongBackoffDelay() {
-        Elasticsearch7DynamicSinkFactory sinkFactory = new Elasticsearch7DynamicSinkFactory();
+        Elasticsearch7DynamicTableFactory sinkFactory = new Elasticsearch7DynamicTableFactory();
 
         thrown.expect(ValidationException.class);
         thrown.expectMessage("Invalid value for option 'sink.bulk-flush.backoff.delay'.");
@@ -154,7 +154,7 @@ public class Elasticsearch7DynamicSinkFactoryTest extends TestLogger {
 
     @Test
     public void validatePrimaryKeyOnIllegalColumn() {
-        Elasticsearch7DynamicSinkFactory sinkFactory = new Elasticsearch7DynamicSinkFactory();
+        Elasticsearch7DynamicTableFactory sinkFactory = new Elasticsearch7DynamicTableFactory();
 
         thrown.expect(ValidationException.class);
         thrown.expectMessage(
@@ -216,7 +216,7 @@ public class Elasticsearch7DynamicSinkFactoryTest extends TestLogger {
 
     @Test
     public void validateWrongCredential() {
-        Elasticsearch7DynamicSinkFactory sinkFactory = new Elasticsearch7DynamicSinkFactory();
+        Elasticsearch7DynamicTableFactory sinkFactory = new Elasticsearch7DynamicTableFactory();
 
         thrown.expect(ValidationException.class);
         thrown.expectMessage(

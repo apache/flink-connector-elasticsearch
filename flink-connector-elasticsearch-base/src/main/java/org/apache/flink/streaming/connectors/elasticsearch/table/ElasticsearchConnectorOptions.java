@@ -77,6 +77,19 @@ public class ElasticsearchConnectorOptions {
                     .withDescription(
                             "Delimiter for composite keys e.g., \"$\" would result in IDs \"KEY1$KEY2$KEY3\".");
 
+    // elasticsearch source config options
+    public static final ConfigOption<Integer> SCROLL_MAX_SIZE_OPTION =
+            ConfigOptions.key("scan.scroll.max-size")
+                    .intType()
+                    .noDefaultValue()
+                    .withDescription("Maximum number of hits to be returned with each Elasticsearch scroll request");
+
+    public static final ConfigOption<Duration> SCROLL_TIMEOUT_OPTION =
+            ConfigOptions.key("scan.scroll.timeout")
+                    .durationType()
+                    .noDefaultValue()
+                    .withDescription("Amount of time Elasticsearch will keep the search context alive for scroll requests");
+
     public static final ConfigOption<String> FAILURE_HANDLER_OPTION =
             ConfigOptions.key("failure-handler")
                     .stringType()
@@ -152,6 +165,24 @@ public class ElasticsearchConnectorOptions {
                             "The format must produce a valid JSON document. "
                                     + "Please refer to the documentation on formats for more details.");
 
+    // look up config options
+    public static final ConfigOption<Long> LOOKUP_CACHE_MAX_ROWS = ConfigOptions
+            .key("lookup.cache.max-rows")
+            .longType()
+            .defaultValue(-1L)
+            .withDescription("the max number of rows of lookup cache, over this value, the oldest rows will " +
+                    "be eliminated. \"cache.max-rows\" and \"cache.ttl\" options must all be specified if any of them is " +
+                    "specified. Cache is not enabled as default.");
+    public static final ConfigOption<Duration> LOOKUP_CACHE_TTL = ConfigOptions
+            .key("lookup.cache.ttl")
+            .durationType()
+            .defaultValue(Duration.ofSeconds(10))
+            .withDescription("the cache time to live.");
+    public static final ConfigOption<Integer> LOOKUP_MAX_RETRIES = ConfigOptions
+            .key("lookup.max-retries")
+            .intType()
+            .defaultValue(3)
+            .withDescription("the max retry times if lookup database failed.");
     // --------------------------------------------------------------------------------------------
     // Enums
     // --------------------------------------------------------------------------------------------

@@ -45,7 +45,7 @@ import java.util.Map;
 
 /** IT cases for the {@link ElasticsearchSink}. */
 public class ElasticsearchSinkITCase<T>
-        extends ElasticsearchSinkTestBase<RestHighLevelClient, HttpHost> {
+        extends ElasticsearchSinkTestBase<T, RestHighLevelClient, HttpHost> {
 
     private static final Logger LOG = LoggerFactory.getLogger(ElasticsearchSinkITCase.class);
 
@@ -59,6 +59,7 @@ public class ElasticsearchSinkITCase<T>
         return new RestHighLevelClient(
                 RestClient.builder(HttpHost.create(elasticsearchContainer.getHttpHostAddress())));
     }
+
 
     @Test
     public void testElasticsearchSink() throws Exception {
@@ -95,7 +96,7 @@ public class ElasticsearchSinkITCase<T>
     protected ElasticsearchSinkBase<Tuple2<Integer, String>, RestHighLevelClient>
             createElasticsearchSink(
             int bulkFlushMaxActions,
-            List httpHosts,
+            List<HttpHost> httpHosts,
             ElasticsearchSinkFunction<Tuple2<Integer, String>> elasticsearchSinkFunction) {
 
         ElasticsearchSink.Builder<Tuple2<Integer, String>> builder =
@@ -107,7 +108,7 @@ public class ElasticsearchSinkITCase<T>
 
     protected ElasticSearchInputFormatBase createElasticsearchInputFormat(
             Map<String, String> userConfig,
-            DeserializationSchema<RestHighLevelClient> deserializationSchema,
+            DeserializationSchema<T> deserializationSchema,
             String[] fieldNames,
             String index,
             String type,

@@ -19,6 +19,7 @@
 package org.apache.flink.streaming.connectors.elasticsearch.table;
 
 import org.apache.flink.annotation.Internal;
+import org.apache.flink.api.common.serialization.DeserializationSchema;
 import org.apache.flink.api.common.serialization.SerializationSchema;
 import org.apache.flink.configuration.ConfigOption;
 import org.apache.flink.configuration.Configuration;
@@ -26,10 +27,15 @@ import org.apache.flink.configuration.ReadableConfig;
 import org.apache.flink.table.api.TableSchema;
 import org.apache.flink.table.api.ValidationException;
 import org.apache.flink.table.api.config.TableConfigOptions;
+import org.apache.flink.table.catalog.ResolvedSchema;
+import org.apache.flink.table.connector.format.DecodingFormat;
 import org.apache.flink.table.connector.format.EncodingFormat;
 import org.apache.flink.table.connector.sink.DynamicTableSink;
+import org.apache.flink.table.connector.source.DynamicTableSource;
 import org.apache.flink.table.data.RowData;
+import org.apache.flink.table.factories.DeserializationFormatFactory;
 import org.apache.flink.table.factories.DynamicTableSinkFactory;
+import org.apache.flink.table.factories.DynamicTableSourceFactory;
 import org.apache.flink.table.factories.FactoryUtil;
 import org.apache.flink.table.factories.SerializationFormatFactory;
 import org.apache.flink.table.utils.TableSchemaUtils;
@@ -54,16 +60,23 @@ import static org.apache.flink.streaming.connectors.elasticsearch.table.Elastics
 import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.HOSTS_OPTION;
 import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.INDEX_OPTION;
 import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.KEY_DELIMITER_OPTION;
+import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.LOOKUP_CACHE_MAX_ROWS;
+import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.LOOKUP_CACHE_TTL;
+import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.LOOKUP_MAX_RETRIES;
 import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.PASSWORD_OPTION;
+import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.SCROLL_MAX_SIZE_OPTION;
+import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.SCROLL_TIMEOUT_OPTION;
 import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.USERNAME_OPTION;
 
 /** A {@link DynamicTableSinkFactory} for discovering {@link Elasticsearch7DynamicSink}. */
 @Internal
-public class Elasticsearch7DynamicSinkFactory implements DynamicTableSinkFactory {
+public class Elasticsearch7DynamicTableFactory implements DynamicTableSourceFactory, DynamicTableSinkFactory {
     private static final Set<ConfigOption<?>> requiredOptions =
             Stream.of(HOSTS_OPTION, INDEX_OPTION).collect(Collectors.toSet());
     private static final Set<ConfigOption<?>> optionalOptions =
             Stream.of(
+                            SCROLL_MAX_SIZE_OPTION,
+                            SCROLL_TIMEOUT_OPTION,
                             KEY_DELIMITER_OPTION,
                             FAILURE_HANDLER_OPTION,
                             FLUSH_ON_CHECKPOINT_OPTION,
@@ -75,9 +88,28 @@ public class Elasticsearch7DynamicSinkFactory implements DynamicTableSinkFactory
                             BULK_FLUSH_BACKOFF_DELAY_OPTION,
                             CONNECTION_PATH_PREFIX,
                             FORMAT_OPTION,
+                            LOOKUP_CACHE_MAX_ROWS,
+                            LOOKUP_CACHE_TTL,
+                            LOOKUP_MAX_RETRIES,
                             PASSWORD_OPTION,
                             USERNAME_OPTION)
                     .collect(Collectors.toSet());
+
+    @Override
+    public DynamicTableSource createDynamicTableSource(Context context) {
+
+        TableSchema schema = context.getCatalogTable().getSchema();
+        final FactoryUtil.TableFactoryHelper helper = FactoryUtil.createTableFactoryHelper(this, context);
+        final DecodingFormat<DeserializationSchema<RowData>> format = helper.discoverDecodingFormat(
+                DeserializationFormatFactory.class, FORMAT_OPTION);
+        helper.validate();
+        Configuration configuration = new Configuration();
+        context.getCatalogTable().getOptions().forEach(configuration::setString);
+        Elasticsearch7Configuration config = new Elasticsearch7Configuration(configuration, context.getClassLoader());
+
+        return new Elasticsearch7DynamicSource(format, config, TableSchemaUtils.getPhysicalSchema(schema),
+                new ElasticsearchLookupOptions.Builder().build());
+    }
 
     @Override
     public DynamicTableSink createDynamicTableSink(Context context) {
@@ -161,6 +193,48 @@ public class Elasticsearch7DynamicSinkFactory implements DynamicTableSinkFactory
         }
     }
 
+    private void validateSource(Elasticsearch7Configuration config, Configuration originalConfiguration) {
+        config.getHosts(); // validate hosts
+        validate(
+                config.getIndex().length() >= 1,
+                () -> String.format("'%s' must not be empty", INDEX_OPTION.key()));
+        validate(
+                config.getScrollMaxSize().map(scrollMaxSize -> scrollMaxSize >= 1).orElse(true),
+                () -> String.format(
+                        "'%s' must be at least 1. Got: %s",
+                        SCROLL_MAX_SIZE_OPTION.key(),
+                        config.getScrollMaxSize().get())
+        );
+        validate(config.getScrollTimeout().map(scrollTimeout -> scrollTimeout >= 1).orElse(true),
+                () -> String.format(
+                        "'%s' must be at least 1. Got: %s",
+                        SCROLL_TIMEOUT_OPTION.key(),
+                        config.getScrollTimeout().get())
+        );
+        long cacheMaxSize = config.getCacheMaxSize();
+        validate(
+                cacheMaxSize == -1 || cacheMaxSize >= 1,
+                () -> String.format(
+                        "'%s' must be at least 1. Got: %s",
+                        LOOKUP_CACHE_MAX_ROWS.key(),
+                        cacheMaxSize)
+        );
+        validate(
+                config.getCacheExpiredMs().getSeconds() >= 1,
+                () -> String.format(
+                        "'%s' must be at least 1. Got: %s",
+                        LOOKUP_CACHE_TTL.key(),
+                        config.getCacheExpiredMs().getSeconds())
+        );
+        validate(
+                config.getMaxRetryTimes() >= 1,
+                () -> String.format(
+                        "'%s' must be at least 1. Got: %s",
+                        LOOKUP_MAX_RETRIES.key(),
+                        config.getMaxRetryTimes())
+        );
+    }
+
     private static void validate(boolean condition, Supplier<String> message) {
         if (!condition) {
             throw new ValidationException(message.get());
@@ -181,4 +255,5 @@ public class Elasticsearch7DynamicSinkFactory implements DynamicTableSinkFactory
     public Set<ConfigOption<?>> optionalOptions() {
         return optionalOptions;
     }
+
 }
