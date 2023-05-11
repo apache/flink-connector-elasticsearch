@@ -16,6 +16,7 @@
 # limitations under the License.
 ################################################################################
 
+version: 4.0.0-SNAPSHOT
 variants:
   - maven: flink-connector-elasticsearch6
     sql_url: https://repo.maven.apache.org/maven2/org/apache/flink/flink-sql-connector-elasticsearch6/$full_version/flink-sql-connector-elasticsearch6-$full_version.jar

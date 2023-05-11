@@ -44,16 +44,16 @@ of the Elasticsearch installation:
   <tbody>
     <tr>
         <td>6.x</td>
-        <td>{{< connector_artifact flink-connector-elasticsearch6 3.0.0 >}}</td>
+        <td>{{< connector_artifact flink-connector-elasticsearch6 elastic >}}</td>
     </tr>
     <tr>
         <td>7.x</td>
-        <td>{{< connector_artifact flink-connector-elasticsearch7 3.0.0 >}}</td>
+        <td>{{< connector_artifact flink-connector-elasticsearch7 elastic >}}</td>
     </tr>
   </tbody>
 </table>
 
-{{< py_connector_download_link "elastic" 3.0.0 >}}
+{{< py_connector_download_link "elastic" >}}
 
 Note that the streaming connectors are currently not part of the binary
 distribution. See [here]({{< ref "docs/dev/configuration/overview" >}}) for information
