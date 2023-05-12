@@ -16,7 +16,14 @@ import org.apache.flink.table.connector.source.TableFunctionProvider;
 import org.apache.flink.table.connector.source.abilities.SupportsProjectionPushDown;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.types.DataType;
+import org.apache.flink.table.types.FieldsDataType;
+import org.apache.flink.table.types.logical.RowType;
+import org.apache.flink.table.types.utils.DataTypeUtils;
+import org.apache.flink.table.utils.TableSchemaUtils;
 import org.apache.flink.util.Preconditions;
+
+import static org.apache.flink.table.utils.TableSchemaUtils.containsPhysicalColumnsOnly;
+import static org.apache.flink.util.Preconditions.checkArgument;
 
 @Internal
 public class Elasticsearch7DynamicSource implements ScanTableSource, LookupTableSource,
@@ -95,5 +102,26 @@ public class Elasticsearch7DynamicSource implements ScanTableSource, LookupTable
     @Override
     public boolean supportsNestedProjection() {
         return false;
+    }
+
+    @Override
+    public void applyProjection(int[][] projectedFields) {
+        this.physicalSchema = projectSchema(physicalSchema, projectedFields);
+    }
+
+    public static TableSchema projectSchema(TableSchema tableSchema, int[][] projectedFields) {
+        checkArgument(
+                containsPhysicalColumnsOnly(tableSchema),
+                "Projection is only supported for physical columns.");
+        TableSchema.Builder builder = TableSchema.builder();
+
+        FieldsDataType fields =
+                (FieldsDataType)
+                        DataTypeUtils.projectRow(tableSchema.toRowDataType(), projectedFields);
+        RowType topFields = (RowType) fields.getLogicalType();
+        for (int i = 0; i < topFields.getFieldCount(); i++) {
+            builder.field(topFields.getFieldNames().get(i), fields.getChildren().get(i));
+        }
+        return builder.build();
     }
 }
