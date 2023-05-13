@@ -222,42 +222,42 @@ public class Elasticsearch7DynamicSource
             ValueLiteralExpression value = (ValueLiteralExpression) valueLiteralExpression;
             FieldReferenceExpression field = (FieldReferenceExpression) fieldReferenceExpression;
             if (functionDefinition.equals(BuiltInFunctionDefinitions.AND)) {
-               boolQueryBuilder.must(QueryBuilders.wildcardQuery(field.getName(),  value.asSummaryString()));
+               boolQueryBuilder = boolQueryBuilder.must(QueryBuilders.wildcardQuery(field.getName(),  value.asSummaryString()));
             }
 
             if (functionDefinition.equals(BuiltInFunctionDefinitions.OR)) {
-               boolQueryBuilder.should(QueryBuilders.wildcardQuery(field.getName(),  value.asSummaryString()));
+               boolQueryBuilder = boolQueryBuilder.should(QueryBuilders.wildcardQuery(field.getName(),  value.asSummaryString()));
             }
 
             if (functionDefinition.equals(BuiltInFunctionDefinitions.NOT)) {
-                boolQueryBuilder.mustNot(QueryBuilders.wildcardQuery(field.getName(),  value.asSummaryString()));
+                boolQueryBuilder = boolQueryBuilder.mustNot(QueryBuilders.wildcardQuery(field.getName(),  value.asSummaryString()));
             }
 
             if (functionDefinition.equals(BuiltInFunctionDefinitions.LESS_THAN)) {
                 RangeQueryBuilder rangeQueryBuilder = QueryBuilders.rangeQuery(field.getName())
                         .gte(value.asSummaryString());
-                boolQueryBuilder.must(rangeQueryBuilder);
+                boolQueryBuilder = boolQueryBuilder.must(rangeQueryBuilder);
             }
 
             if (functionDefinition.equals(functionDefinition.equals(BuiltInFunctionDefinitions.GREATER_THAN))) {
                 RangeQueryBuilder rangeQueryBuilder = QueryBuilders.rangeQuery(field.getName())
                         .gte( value.asSummaryString());
-                boolQueryBuilder.must(rangeQueryBuilder);
+                boolQueryBuilder = boolQueryBuilder.must(rangeQueryBuilder);
             }
 
             if (functionDefinition.equals(BuiltInFunctionDefinitions.EQUALS)) {
                 TermQueryBuilder termQueryBuilder =  QueryBuilders.termQuery(field.getName(),  value.asSummaryString());
-                boolQueryBuilder.must(termQueryBuilder);
+                boolQueryBuilder = boolQueryBuilder.must(termQueryBuilder);
             }
 
             if (functionDefinition.equals(BuiltInFunctionDefinitions.IF_NULL)) {
                 ExistsQueryBuilder existsQueryBuilder = QueryBuilders.existsQuery(field.getName());
-                boolQueryBuilder.must(existsQueryBuilder);
+                boolQueryBuilder = boolQueryBuilder.must(existsQueryBuilder);
             }
 
             if (functionDefinition.equals(BuiltInFunctionDefinitions.IS_NOT_NULL)) {
                 ExistsQueryBuilder existsQueryBuilder = QueryBuilders.existsQuery(field.getName());
-                boolQueryBuilder.must(existsQueryBuilder);
+                boolQueryBuilder = boolQueryBuilder.must(existsQueryBuilder);
             }
         }
         return boolQueryBuilder;
