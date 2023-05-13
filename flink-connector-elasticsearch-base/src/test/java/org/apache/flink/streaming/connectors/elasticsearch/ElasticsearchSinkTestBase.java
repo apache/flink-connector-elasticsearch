@@ -17,9 +17,6 @@
 
 package org.apache.flink.streaming.connectors.elasticsearch;
 
-import org.apache.flink.api.common.typeinfo.TypeInformation;
-import org.apache.flink.table.planner.runtime.utils.TestingAppendRowDataSink;
-import org.apache.flink.table.runtime.typeutils.InternalTypeInfo;
 import org.apache.flink.api.common.serialization.DeserializationSchema;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.formats.common.TimestampFormat;
@@ -30,6 +27,8 @@ import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.connectors.elasticsearch.testutils.SourceSinkDataTestKit;
 import org.apache.flink.table.data.RowData;
+import org.apache.flink.table.planner.runtime.utils.TestingAppendRowDataSink;
+import org.apache.flink.table.runtime.typeutils.InternalTypeInfo;
 import org.apache.flink.table.types.DataType;
 import org.apache.flink.table.types.logical.RowType;
 import org.apache.flink.test.util.AbstractTestBase;
@@ -107,47 +106,52 @@ public abstract class ElasticsearchSinkTestBase<T, C extends AutoCloseable, A>
         RowType schema = (RowType) dataType.getLogicalType();
 
         // pass on missing field
-        DeserializationSchema<RowData> deserializationSchema = new JsonRowDataDeserializationSchema(
-                schema, InternalTypeInfo.of(schema), false, false, TimestampFormat.ISO_8601);
+        DeserializationSchema<RowData> deserializationSchema =
+                new JsonRowDataDeserializationSchema(
+                        schema,
+                        InternalTypeInfo.of(schema),
+                        false,
+                        false,
+                        TimestampFormat.ISO_8601);
 
-        ElasticSearchInputFormatBase inputFormat = createElasticsearchInputFormat(
-                userConfig,
-                (DeserializationSchema<T>) deserializationSchema,
-                null,
-                "elasticsearch-sink-test-json-index",
-                "flink-es-test-type",
-                1000,
-                10,
-                null,
-                0
-        );
+        ElasticSearchInputFormatBase inputFormat =
+                createElasticsearchInputFormat(
+                        userConfig,
+                        (DeserializationSchema<T>) deserializationSchema,
+                        null,
+                        "elasticsearch-sink-test-json-index",
+                        "flink-es-test-type",
+                        1000,
+                        10,
+                        null,
+                        0);
 
         DataStream<RowData> dataStream = env.createInput(inputFormat);
         TestingAppendRowDataSink sink = new TestingAppendRowDataSink(InternalTypeInfo.of(schema));
         dataStream.addSink(sink);
         env.execute("Elasticsearch Source Test");
-        List<String> expected = Arrays.asList(
-                "+I(message #0)",
-                "+I(message #1)",
-                "+I(message #10)",
-                "+I(message #11)",
-                "+I(message #12)",
-                "+I(message #13)",
-                "+I(message #14)",
-                "+I(message #15)",
-                "+I(message #16)",
-                "+I(message #17)",
-                "+I(message #18)",
-                "+I(message #19)",
-                "+I(message #2)",
-                "+I(message #3)",
-                "+I(message #4)",
-                "+I(message #5)",
-                "+I(message #6)",
-                "+I(message #7)",
-                "+I(message #8)",
-                "+I(message #9)"
-        );
+        List<String> expected =
+                Arrays.asList(
+                        "+I(message #0)",
+                        "+I(message #1)",
+                        "+I(message #10)",
+                        "+I(message #11)",
+                        "+I(message #12)",
+                        "+I(message #13)",
+                        "+I(message #14)",
+                        "+I(message #15)",
+                        "+I(message #16)",
+                        "+I(message #17)",
+                        "+I(message #18)",
+                        "+I(message #19)",
+                        "+I(message #2)",
+                        "+I(message #3)",
+                        "+I(message #4)",
+                        "+I(message #5)",
+                        "+I(message #6)",
+                        "+I(message #7)",
+                        "+I(message #8)",
+                        "+I(message #9)");
         List<String> results = sink.getJavaAppendResults();
         results.sort(String::compareTo);
         assertEquals(expected, results);
@@ -162,8 +166,8 @@ public abstract class ElasticsearchSinkTestBase<T, C extends AutoCloseable, A>
             long scrollTimeout,
             int scrollMaxSize,
             QueryBuilder predicate,
-            int limit
-    ) throws Exception;
+            int limit)
+            throws Exception;
 
     /**
      * Tests that the Elasticsearch sink fails eagerly if the provided list of addresses is {@code

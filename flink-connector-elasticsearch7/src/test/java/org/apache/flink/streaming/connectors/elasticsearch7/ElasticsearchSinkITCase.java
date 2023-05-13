@@ -60,7 +60,6 @@ public class ElasticsearchSinkITCase<T>
                 RestClient.builder(HttpHost.create(elasticsearchContainer.getHttpHostAddress())));
     }
 
-
     @Test
     public void testElasticsearchSink() throws Exception {
         runElasticsearchSinkTest();
@@ -95,9 +94,9 @@ public class ElasticsearchSinkITCase<T>
     @Override
     protected ElasticsearchSinkBase<Tuple2<Integer, String>, RestHighLevelClient>
             createElasticsearchSink(
-            int bulkFlushMaxActions,
-            List<HttpHost> httpHosts,
-            ElasticsearchSinkFunction<Tuple2<Integer, String>> elasticsearchSinkFunction) {
+                    int bulkFlushMaxActions,
+                    List<HttpHost> httpHosts,
+                    ElasticsearchSinkFunction<Tuple2<Integer, String>> elasticsearchSinkFunction) {
 
         ElasticsearchSink.Builder<Tuple2<Integer, String>> builder =
                 new ElasticsearchSink.Builder<>(httpHosts, elasticsearchSinkFunction);
@@ -115,23 +114,23 @@ public class ElasticsearchSinkITCase<T>
             long scrollTimeout,
             int scrollMaxSize,
             QueryBuilder predicate,
-            int limit) throws Exception {
+            int limit)
+            throws Exception {
         List<InetSocketAddress> transports = new ArrayList<>();
         transports.add(new InetSocketAddress(InetAddress.getByName("127.0.0.1"), 9300));
 
-        ElasticSearch7InputFormat builder = new ElasticSearch7InputFormat.Builder()
-                .setDeserializationSchema(deserializationSchema)
-                .setFieldNames(fieldNames)
-                .setIndex(index)
-                .setScrollTimeout(scrollTimeout)
-                .setScrollMaxSize(scrollMaxSize)
-                .setPredicate(predicate)
-                .setLimit(limit)
-                .build();
+        ElasticSearch7InputFormat builder =
+                new ElasticSearch7InputFormat.Builder()
+                        .setDeserializationSchema(deserializationSchema)
+                        .setFieldNames(fieldNames)
+                        .setIndex(index)
+                        .setScrollTimeout(scrollTimeout)
+                        .setScrollMaxSize(scrollMaxSize)
+                        .setPredicate(predicate)
+                        .setLimit(limit)
+                        .build();
         return builder;
     }
-
-
 
     @Override
     protected ElasticsearchSinkBase<Tuple2<Integer, String>, RestHighLevelClient>

@@ -27,7 +27,6 @@ import org.apache.flink.configuration.ReadableConfig;
 import org.apache.flink.table.api.TableSchema;
 import org.apache.flink.table.api.ValidationException;
 import org.apache.flink.table.api.config.TableConfigOptions;
-import org.apache.flink.table.catalog.ResolvedSchema;
 import org.apache.flink.table.connector.format.DecodingFormat;
 import org.apache.flink.table.connector.format.EncodingFormat;
 import org.apache.flink.table.connector.sink.DynamicTableSink;
@@ -70,7 +69,8 @@ import static org.apache.flink.streaming.connectors.elasticsearch.table.Elastics
 
 /** A {@link DynamicTableSinkFactory} for discovering {@link Elasticsearch7DynamicSink}. */
 @Internal
-public class Elasticsearch7DynamicTableFactory implements DynamicTableSourceFactory, DynamicTableSinkFactory {
+public class Elasticsearch7DynamicTableFactory
+        implements DynamicTableSourceFactory, DynamicTableSinkFactory {
     private static final Set<ConfigOption<?>> requiredOptions =
             Stream.of(HOSTS_OPTION, INDEX_OPTION).collect(Collectors.toSet());
     private static final Set<ConfigOption<?>> optionalOptions =
@@ -99,15 +99,20 @@ public class Elasticsearch7DynamicTableFactory implements DynamicTableSourceFact
     public DynamicTableSource createDynamicTableSource(Context context) {
 
         TableSchema schema = context.getCatalogTable().getSchema();
-        final FactoryUtil.TableFactoryHelper helper = FactoryUtil.createTableFactoryHelper(this, context);
-        final DecodingFormat<DeserializationSchema<RowData>> format = helper.discoverDecodingFormat(
-                DeserializationFormatFactory.class, FORMAT_OPTION);
+        final FactoryUtil.TableFactoryHelper helper =
+                FactoryUtil.createTableFactoryHelper(this, context);
+        final DecodingFormat<DeserializationSchema<RowData>> format =
+                helper.discoverDecodingFormat(DeserializationFormatFactory.class, FORMAT_OPTION);
         helper.validate();
         Configuration configuration = new Configuration();
         context.getCatalogTable().getOptions().forEach(configuration::setString);
-        Elasticsearch7Configuration config = new Elasticsearch7Configuration(configuration, context.getClassLoader());
+        Elasticsearch7Configuration config =
+                new Elasticsearch7Configuration(configuration, context.getClassLoader());
 
-        return new Elasticsearch7DynamicSource(format, config, TableSchemaUtils.getPhysicalSchema(schema),
+        return new Elasticsearch7DynamicSource(
+                format,
+                config,
+                TableSchemaUtils.getPhysicalSchema(schema),
                 new ElasticsearchLookupOptions.Builder().build());
     }
 
@@ -193,46 +198,43 @@ public class Elasticsearch7DynamicTableFactory implements DynamicTableSourceFact
         }
     }
 
-    private void validateSource(Elasticsearch7Configuration config, Configuration originalConfiguration) {
+    private void validateSource(
+            Elasticsearch7Configuration config, Configuration originalConfiguration) {
         config.getHosts(); // validate hosts
         validate(
                 config.getIndex().length() >= 1,
                 () -> String.format("'%s' must not be empty", INDEX_OPTION.key()));
         validate(
                 config.getScrollMaxSize().map(scrollMaxSize -> scrollMaxSize >= 1).orElse(true),
-                () -> String.format(
-                        "'%s' must be at least 1. Got: %s",
-                        SCROLL_MAX_SIZE_OPTION.key(),
-                        config.getScrollMaxSize().get())
-        );
-        validate(config.getScrollTimeout().map(scrollTimeout -> scrollTimeout >= 1).orElse(true),
-                () -> String.format(
-                        "'%s' must be at least 1. Got: %s",
-                        SCROLL_TIMEOUT_OPTION.key(),
-                        config.getScrollTimeout().get())
-        );
+                () ->
+                        String.format(
+                                "'%s' must be at least 1. Got: %s",
+                                SCROLL_MAX_SIZE_OPTION.key(), config.getScrollMaxSize().get()));
+        validate(
+                config.getScrollTimeout().map(scrollTimeout -> scrollTimeout >= 1).orElse(true),
+                () ->
+                        String.format(
+                                "'%s' must be at least 1. Got: %s",
+                                SCROLL_TIMEOUT_OPTION.key(), config.getScrollTimeout().get()));
         long cacheMaxSize = config.getCacheMaxSize();
         validate(
                 cacheMaxSize == -1 || cacheMaxSize >= 1,
-                () -> String.format(
-                        "'%s' must be at least 1. Got: %s",
-                        LOOKUP_CACHE_MAX_ROWS.key(),
-                        cacheMaxSize)
-        );
+                () ->
+                        String.format(
+                                "'%s' must be at least 1. Got: %s",
+                                LOOKUP_CACHE_MAX_ROWS.key(), cacheMaxSize));
         validate(
                 config.getCacheExpiredMs().getSeconds() >= 1,
-                () -> String.format(
-                        "'%s' must be at least 1. Got: %s",
-                        LOOKUP_CACHE_TTL.key(),
-                        config.getCacheExpiredMs().getSeconds())
-        );
+                () ->
+                        String.format(
+                                "'%s' must be at least 1. Got: %s",
+                                LOOKUP_CACHE_TTL.key(), config.getCacheExpiredMs().getSeconds()));
         validate(
                 config.getMaxRetryTimes() >= 1,
-                () -> String.format(
-                        "'%s' must be at least 1. Got: %s",
-                        LOOKUP_MAX_RETRIES.key(),
-                        config.getMaxRetryTimes())
-        );
+                () ->
+                        String.format(
+                                "'%s' must be at least 1. Got: %s",
+                                LOOKUP_MAX_RETRIES.key(), config.getMaxRetryTimes()));
     }
 
     private static void validate(boolean condition, Supplier<String> message) {
@@ -255,5 +257,4 @@ public class Elasticsearch7DynamicTableFactory implements DynamicTableSourceFact
     public Set<ConfigOption<?>> optionalOptions() {
         return optionalOptions;
     }
-
 }

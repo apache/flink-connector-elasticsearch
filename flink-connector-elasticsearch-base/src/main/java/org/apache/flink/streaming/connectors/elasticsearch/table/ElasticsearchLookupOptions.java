@@ -35,41 +35,33 @@ public class ElasticsearchLookupOptions implements Serializable {
     public boolean equals(Object o) {
         if (o instanceof ElasticsearchLookupOptions) {
             ElasticsearchLookupOptions options = (ElasticsearchLookupOptions) o;
-            return Objects.equals(cacheMaxSize, options.cacheMaxSize) &&
-                    Objects.equals(cacheExpireMs, options.cacheExpireMs) &&
-                    Objects.equals(maxRetryTimes, options.maxRetryTimes);
+            return Objects.equals(cacheMaxSize, options.cacheMaxSize)
+                    && Objects.equals(cacheExpireMs, options.cacheExpireMs)
+                    && Objects.equals(maxRetryTimes, options.maxRetryTimes);
         } else {
             return false;
         }
     }
 
-    /**
-     * Builder of {@link ElasticsearchLookupOptions}.
-     */
+    /** Builder of {@link ElasticsearchLookupOptions}. */
     public static class Builder {
         private long cacheMaxSize = -1L;
         private long cacheExpireMs = -1L;
         private int maxRetryTimes = 3;
 
-        /**
-         * optional, lookup cache max size, over this value, the old data will be eliminated.
-         */
+        /** optional, lookup cache max size, over this value, the old data will be eliminated. */
         public Builder setCacheMaxSize(long cacheMaxSize) {
             this.cacheMaxSize = cacheMaxSize;
             return this;
         }
 
-        /**
-         * optional, lookup cache expire mills, over this time, the old data will expire.
-         */
+        /** optional, lookup cache expire mills, over this time, the old data will expire. */
         public Builder setCacheExpireMs(long cacheExpireMs) {
             this.cacheExpireMs = cacheExpireMs;
             return this;
         }
 
-        /**
-         * optional, max retry times for jdbc connector.
-         */
+        /** optional, max retry times for jdbc connector. */
         public Builder setMaxRetryTimes(int maxRetryTimes) {
             this.maxRetryTimes = maxRetryTimes;
             return this;
@@ -79,6 +71,4 @@ public class ElasticsearchLookupOptions implements Serializable {
             return new ElasticsearchLookupOptions(cacheMaxSize, cacheExpireMs, maxRetryTimes);
         }
     }
-
-
 }

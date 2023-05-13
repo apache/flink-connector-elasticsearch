@@ -19,7 +19,6 @@
 package org.apache.flink.streaming.connectors.elasticsearch;
 
 import org.apache.flink.annotation.Internal;
-
 import org.apache.flink.api.java.tuple.Tuple2;
 
 import org.elasticsearch.action.bulk.BulkItemResponse;
@@ -31,7 +30,6 @@ import javax.annotation.Nullable;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -66,11 +64,13 @@ public interface ElasticsearchApiCallBridge<C extends AutoCloseable> extends Ser
      */
     BulkProcessor.Builder createBulkProcessorBuilder(C client, BulkProcessor.Listener listener);
 
-    ElasticsearchInputSplit[] createInputSplitsInternal(C client, String index, String type, int minNumSplits);
+    ElasticsearchInputSplit[] createInputSplitsInternal(
+            C client, String index, String type, int minNumSplits);
 
     Tuple2<String, String[]> search(C client, SearchRequest searchRequest) throws IOException;
 
-    Tuple2<String, String[]> scroll(C client, SearchScrollRequest searchScrollRequest) throws IOException;
+    Tuple2<String, String[]> scroll(C client, SearchScrollRequest searchScrollRequest)
+            throws IOException;
 
     void close(C client) throws IOException;
 
@@ -78,7 +78,8 @@ public interface ElasticsearchApiCallBridge<C extends AutoCloseable> extends Ser
      * Extracts the cause of failure of a bulk item action.
      *
      * @param bulkItemResponse the bulk item response to extract cause of failure
-     * @return the extracted {@link Throwable} from the response ({@code null} is the response is successful).
+     * @return the extracted {@link Throwable} from the response ({@code null} is the response is
+     *     successful).
      */
     @Nullable
     Throwable extractFailureCauseFromBulkItemResponse(BulkItemResponse bulkItemResponse);

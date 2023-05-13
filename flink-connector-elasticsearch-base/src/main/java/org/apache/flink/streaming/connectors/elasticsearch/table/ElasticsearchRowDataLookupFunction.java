@@ -9,10 +9,7 @@ import org.apache.flink.table.data.util.DataFormatConverters;
 import org.apache.flink.table.data.util.DataFormatConverters.DataFormatConverter;
 import org.apache.flink.table.functions.FunctionContext;
 import org.apache.flink.table.functions.TableFunction;
-
 import org.apache.flink.table.types.DataType;
-import org.apache.flink.types.Row;
-
 import org.apache.flink.util.Preconditions;
 
 import org.elasticsearch.action.search.SearchRequest;
@@ -31,16 +28,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.apache.flink.util.Preconditions.checkNotNull;
-import static org.elasticsearch.common.cache.CacheBuilder.builder;
 
-public class ElasticsearchRowDataLookupFunction<C extends AutoCloseable> extends TableFunction<RowData> {
+public class ElasticsearchRowDataLookupFunction<C extends AutoCloseable>
+        extends TableFunction<RowData> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ElasticsearchRowDataLookupFunction.class);
+    private static final Logger LOG =
+            LoggerFactory.getLogger(ElasticsearchRowDataLookupFunction.class);
 
     private final DeserializationSchema<RowData> deserializationSchema;
 
@@ -91,11 +88,14 @@ public class ElasticsearchRowDataLookupFunction<C extends AutoCloseable> extends
         this.producedNames = producedNames;
         this.lookupKeys = lookupKeys;
         this.converters = new DataFormatConverter[lookupKeys.length];
-        Map<String, Integer> nameToIndex = IntStream.range(0, producedNames.length).boxed().collect(
-                Collectors.toMap(i -> producedNames[i], i -> i));
+        Map<String, Integer> nameToIndex =
+                IntStream.range(0, producedNames.length)
+                        .boxed()
+                        .collect(Collectors.toMap(i -> producedNames[i], i -> i));
         for (int i = 0; i < lookupKeys.length; i++) {
             Integer position = nameToIndex.get(lookupKeys[i]);
-            Preconditions.checkArgument(position != null, "Lookup keys %s not selected", Arrays.toString(lookupKeys));
+            Preconditions.checkArgument(
+                    position != null, "Lookup keys %s not selected", Arrays.toString(lookupKeys));
             converters[i] = DataFormatConverters.getConverterForDataType(producedTypes[position]);
         }
         this.callBridge = callBridge;
@@ -103,10 +103,16 @@ public class ElasticsearchRowDataLookupFunction<C extends AutoCloseable> extends
 
     @Override
     public void open(FunctionContext context) throws Exception {
-        this.cache = cacheMaxSize == -1 || cacheExpireMs == -1 ? null : CacheBuilder.<RowData, List<RowData>>builder().setExpireAfterWrite(TimeValue.timeValueMillis(cacheExpireMs))
-                .setMaximumWeight(cacheMaxSize).build();
+        this.cache =
+                cacheMaxSize == -1 || cacheExpireMs == -1
+                        ? null
+                        : CacheBuilder.<RowData, List<RowData>>builder()
+                                .setExpireAfterWrite(TimeValue.timeValueMillis(cacheExpireMs))
+                                .setMaximumWeight(cacheMaxSize)
+                                .build();
         this.client = callBridge.createClient();
-        //Set searchRequest in open method in case of amount of calling in eval method when every record comes.
+        // Set searchRequest in open method in case of amount of calling in eval method when every
+        // record comes.
         this.searchRequest = new SearchRequest(index);
         if (type == null) {
             searchRequest.types(Strings.EMPTY_ARRAY);
@@ -116,7 +122,6 @@ public class ElasticsearchRowDataLookupFunction<C extends AutoCloseable> extends
         searchSourceBuilder = new SearchSourceBuilder();
         searchSourceBuilder.fetchSource(producedNames, null);
     }
-
 
     /**
      * This is a lookup method which is called by Flink framework in runtime.
@@ -137,7 +142,8 @@ public class ElasticsearchRowDataLookupFunction<C extends AutoCloseable> extends
 
         BoolQueryBuilder lookupCondition = new BoolQueryBuilder();
         for (int i = 0; i < lookupKeys.length; i++) {
-            lookupCondition.must(new TermQueryBuilder(lookupKeys[i], converters[i].toExternal(keys[i])));
+            lookupCondition.must(
+                    new TermQueryBuilder(lookupKeys[i], converters[i].toExternal(keys[i])));
         }
         searchSourceBuilder.query(lookupCondition);
         searchRequest.source(searchSourceBuilder);
@@ -174,7 +180,8 @@ public class ElasticsearchRowDataLookupFunction<C extends AutoCloseable> extends
                 try {
                     Thread.sleep(1000 * retry);
                 } catch (InterruptedException e1) {
-                    LOG.warn("Interrupted while waiting to retry failed elasticsearch search, aborting");
+                    LOG.warn(
+                            "Interrupted while waiting to retry failed elasticsearch search, aborting");
                     throw new RuntimeException(e1);
                 }
             }
@@ -191,12 +198,4 @@ public class ElasticsearchRowDataLookupFunction<C extends AutoCloseable> extends
 
         return row;
     }
-
-
-
-
-
-
-
-
 }

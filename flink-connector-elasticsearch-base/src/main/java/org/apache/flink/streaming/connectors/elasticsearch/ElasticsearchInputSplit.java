@@ -15,7 +15,8 @@ public class ElasticsearchInputSplit extends LocatableInputSplit {
     /** Index will split diffirent shards when index created. */
     private final int shard;
 
-    public ElasticsearchInputSplit(int splitNumber, String[] hostnames, String index, String type, int shard) {
+    public ElasticsearchInputSplit(
+            int splitNumber, String[] hostnames, String index, String type, int shard) {
         super(splitNumber, hostnames);
         this.index = index;
         this.type = type;

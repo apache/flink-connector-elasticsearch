@@ -14,8 +14,8 @@ import java.util.List;
 import java.util.Map;
 
 @PublicEvolving
-public class ElasticSearch7InputFormat<T> extends
-        ElasticSearchInputFormatBase<T, RestHighLevelClient> {
+public class ElasticSearch7InputFormat<T>
+        extends ElasticSearchInputFormatBase<T, RestHighLevelClient> {
 
     private static final long serialVersionUID = 1L;
 
@@ -31,7 +31,17 @@ public class ElasticSearch7InputFormat<T> extends
             QueryBuilder predicate,
             int limit) {
 
-        super(new Elasticsearch7ApiCallBridge(httpHosts, restClientFactory), userConfig, serializationSchema, fieldNames, index, null, scrollTimeout, scrollSize, predicate, limit);
+        super(
+                new Elasticsearch7ApiCallBridge(httpHosts, restClientFactory),
+                userConfig,
+                serializationSchema,
+                fieldNames,
+                index,
+                null,
+                scrollTimeout,
+                scrollSize,
+                predicate,
+                limit);
     }
 
     /**
@@ -43,8 +53,7 @@ public class ElasticSearch7InputFormat<T> extends
     public static class Builder<T> {
         private Map<String, String> userConfig = new HashMap<>();
         private List<HttpHost> httpHosts;
-        private RestClientFactory restClientFactory = restClientBuilder -> {
-        };
+        private RestClientFactory restClientFactory = restClientBuilder -> {};
         private DeserializationSchema<T> deserializationSchema;
         private String index;
 
@@ -55,13 +64,13 @@ public class ElasticSearch7InputFormat<T> extends
         private QueryBuilder predicate;
         private int limit;
 
-        public Builder() {
-        }
+        public Builder() {}
 
         /**
          * Sets HttpHost which the RestHighLevelClient connects to.
          *
-         * @param httpHosts The list of {@link HttpHost} to which the {@link RestHighLevelClient} connects to.
+         * @param httpHosts The list of {@link HttpHost} to which the {@link RestHighLevelClient}
+         *     connects to.
          */
         public Builder setHttpHosts(List<HttpHost> httpHosts) {
             this.httpHosts = httpHosts;
@@ -137,7 +146,17 @@ public class ElasticSearch7InputFormat<T> extends
          * @return the created ElasticSearch7RowDataInputFormat.
          */
         public ElasticSearch7InputFormat<T> build() {
-            return new ElasticSearch7InputFormat<T>(userConfig, httpHosts, restClientFactory, deserializationSchema, fieldNames, index, scrollTimeout, scrollMaxSize, predicate, limit);
+            return new ElasticSearch7InputFormat<T>(
+                    userConfig,
+                    httpHosts,
+                    restClientFactory,
+                    deserializationSchema,
+                    fieldNames,
+                    index,
+                    scrollTimeout,
+                    scrollMaxSize,
+                    predicate,
+                    limit);
         }
     }
 }

@@ -609,10 +609,7 @@ public class ElasticsearchSinkBaseTest {
 
         @Override
         public ElasticsearchInputSplit[] createInputSplitsInternal(
-                Client client,
-                String index,
-                String type,
-                int minNumSplits) {
+                Client client, String index, String type, int minNumSplits) {
             return new ElasticsearchInputSplit[0];
         }
 
@@ -624,15 +621,12 @@ public class ElasticsearchSinkBaseTest {
 
         @Override
         public Tuple2<String, String[]> scroll(
-                Client client,
-                SearchScrollRequest searchScrollRequest) throws IOException {
+                Client client, SearchScrollRequest searchScrollRequest) throws IOException {
             return null;
         }
 
         @Override
-        public void close(Client client) throws IOException {
-
-        }
+        public void close(Client client) throws IOException {}
 
         @Nullable
         @Override

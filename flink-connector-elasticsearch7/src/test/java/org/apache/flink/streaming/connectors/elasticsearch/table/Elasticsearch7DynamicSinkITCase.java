@@ -20,7 +20,6 @@ package org.apache.flink.streaming.connectors.elasticsearch.table;
 
 import org.apache.flink.api.common.time.Deadline;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
-import org.apache.flink.connector.elasticsearch.test.DockerImageVersions;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.table.api.DataTypes;
@@ -37,21 +36,14 @@ import org.apache.flink.table.data.StringData;
 import org.apache.flink.table.data.TimestampData;
 import org.apache.flink.table.types.DataType;
 import org.apache.flink.table.types.logical.LogicalType;
-import org.apache.flink.test.util.AbstractTestBase;
 import org.apache.flink.types.RowKind;
-import org.apache.flink.util.TestLogger;
 
-import org.apache.http.HttpHost;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.search.SearchHits;
-import org.junit.ClassRule;
 import org.junit.Test;
-import org.testcontainers.elasticsearch.ElasticsearchContainer;
-import org.testcontainers.utility.DockerImageName;
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -71,8 +63,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /** IT tests for {@link Elasticsearch7DynamicSink}. */
 public class Elasticsearch7DynamicSinkITCase extends Elasticsearch7DynamicTableTestBase {
-
-
 
     @Test
     public void testWritingDocuments() throws Exception {

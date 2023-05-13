@@ -11,11 +11,11 @@ import org.apache.flink.api.java.typeutils.ResultTypeQueryable;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.core.io.InputSplitAssigner;
 
-import org.elasticsearch.action.search.SearchScrollRequest;
-import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.Scroll;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
@@ -29,9 +29,8 @@ import java.util.Map;
 import static org.apache.flink.shaded.curator5.com.google.common.base.Preconditions.checkNotNull;
 
 @Internal
-public class ElasticSearchInputFormatBase <T, C extends AutoCloseable> extends RichInputFormat<T, ElasticsearchInputSplit>
-        implements ResultTypeQueryable<T> {
-
+public class ElasticSearchInputFormatBase<T, C extends AutoCloseable>
+        extends RichInputFormat<T, ElasticsearchInputSplit> implements ResultTypeQueryable<T> {
 
     private static final Logger LOG = LoggerFactory.getLogger(ElasticSearchInputFormatBase.class);
     private static final long serialVersionUID = 1L;
@@ -53,15 +52,11 @@ public class ElasticSearchInputFormatBase <T, C extends AutoCloseable> extends R
     private int nextRecordIndex = 0;
     private long currentReadCount = 0L;
 
-    /**
-     * Call bridge for different version-specific.
-     */
+    /** Call bridge for different version-specific. */
     private final ElasticsearchApiCallBridge<C> callBridge;
 
     private final Map<String, String> userConfig;
-    /**
-     * Elasticsearch client created using the call bridge.
-     */
+    /** Elasticsearch client created using the call bridge. */
     private transient C client;
 
     public ElasticSearchInputFormatBase(
@@ -91,8 +86,8 @@ public class ElasticSearchInputFormatBase <T, C extends AutoCloseable> extends R
 
         this.scrollTimeout = scrollTimeout;
         this.scrollSize = scrollSize;
-
     }
+
     @Override
     public TypeInformation<T> getProducedType() {
         return deserializationSchema.getProducedType();
@@ -142,7 +137,7 @@ public class ElasticSearchInputFormatBase <T, C extends AutoCloseable> extends R
         } else {
             size = scrollSize;
         }
-        //elasticsearch default value is 10 here.
+        // elasticsearch default value is 10 here.
         searchSourceBuilder.size(size);
         searchSourceBuilder.fetchSource(fieldNames, null);
         if (predicate != null) {
@@ -172,8 +167,10 @@ public class ElasticSearchInputFormatBase <T, C extends AutoCloseable> extends R
             return true;
         }
 
-        // SearchResponse can be InternalSearchHits.empty(), and the InternalSearchHit[] EMPTY = new InternalSearchHit[0]
-        if (currentScrollWindowHits.length != 0 && nextRecordIndex > currentScrollWindowHits.length - 1) {
+        // SearchResponse can be InternalSearchHits.empty(), and the InternalSearchHit[] EMPTY = new
+        // InternalSearchHit[0]
+        if (currentScrollWindowHits.length != 0
+                && nextRecordIndex > currentScrollWindowHits.length - 1) {
             fetchNextScrollWindow();
         }
 

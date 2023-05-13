@@ -20,7 +20,6 @@ package org.apache.flink.streaming.connectors.elasticsearch.table;
 
 import org.apache.flink.api.common.typeutils.base.VoidSerializer;
 import org.apache.flink.table.api.DataTypes;
-import org.apache.flink.table.api.TableSchema;
 import org.apache.flink.table.api.ValidationException;
 import org.apache.flink.table.catalog.Column;
 import org.apache.flink.table.catalog.ResolvedSchema;
@@ -84,16 +83,16 @@ public class Elasticsearch7DynamicTableFactoryTest extends TestLogger {
         Elasticsearch7DynamicTableFactory tableFactory = new Elasticsearch7DynamicTableFactory();
 
         thrown.expect(ValidationException.class);
-        thrown.expectMessage(
-                "'scan.scroll.max-size' must be at least 1. Got: 0");
+        thrown.expectMessage("'scan.scroll.max-size' must be at least 1. Got: 0");
         tableFactory.createDynamicTableSource(
                 context()
                         .withSchema(ResolvedSchema.of(Column.physical("a", DataTypes.TIME())))
                         .withOption(ElasticsearchConnectorOptions.INDEX_OPTION.key(), "MyIndex")
-                        .withOption(ElasticsearchConnectorOptions.HOSTS_OPTION.key(), "http://localhost:1234")
+                        .withOption(
+                                ElasticsearchConnectorOptions.HOSTS_OPTION.key(),
+                                "http://localhost:1234")
                         .withOption(ElasticsearchConnectorOptions.SCROLL_MAX_SIZE_OPTION.key(), "0")
-                        .build()
-        );
+                        .build());
     }
 
     @Test
@@ -101,16 +100,16 @@ public class Elasticsearch7DynamicTableFactoryTest extends TestLogger {
         Elasticsearch7DynamicTableFactory tableFactory = new Elasticsearch7DynamicTableFactory();
 
         thrown.expect(ValidationException.class);
-        thrown.expectMessage(
-                "'scan.scroll.timeout' must be at least 1. Got: 0");
+        thrown.expectMessage("'scan.scroll.timeout' must be at least 1. Got: 0");
         tableFactory.createDynamicTableSource(
                 context()
                         .withSchema(ResolvedSchema.of(Column.physical("a", DataTypes.TIME())))
                         .withOption(ElasticsearchConnectorOptions.INDEX_OPTION.key(), "MyIndex")
-                        .withOption(ElasticsearchConnectorOptions.HOSTS_OPTION.key(), "http://localhost:1234")
+                        .withOption(
+                                ElasticsearchConnectorOptions.HOSTS_OPTION.key(),
+                                "http://localhost:1234")
                         .withOption(ElasticsearchConnectorOptions.SCROLL_TIMEOUT_OPTION.key(), "0")
-                        .build()
-        );
+                        .build());
     }
 
     @Test
@@ -118,16 +117,16 @@ public class Elasticsearch7DynamicTableFactoryTest extends TestLogger {
         Elasticsearch7DynamicTableFactory tableFactory = new Elasticsearch7DynamicTableFactory();
 
         thrown.expect(ValidationException.class);
-        thrown.expectMessage(
-                "'lookup.cache.max-rows' must be at least 1. Got: 0");
+        thrown.expectMessage("'lookup.cache.max-rows' must be at least 1. Got: 0");
         tableFactory.createDynamicTableSource(
                 context()
                         .withSchema(ResolvedSchema.of(Column.physical("a", DataTypes.TIME())))
                         .withOption(ElasticsearchConnectorOptions.INDEX_OPTION.key(), "MyIndex")
-                        .withOption(ElasticsearchConnectorOptions.HOSTS_OPTION.key(), "http://localhost:1234")
+                        .withOption(
+                                ElasticsearchConnectorOptions.HOSTS_OPTION.key(),
+                                "http://localhost:1234")
                         .withOption(ElasticsearchConnectorOptions.LOOKUP_CACHE_MAX_ROWS.key(), "0")
-                        .build()
-        );
+                        .build());
     }
 
     @Test
@@ -135,16 +134,16 @@ public class Elasticsearch7DynamicTableFactoryTest extends TestLogger {
         Elasticsearch7DynamicTableFactory tableFactory = new Elasticsearch7DynamicTableFactory();
 
         thrown.expect(ValidationException.class);
-        thrown.expectMessage(
-                "'lookup.cache.ttl' must be at least 1. Got: 0");
+        thrown.expectMessage("'lookup.cache.ttl' must be at least 1. Got: 0");
         tableFactory.createDynamicTableSource(
                 context()
                         .withSchema(ResolvedSchema.of(Column.physical("a", DataTypes.TIME())))
                         .withOption(ElasticsearchConnectorOptions.INDEX_OPTION.key(), "MyIndex")
-                        .withOption(ElasticsearchConnectorOptions.HOSTS_OPTION.key(), "http://localhost:1234")
+                        .withOption(
+                                ElasticsearchConnectorOptions.HOSTS_OPTION.key(),
+                                "http://localhost:1234")
                         .withOption(ElasticsearchConnectorOptions.LOOKUP_CACHE_TTL.key(), "0")
-                        .build()
-        );
+                        .build());
     }
 
     @Test
@@ -152,16 +151,16 @@ public class Elasticsearch7DynamicTableFactoryTest extends TestLogger {
         Elasticsearch7DynamicTableFactory tableFactory = new Elasticsearch7DynamicTableFactory();
 
         thrown.expect(ValidationException.class);
-        thrown.expectMessage(
-                "'lookup.max-retries' must be at least 1. Got: 0");
+        thrown.expectMessage("'lookup.max-retries' must be at least 1. Got: 0");
         tableFactory.createDynamicTableSource(
                 context()
                         .withSchema(ResolvedSchema.of(Column.physical("a", DataTypes.TIME())))
                         .withOption(ElasticsearchConnectorOptions.INDEX_OPTION.key(), "MyIndex")
-                        .withOption(ElasticsearchConnectorOptions.HOSTS_OPTION.key(), "http://localhost:1234")
+                        .withOption(
+                                ElasticsearchConnectorOptions.HOSTS_OPTION.key(),
+                                "http://localhost:1234")
                         .withOption(ElasticsearchConnectorOptions.LOOKUP_MAX_RETRIES.key(), "0")
-                        .build()
-        );
+                        .build());
     }
 
     @Test

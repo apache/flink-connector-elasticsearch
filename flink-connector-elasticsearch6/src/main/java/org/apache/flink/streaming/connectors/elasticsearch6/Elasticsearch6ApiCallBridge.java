@@ -42,7 +42,6 @@ import javax.annotation.Nullable;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 /** Implementation of {@link ElasticsearchApiCallBridge} for Elasticsearch 6 and later versions. */
@@ -85,10 +84,7 @@ public class Elasticsearch6ApiCallBridge
 
     @Override
     public ElasticsearchInputSplit[] createInputSplitsInternal(
-            RestHighLevelClient client,
-            String index,
-            String type,
-            int minNumSplits) {
+            RestHighLevelClient client, String index, String type, int minNumSplits) {
         return new ElasticsearchInputSplit[0];
     }
 
@@ -100,15 +96,13 @@ public class Elasticsearch6ApiCallBridge
 
     @Override
     public Tuple2<String, String[]> scroll(
-            RestHighLevelClient client,
-            SearchScrollRequest searchScrollRequest) throws IOException {
+            RestHighLevelClient client, SearchScrollRequest searchScrollRequest)
+            throws IOException {
         return null;
     }
 
     @Override
-    public void close(RestHighLevelClient client) throws IOException {
-
-    }
+    public void close(RestHighLevelClient client) throws IOException {}
 
     @Override
     public Throwable extractFailureCauseFromBulkItemResponse(BulkItemResponse bulkItemResponse) {

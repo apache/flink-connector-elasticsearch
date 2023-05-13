@@ -19,14 +19,13 @@ package org.apache.flink.streaming.connectors.elasticsearch7;
 
 import org.apache.flink.annotation.Internal;
 import org.apache.flink.api.java.tuple.Tuple2;
-
-import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.apache.flink.streaming.connectors.elasticsearch.ElasticsearchApiCallBridge;
 import org.apache.flink.streaming.connectors.elasticsearch.ElasticsearchInputSplit;
 import org.apache.flink.streaming.connectors.elasticsearch.ElasticsearchSinkBase;
 import org.apache.flink.streaming.connectors.elasticsearch.RequestIndexer;
 import org.apache.flink.util.Preconditions;
+
+import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.http.HttpHost;
 import org.elasticsearch.action.bulk.BackoffPolicy;
@@ -65,7 +64,8 @@ public class Elasticsearch7ApiCallBridge
 
     private final ObjectMapper jsonParser = new ObjectMapper();
 
-    public Elasticsearch7ApiCallBridge(List<HttpHost> httpHosts, RestClientFactory restClientFactory) {
+    public Elasticsearch7ApiCallBridge(
+            List<HttpHost> httpHosts, RestClientFactory restClientFactory) {
         Preconditions.checkArgument(httpHosts != null && !httpHosts.isEmpty());
         this.httpHosts = httpHosts;
         this.restClientFactory = Preconditions.checkNotNull(restClientFactory);
@@ -93,10 +93,7 @@ public class Elasticsearch7ApiCallBridge
 
     @Override
     public ElasticsearchInputSplit[] createInputSplitsInternal(
-            RestHighLevelClient client,
-            String index,
-            String type,
-            int minNumSplits) {
+            RestHighLevelClient client, String index, String type, int minNumSplits) {
         return new ElasticsearchInputSplit[0];
     }
 
@@ -108,15 +105,13 @@ public class Elasticsearch7ApiCallBridge
 
     @Override
     public Tuple2<String, String[]> scroll(
-            RestHighLevelClient client,
-            SearchScrollRequest searchScrollRequest) throws IOException {
+            RestHighLevelClient client, SearchScrollRequest searchScrollRequest)
+            throws IOException {
         return null;
     }
 
     @Override
-    public void close(RestHighLevelClient client) throws IOException {
-
-    }
+    public void close(RestHighLevelClient client) throws IOException {}
 
     @Override
     public Throwable extractFailureCauseFromBulkItemResponse(BulkItemResponse bulkItemResponse) {
