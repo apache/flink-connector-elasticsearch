@@ -28,8 +28,6 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.test.junit5.MiniClusterExtension;
 import org.apache.flink.util.TestLoggerExtension;
 
-import org.apache.flink.shaded.guava30.com.google.common.collect.Lists;
-
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -51,6 +49,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.BiFunction;
@@ -206,7 +205,7 @@ abstract class ElasticsearchSinkBaseITCase {
 
     private static List<BiFunction<String, String, ElasticsearchEmitter<Tuple2<Integer, String>>>>
             elasticsearchEmitters() {
-        return Lists.newArrayList(TestEmitter::jsonEmitter, TestEmitter::smileEmitter);
+        return Arrays.asList(TestEmitter::jsonEmitter, TestEmitter::smileEmitter);
     }
 
     private static class FailingMapper implements MapFunction<Long, Long>, CheckpointListener {
