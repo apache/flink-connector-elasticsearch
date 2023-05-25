@@ -20,9 +20,9 @@ under the License.
 	xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
 	<parent>
-		<groupId>io.github.zentol.flink</groupId>
+		<groupId>org.apache.flink</groupId>
 		<artifactId>flink-connector-parent</artifactId>
-		<version>1.0</version>
+		<version>1.0.0</version>
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
@@ -51,7 +51,6 @@ under the License.
 
 	<properties>
 		<flink.version>1.16.2</flink.version>
-		<flink.shaded.version>15.0</flink.shaded.version>
 
 		<jackson-bom.version>2.13.4.20221013</jackson-bom.version>
 		<junit4.version>4.13.2</junit4.version>
@@ -75,12 +74,6 @@ under the License.
 	</properties>
 
 	<dependencies>
-		<dependency>
-			<groupId>org.apache.flink</groupId>
-			<artifactId>flink-shaded-force-shading</artifactId>
-			<version>${flink.shaded.version}</version>
-		</dependency>
-
 		<!-- Root dependencies for all projects -->
 
 		<!-- Logging API -->
