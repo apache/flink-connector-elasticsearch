@@ -195,7 +195,7 @@ This file is based on the checkstyle file of Apache Beam.
 			<!-- Checks for out of order import statements. -->
 			<property name="severity" value="error"/>
 			<property name="groups"
-					  value="org.apache.flink,org.apache.flink.shaded,*,javax,java,scala"/>
+					  value="org.apache.flink,*,javax,java,scala"/>
 			<property name="separated" value="true"/>
 			<property name="sortStaticImportsAlphabetically" value="true"/>
 			<property name="option" value="bottom"/>
@@ -223,10 +223,6 @@ This file is based on the checkstyle file of Apache Beam.
 		<module name="IllegalImport">
 			<property name="illegalPkgs" value="io.netty"/>
 			<message key="import.illegal" value="{0}; Use flink-shaded-netty instead."/>
-		</module>
-		<module name="IllegalImport">
-			<property name="illegalPkgs" value="com.google.common"/>
-			<message key="import.illegal" value="{0}; Use flink-shaded-guava instead."/>
 		</module>
 
 		<module name="RedundantModifier">
