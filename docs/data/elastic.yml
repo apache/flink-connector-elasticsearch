@@ -16,16 +16,9 @@
 # limitations under the License.
 ################################################################################
 
-name: CI
-on: [push, pull_request]
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-jobs:
-  compile_and_test:
-    strategy:
-      matrix:
-        flink: [1.17.1, 1.18-SNAPSHOT]
-    uses: apache/flink-connector-shared-utils/.github/workflows/ci.yml@ci_utils
-    with:
-      flink_version: ${{ matrix.flink }}
+version: 4.0.0-SNAPSHOT
+variants:
+  - maven: flink-connector-elasticsearch6
+    sql_url: https://repo.maven.apache.org/maven2/org/apache/flink/flink-sql-connector-elasticsearch6/$full_version/flink-sql-connector-elasticsearch6-$full_version.jar
+  - maven: flink-connector-elasticsearch7
+    sql_url: https://repo.maven.apache.org/maven2/org/apache/flink/flink-sql-connector-elasticsearch7/$full_version/flink-sql-connector-elasticsearch7-$full_version.jar
