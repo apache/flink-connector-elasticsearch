@@ -56,7 +56,8 @@ under the License.
 		<junit4.version>4.13.2</junit4.version>
 		<junit5.version>5.9.1</junit5.version>
 		<assertj.version>3.23.1</assertj.version>
-		<testcontainers.version>1.17.2</testcontainers.version>
+		<!-- keep net.java.dev.jna:jna in sync with the one from testcontainers -->
+		<testcontainers.version>1.18.3</testcontainers.version>
 		<mockito.version>3.4.6</mockito.version>
 
 		<japicmp.skip>false</japicmp.skip>
@@ -316,6 +317,13 @@ under the License.
 			</dependency>
 
 			<!-- For dependency convergence  -->
+			<dependency>
+				<groupId>org.apache.commons</groupId>
+				<artifactId>commons-compress</artifactId>
+				<version>1.22</version>
+			</dependency>
+
+			<!-- For dependency convergence -->
 			<dependency>
 				<groupId>org.objenesis</groupId>
 				<artifactId>objenesis</artifactId>

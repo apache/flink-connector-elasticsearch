@@ -39,6 +39,19 @@ under the License.
 		<module>flink-connector-elasticsearch7-e2e-tests</module>
     </modules>
 
+	<dependencyManagement>
+		<dependencies>
+			<!-- We pick the version of net.java.dev.jna:jna to satisfy dependency
+				 convergence for org.testcontainers:testcontainers which transitively depends on
+				 two different versions.-->
+			<dependency>
+				<groupId>net.java.dev.jna</groupId>
+				<artifactId>jna</artifactId>
+				<version>5.12.1</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
 	<profiles>
 		<profile>
 			<id>run-end-to-end-tests</id>
