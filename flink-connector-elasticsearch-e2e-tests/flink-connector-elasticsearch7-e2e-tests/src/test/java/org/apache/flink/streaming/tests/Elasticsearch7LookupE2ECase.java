@@ -18,7 +18,7 @@
 
 package org.apache.flink.streaming.tests;
 
-import org.apache.flink.util.DockerImageVersions;
+import org.apache.flink.connector.elasticsearch.test.DockerImageVersions;
 
 /** End-to-end test for Elasticsearch7 lookup. */
 public class Elasticsearch7LookupE2ECase extends ElasticsearchLookupE2ECase {

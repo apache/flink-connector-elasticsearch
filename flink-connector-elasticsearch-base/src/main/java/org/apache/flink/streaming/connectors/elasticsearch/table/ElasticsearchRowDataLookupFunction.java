@@ -115,7 +115,7 @@ public class ElasticsearchRowDataLookupFunction<C extends AutoCloseable> extends
 
     @Override
     public void open(FunctionContext context) throws Exception {
-        this.client = callBridge.createClient(null);
+        this.client = callBridge.createClient();
 
         // Set searchRequest in open method in case of amount of calling in eval method when every
         // record comes.
