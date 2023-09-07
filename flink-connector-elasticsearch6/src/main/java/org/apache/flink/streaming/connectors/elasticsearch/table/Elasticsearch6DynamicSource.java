@@ -120,7 +120,7 @@ public class Elasticsearch6DynamicSource implements LookupTableSource, SupportsP
 
     @Override
     public String asSummaryString() {
-        return "Elasticsearch-6";
+        return "Elasticsearch6";
     }
 
     @Override

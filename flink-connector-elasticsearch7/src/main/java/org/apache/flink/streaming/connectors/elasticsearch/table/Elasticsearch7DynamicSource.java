@@ -83,7 +83,7 @@ public class Elasticsearch7DynamicSource implements LookupTableSource, SupportsP
                             config.getPathPrefix().orElse(null));
         }
 
-        Elasticsearch7ApiCallBridge elasticsearch6ApiCallBridge =
+        Elasticsearch7ApiCallBridge elasticsearch7ApiCallBridge =
                 new Elasticsearch7ApiCallBridge(config.getHosts(), restClientFactory);
 
         // Elasticsearch only support non-nested look up keys
@@ -104,7 +104,7 @@ public class Elasticsearch7DynamicSource implements LookupTableSource, SupportsP
                         DataType.getFieldNames(physicalRowDataType).toArray(new String[0]),
                         DataType.getFieldDataTypes(physicalRowDataType).toArray(new DataType[0]),
                         keyNames,
-                        elasticsearch6ApiCallBridge);
+                        elasticsearch7ApiCallBridge);
         if (lookupCache != null) {
             return PartialCachingLookupProvider.of(lookupFunction, lookupCache);
         } else {
@@ -120,7 +120,7 @@ public class Elasticsearch7DynamicSource implements LookupTableSource, SupportsP
 
     @Override
     public String asSummaryString() {
-        return "Elasticsearch-6";
+        return "Elasticsearch7";
     }
 
     @Override

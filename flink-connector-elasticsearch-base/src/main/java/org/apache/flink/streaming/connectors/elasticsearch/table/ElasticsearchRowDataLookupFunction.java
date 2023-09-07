@@ -28,6 +28,7 @@ import org.apache.flink.table.data.util.DataFormatConverters;
 import org.apache.flink.table.functions.FunctionContext;
 import org.apache.flink.table.functions.LookupFunction;
 import org.apache.flink.table.types.DataType;
+import org.apache.flink.util.FlinkRuntimeException;
 import org.apache.flink.util.Preconditions;
 
 import org.elasticsearch.action.search.SearchRequest;
@@ -49,7 +50,7 @@ import java.util.stream.IntStream;
 
 import static org.apache.flink.util.Preconditions.checkNotNull;
 
-/** A lookup function implementing {@link LookupTableSource} in elasticsearch connector. */
+/** A lookup function implementing {@link LookupTableSource} in Elasticsearch connector. */
 @Internal
 public class ElasticsearchRowDataLookupFunction<C extends AutoCloseable> extends LookupFunction {
 
@@ -155,14 +156,14 @@ public class ElasticsearchRowDataLookupFunction<C extends AutoCloseable> extends
             } catch (IOException e) {
                 LOG.error(String.format("Elasticsearch search error, retry times = %d", retry), e);
                 if (retry >= maxRetryTimes) {
-                    throw new RuntimeException("Execution of Elasticsearch search failed.", e);
+                    throw new FlinkRuntimeException("Execution of Elasticsearch search failed.", e);
                 }
                 try {
                     Thread.sleep(1000L * retry);
                 } catch (InterruptedException e1) {
                     LOG.warn(
                             "Interrupted while waiting to retry failed elasticsearch search, aborting");
-                    throw new RuntimeException(e1);
+                    throw new FlinkRuntimeException(e1);
                 }
             }
         }
