@@ -25,18 +25,17 @@ import org.junit.jupiter.api.Test;
 import static org.apache.flink.connector.elasticsearch.table.TestContext.context;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-/** Tests for validation in {@link Elasticsearch6DynamicSinkFactory}. */
-public class Elasticsearch6DynamicSinkFactoryTest extends ElasticsearchDynamicSinkFactoryBaseTest {
+/** Tests for validation in {@link Elasticsearch7DynamicSinkFactory}. */
+public class Elasticsearch7DynamicTableFactoryTest extends ElasticsearchDynamicSinkFactoryBaseTest {
     @Override
     ElasticsearchDynamicSinkFactoryBase createSinkFactory() {
-        return new Elasticsearch6DynamicSinkFactory();
+        return new Elasticsearch7DynamicSinkFactory();
     }
 
     @Override
     TestContext createPrefilledTestContext() {
         return context()
                 .withOption(ElasticsearchConnectorOptions.INDEX_OPTION.key(), "MyIndex")
-                .withOption(Elasticsearch6ConnectorOptions.DOCUMENT_TYPE_OPTION.key(), "MyType")
                 .withOption(
                         ElasticsearchConnectorOptions.HOSTS_OPTION.key(), "http://localhost:12345");
     }
@@ -52,7 +51,6 @@ public class Elasticsearch6DynamicSinkFactoryTest extends ElasticsearchDynamicSi
                                 + "\n"
                                 + "Missing required options are:\n"
                                 + "\n"
-                                + "document-type\n"
                                 + "hosts\n"
                                 + "index");
     }

@@ -19,9 +19,11 @@
 package org.apache.flink.streaming.connectors.elasticsearch;
 
 import org.apache.flink.annotation.Internal;
+import org.apache.flink.api.java.tuple.Tuple2;
 
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkProcessor;
+import org.elasticsearch.action.search.SearchRequest;
 
 import javax.annotation.Nullable;
 
@@ -60,6 +62,21 @@ public interface ElasticsearchApiCallBridge<C extends AutoCloseable> extends Ser
      * @return the bulk processor builder.
      */
     BulkProcessor.Builder createBulkProcessorBuilder(C client, BulkProcessor.Listener listener);
+
+    /**
+     * Executes a search using the Search API.
+     *
+     * @param client the Elasticsearch client.
+     * @param searchRequest A request to execute search against one or more indices (or all).
+     */
+    Tuple2<String, String[]> search(C client, SearchRequest searchRequest) throws IOException;
+
+    /**
+     * Closes this client and releases any system resources associated with it.
+     *
+     * @param client the Elasticsearch client.
+     */
+    void close(C client) throws IOException;
 
     /**
      * Extracts the cause of failure of a bulk item action.

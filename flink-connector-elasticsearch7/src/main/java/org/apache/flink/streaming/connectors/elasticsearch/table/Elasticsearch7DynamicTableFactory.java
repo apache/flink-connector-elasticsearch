@@ -19,6 +19,7 @@
 package org.apache.flink.streaming.connectors.elasticsearch.table;
 
 import org.apache.flink.annotation.Internal;
+import org.apache.flink.api.common.serialization.DeserializationSchema;
 import org.apache.flink.api.common.serialization.SerializationSchema;
 import org.apache.flink.configuration.ConfigOption;
 import org.apache.flink.configuration.Configuration;
@@ -26,14 +27,25 @@ import org.apache.flink.configuration.ReadableConfig;
 import org.apache.flink.table.api.TableSchema;
 import org.apache.flink.table.api.ValidationException;
 import org.apache.flink.table.api.config.TableConfigOptions;
+import org.apache.flink.table.connector.format.DecodingFormat;
 import org.apache.flink.table.connector.format.EncodingFormat;
 import org.apache.flink.table.connector.sink.DynamicTableSink;
+import org.apache.flink.table.connector.source.DynamicTableSource;
+import org.apache.flink.table.connector.source.lookup.LookupOptions;
+import org.apache.flink.table.connector.source.lookup.cache.DefaultLookupCache;
+import org.apache.flink.table.connector.source.lookup.cache.LookupCache;
 import org.apache.flink.table.data.RowData;
+import org.apache.flink.table.factories.DeserializationFormatFactory;
+import org.apache.flink.table.factories.DynamicTableFactory;
 import org.apache.flink.table.factories.DynamicTableSinkFactory;
+import org.apache.flink.table.factories.DynamicTableSourceFactory;
 import org.apache.flink.table.factories.FactoryUtil;
 import org.apache.flink.table.factories.SerializationFormatFactory;
+import org.apache.flink.table.types.DataType;
 import org.apache.flink.table.utils.TableSchemaUtils;
 import org.apache.flink.util.StringUtils;
+
+import javax.annotation.Nullable;
 
 import java.time.ZoneId;
 import java.util.Set;
@@ -48,7 +60,6 @@ import static org.apache.flink.streaming.connectors.elasticsearch.table.Elastics
 import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.BULK_FLUSH_INTERVAL_OPTION;
 import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.BULK_FLUSH_MAX_ACTIONS_OPTION;
 import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.CONNECTION_PATH_PREFIX;
-import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.DOCUMENT_TYPE_OPTION;
 import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.FAILURE_HANDLER_OPTION;
 import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.FLUSH_ON_CHECKPOINT_OPTION;
 import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.FORMAT_OPTION;
@@ -57,12 +68,22 @@ import static org.apache.flink.streaming.connectors.elasticsearch.table.Elastics
 import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.KEY_DELIMITER_OPTION;
 import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.PASSWORD_OPTION;
 import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.USERNAME_OPTION;
+import static org.apache.flink.table.connector.source.lookup.LookupOptions.CACHE_TYPE;
+import static org.apache.flink.table.connector.source.lookup.LookupOptions.MAX_RETRIES;
+import static org.apache.flink.table.connector.source.lookup.LookupOptions.PARTIAL_CACHE_CACHE_MISSING_KEY;
+import static org.apache.flink.table.connector.source.lookup.LookupOptions.PARTIAL_CACHE_EXPIRE_AFTER_ACCESS;
+import static org.apache.flink.table.connector.source.lookup.LookupOptions.PARTIAL_CACHE_EXPIRE_AFTER_WRITE;
+import static org.apache.flink.table.connector.source.lookup.LookupOptions.PARTIAL_CACHE_MAX_ROWS;
 
-/** A {@link DynamicTableSinkFactory} for discovering {@link Elasticsearch6DynamicSink}. */
+/**
+ * A {@link DynamicTableFactory} for discovering {@link Elasticsearch7DynamicSource} and {@link
+ * Elasticsearch7DynamicSink}.
+ */
 @Internal
-public class Elasticsearch6DynamicSinkFactory implements DynamicTableSinkFactory {
+public class Elasticsearch7DynamicTableFactory
+        implements DynamicTableSourceFactory, DynamicTableSinkFactory {
     private static final Set<ConfigOption<?>> requiredOptions =
-            Stream.of(HOSTS_OPTION, INDEX_OPTION, DOCUMENT_TYPE_OPTION).collect(Collectors.toSet());
+            Stream.of(HOSTS_OPTION, INDEX_OPTION).collect(Collectors.toSet());
     private static final Set<ConfigOption<?>> optionalOptions =
             Stream.of(
                             KEY_DELIMITER_OPTION,
@@ -77,13 +98,47 @@ public class Elasticsearch6DynamicSinkFactory implements DynamicTableSinkFactory
                             CONNECTION_PATH_PREFIX,
                             FORMAT_OPTION,
                             PASSWORD_OPTION,
-                            USERNAME_OPTION)
+                            USERNAME_OPTION,
+                            CACHE_TYPE,
+                            PARTIAL_CACHE_EXPIRE_AFTER_ACCESS,
+                            PARTIAL_CACHE_EXPIRE_AFTER_WRITE,
+                            PARTIAL_CACHE_MAX_ROWS,
+                            PARTIAL_CACHE_CACHE_MISSING_KEY,
+                            MAX_RETRIES)
                     .collect(Collectors.toSet());
+
+    @Override
+    public DynamicTableSource createDynamicTableSource(Context context) {
+        DataType physicalRowDataType = context.getPhysicalRowDataType();
+        final FactoryUtil.TableFactoryHelper helper =
+                FactoryUtil.createTableFactoryHelper(this, context);
+        final ReadableConfig options = helper.getOptions();
+        final DecodingFormat<DeserializationSchema<RowData>> format =
+                helper.discoverDecodingFormat(
+                        DeserializationFormatFactory.class,
+                        org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions
+                                .FORMAT_OPTION);
+
+        helper.validate();
+
+        Configuration configuration = new Configuration();
+        context.getCatalogTable().getOptions().forEach(configuration::setString);
+        Elasticsearch7Configuration config =
+                new Elasticsearch7Configuration(configuration, context.getClassLoader());
+
+        return new Elasticsearch7DynamicSource(
+                format,
+                config,
+                physicalRowDataType,
+                options.get(MAX_RETRIES),
+                getLookupCache(options));
+    }
 
     @Override
     public DynamicTableSink createDynamicTableSink(Context context) {
         TableSchema tableSchema = context.getCatalogTable().getSchema();
         ElasticsearchValidationUtils.validatePrimaryKey(tableSchema);
+
         final FactoryUtil.TableFactoryHelper helper =
                 FactoryUtil.createTableFactoryHelper(this, context);
 
@@ -93,16 +148,27 @@ public class Elasticsearch6DynamicSinkFactory implements DynamicTableSinkFactory
         helper.validate();
         Configuration configuration = new Configuration();
         context.getCatalogTable().getOptions().forEach(configuration::setString);
-        Elasticsearch6Configuration config =
-                new Elasticsearch6Configuration(configuration, context.getClassLoader());
+        Elasticsearch7Configuration config =
+                new Elasticsearch7Configuration(configuration, context.getClassLoader());
 
         validate(config, configuration);
 
-        return new Elasticsearch6DynamicSink(
+        return new Elasticsearch7DynamicSink(
                 format,
                 config,
                 TableSchemaUtils.getPhysicalSchema(tableSchema),
                 getLocalTimeZoneId(context.getConfiguration()));
+    }
+
+    @Nullable
+    private LookupCache getLookupCache(ReadableConfig tableOptions) {
+        LookupCache cache = null;
+        if (tableOptions
+                .get(LookupOptions.CACHE_TYPE)
+                .equals(LookupOptions.LookupCacheType.PARTIAL)) {
+            cache = DefaultLookupCache.fromConfig(tableOptions);
+        }
+        return cache;
     }
 
     ZoneId getLocalTimeZoneId(ReadableConfig readableConfig) {
@@ -115,7 +181,7 @@ public class Elasticsearch6DynamicSinkFactory implements DynamicTableSinkFactory
         return zoneId;
     }
 
-    private void validate(Elasticsearch6Configuration config, Configuration originalConfiguration) {
+    private void validate(Elasticsearch7Configuration config, Configuration originalConfiguration) {
         config.getFailureHandler(); // checks if we can instantiate the custom failure handler
         config.getHosts(); // validate hosts
         validate(
@@ -169,7 +235,7 @@ public class Elasticsearch6DynamicSinkFactory implements DynamicTableSinkFactory
 
     @Override
     public String factoryIdentifier() {
-        return "elasticsearch-6";
+        return "elasticsearch-7";
     }
 
     @Override

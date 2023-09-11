@@ -18,6 +18,7 @@
 package org.apache.flink.streaming.connectors.elasticsearch6;
 
 import org.apache.flink.annotation.Internal;
+import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.streaming.connectors.elasticsearch.ElasticsearchApiCallBridge;
 import org.apache.flink.streaming.connectors.elasticsearch.ElasticsearchSinkBase;
 import org.apache.flink.streaming.connectors.elasticsearch.RequestIndexer;
@@ -27,10 +28,13 @@ import org.apache.http.HttpHost;
 import org.elasticsearch.action.bulk.BackoffPolicy;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkProcessor;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.search.SearchHit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,6 +43,7 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Stream;
 
 /** Implementation of {@link ElasticsearchApiCallBridge} for Elasticsearch 6 and later versions. */
 @Internal
@@ -55,7 +60,8 @@ public class Elasticsearch6ApiCallBridge
     /** The factory to configure the rest client. */
     private final RestClientFactory restClientFactory;
 
-    Elasticsearch6ApiCallBridge(List<HttpHost> httpHosts, RestClientFactory restClientFactory) {
+    public Elasticsearch6ApiCallBridge(
+            List<HttpHost> httpHosts, RestClientFactory restClientFactory) {
         Preconditions.checkArgument(httpHosts != null && !httpHosts.isEmpty());
         this.httpHosts = httpHosts;
         this.restClientFactory = Preconditions.checkNotNull(restClientFactory);
@@ -76,6 +82,21 @@ public class Elasticsearch6ApiCallBridge
     public BulkProcessor.Builder createBulkProcessorBuilder(
             RestHighLevelClient client, BulkProcessor.Listener listener) {
         return BulkProcessor.builder(client::bulkAsync, listener);
+    }
+
+    @Override
+    public Tuple2<String, String[]> search(RestHighLevelClient client, SearchRequest searchRequest)
+            throws IOException {
+        SearchResponse searchResponse = client.search(searchRequest);
+        SearchHit[] searchHits = searchResponse.getHits().getHits();
+        return new Tuple2<>(
+                searchResponse.getScrollId(),
+                Stream.of(searchHits).map(SearchHit::getSourceAsString).toArray(String[]::new));
+    }
+
+    @Override
+    public void close(RestHighLevelClient client) throws IOException {
+        client.close();
     }
 
     @Override

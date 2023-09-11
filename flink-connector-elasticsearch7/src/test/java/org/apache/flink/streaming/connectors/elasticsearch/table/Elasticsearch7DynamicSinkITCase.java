@@ -107,12 +107,11 @@ public class Elasticsearch7DynamicSinkITCase extends TestLogger {
                                 LocalDateTime.parse("2012-12-12T12:12:12")));
 
         String index = "writing-documents";
-        Elasticsearch7DynamicSinkFactory sinkFactory = new Elasticsearch7DynamicSinkFactory();
+        Elasticsearch7DynamicTableFactory factory = new Elasticsearch7DynamicTableFactory();
 
         SinkFunctionProvider sinkRuntimeProvider =
                 (SinkFunctionProvider)
-                        sinkFactory
-                                .createDynamicTableSink(
+                        factory.createDynamicTableSink(
                                         context()
                                                 .withSchema(schema)
                                                 .withOption(
