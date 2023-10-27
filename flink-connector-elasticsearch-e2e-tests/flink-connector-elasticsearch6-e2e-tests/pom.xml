@@ -92,6 +92,12 @@ under the License.
 			<version>${flink.version}</version>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.flink</groupId>
+			<artifactId>flink-connector-base</artifactId>
+			<version>${flink.version}</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
