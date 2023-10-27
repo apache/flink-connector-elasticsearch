@@ -118,6 +118,12 @@ under the License.
 			<groupId>org.testcontainers</groupId>
 			<artifactId>junit-jupiter</artifactId>
 			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<artifactId>commons-compress</artifactId>
+					<groupId>org.apache.commons</groupId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<!-- Tests will have log4j as the default logging framework available -->
@@ -275,6 +281,13 @@ under the License.
 				<groupId>org.apache.logging.log4j</groupId>
 				<artifactId>log4j-1.2-api</artifactId>
 				<version>${log4j.version}</version>
+			</dependency>
+
+			<!-- For dependency convergence  -->
+			<dependency>
+				<groupId>org.apache.commons</groupId>
+				<artifactId>commons-compress</artifactId>
+				<version>1.24.0</version>
 			</dependency>
 
 			<!-- For dependency convergence -->
