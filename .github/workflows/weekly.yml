@@ -36,9 +36,6 @@ jobs:
           flink: 1.18-SNAPSHOT,
           branch: main
         }, {
-          flink: 1.19-SNAPSHOT,
-          branch: main
-        }, {
           flink: 1.16.2,
           branch: v3.0
         }, {
