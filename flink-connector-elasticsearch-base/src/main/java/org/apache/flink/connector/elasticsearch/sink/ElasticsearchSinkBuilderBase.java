@@ -22,6 +22,9 @@ import org.apache.flink.annotation.PublicEvolving;
 import org.apache.flink.api.common.ExecutionConfig;
 import org.apache.flink.api.java.ClosureCleaner;
 import org.apache.flink.connector.base.DeliveryGuarantee;
+import org.apache.flink.connector.elasticsearch.sink.BulkResponseInspector.BulkResponseInspectorFactory;
+import org.apache.flink.connector.elasticsearch.sink.ElasticsearchWriter.DefaultBulkResponseInspector;
+import org.apache.flink.connector.elasticsearch.sink.ElasticsearchWriter.DefaultFailureHandler;
 import org.apache.flink.util.InstantiationUtil;
 
 import org.apache.http.HttpHost;
@@ -57,6 +60,8 @@ public abstract class ElasticsearchSinkBuilderBase<
     private Integer connectionTimeout;
     private Integer connectionRequestTimeout;
     private Integer socketTimeout;
+    private FailureHandler failureHandler = new DefaultFailureHandler();
+    private BulkResponseInspectorFactory bulkResponseInspectorFactory;
 
     protected ElasticsearchSinkBuilderBase() {}
 
@@ -258,7 +263,40 @@ public abstract class ElasticsearchSinkBuilderBase<
         return self();
     }
 
+    /**
+     * Overrides the default {@link FailureHandler}. A custom failure handler can handle partial
+     * failures gracefully. See {@link #bulkResponseInspectorFactory} for more extensive control.
+     *
+     * @param failureHandler the handler
+     * @see #bulkResponseInspectorFactory
+     * @return this builder
+     */
+    public B setFailureHandler(FailureHandler failureHandler) {
+        this.failureHandler = checkNotNull(failureHandler);
+        return self();
+    }
+
+    /**
+     * Overrides the default {@link BulkResponseInspectorFactory}. A custom {@link
+     * BulkResponseInspector}, for example, can change the failure handling and capture additional
+     * metrics. See {@link #failureHandler} for a simpler way of handling failures.
+     *
+     * @param bulkResponseInspectorFactory the factory
+     * @return this builder
+     */
+    public B setBulkResponseInspectorFactory(
+            BulkResponseInspectorFactory bulkResponseInspectorFactory) {
+        this.bulkResponseInspectorFactory = checkNotNull(bulkResponseInspectorFactory);
+        return self();
+    }
+
     protected abstract BulkProcessorBuilderFactory getBulkProcessorBuilderFactory();
+
+    protected BulkResponseInspectorFactory getBulkResponseInspectorFactory() {
+        return this.bulkResponseInspectorFactory == null
+                ? new DefaultBulkResponseInspectorFactory(failureHandler)
+                : this.bulkResponseInspectorFactory;
+    }
 
     /**
      * Constructs the {@link ElasticsearchSink} with the properties configured this builder.
@@ -276,13 +314,17 @@ public abstract class ElasticsearchSinkBuilderBase<
         ClosureCleaner.clean(
                 bulkProcessorBuilderFactory, ExecutionConfig.ClosureCleanerLevel.RECURSIVE, true);
 
+        final BulkResponseInspectorFactory bulkResponseInspectorFactory =
+                getBulkResponseInspectorFactory();
+
         return new ElasticsearchSink<>(
                 hosts,
                 emitter,
                 deliveryGuarantee,
                 bulkProcessorBuilderFactory,
                 bulkProcessorConfig,
-                networkClientConfig);
+                networkClientConfig,
+                bulkResponseInspectorFactory);
     }
 
     private NetworkClientConfig buildNetworkClientConfig() {
@@ -338,5 +380,24 @@ public abstract class ElasticsearchSinkBuilderBase<
                 + connectionPathPrefix
                 + '\''
                 + '}';
+    }
+
+    /**
+     * Default factory for {@link FailureHandler}-bound {@link BulkResponseInspector
+     * BulkResponseInspectors}. A Static class is used instead of anonymous/lambda to avoid
+     * non-serializable references to {@link ElasticsearchSinkBuilderBase}.
+     */
+    static class DefaultBulkResponseInspectorFactory implements BulkResponseInspectorFactory {
+
+        private final FailureHandler failureHandler;
+
+        DefaultBulkResponseInspectorFactory(FailureHandler failureHandler) {
+            this.failureHandler = failureHandler;
+        }
+
+        @Override
+        public BulkResponseInspector apply(InitContext context) {
+            return new DefaultBulkResponseInspector(failureHandler);
+        }
     }
 }
