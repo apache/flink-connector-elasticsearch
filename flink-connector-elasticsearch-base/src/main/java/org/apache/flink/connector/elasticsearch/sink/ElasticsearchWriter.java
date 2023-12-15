@@ -315,6 +315,11 @@ class ElasticsearchWriter<IN> implements SinkWriter<IN> {
                 bulkProcessor.add(updateRequest);
             }
         }
+
+        @Override
+        public void flush() {
+            bulkProcessor.flush();
+        }
     }
 
     /**

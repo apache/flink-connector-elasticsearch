@@ -53,4 +53,16 @@ public interface RequestIndexer {
      * @param updateRequests The multiple {@link UpdateRequest} to add.
      */
     void add(UpdateRequest... updateRequests);
+
+    /**
+     * Manually flush the underlying bulk request. This is optional and will happen automatically if
+     * configured, for example, by setting
+     *
+     * <ul>
+     *   <li>{@link ElasticsearchSinkBuilderBase#setBulkFlushMaxSizeMb(int)},
+     *   <li>{@link ElasticsearchSinkBuilderBase#setBulkFlushMaxActions(int)}, and/or
+     *   <li>{@link ElasticsearchSinkBuilderBase#setBulkFlushInterval(long)}
+     * </ul>
+     */
+    void flush();
 }
