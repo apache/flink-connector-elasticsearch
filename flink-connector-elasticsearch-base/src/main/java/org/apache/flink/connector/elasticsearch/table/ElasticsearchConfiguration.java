@@ -23,7 +23,7 @@ import org.apache.flink.configuration.MemorySize;
 import org.apache.flink.configuration.ReadableConfig;
 import org.apache.flink.connector.base.DeliveryGuarantee;
 import org.apache.flink.connector.elasticsearch.sink.FlushBackoffType;
-import org.apache.flink.table.api.ValidationException;
+import org.apache.flink.streaming.connectors.elasticsearch.util.ElasticsearchCommonUtils;
 
 import org.apache.http.HttpHost;
 
@@ -122,37 +122,11 @@ class ElasticsearchConfiguration {
 
     public List<HttpHost> getHosts() {
         return config.get(HOSTS_OPTION).stream()
-                .map(ElasticsearchConfiguration::validateAndParseHostsString)
+                .map(ElasticsearchCommonUtils::validateAndParseHostsString)
                 .collect(Collectors.toList());
     }
 
     public Optional<Integer> getParallelism() {
         return config.getOptional(SINK_PARALLELISM);
-    }
-
-    private static HttpHost validateAndParseHostsString(String host) {
-        try {
-            HttpHost httpHost = HttpHost.create(host);
-            if (httpHost.getPort() < 0) {
-                throw new ValidationException(
-                        String.format(
-                                "Could not parse host '%s' in option '%s'. It should follow the format 'http://host_name:port'. Missing port.",
-                                host, HOSTS_OPTION.key()));
-            }
-
-            if (httpHost.getSchemeName() == null) {
-                throw new ValidationException(
-                        String.format(
-                                "Could not parse host '%s' in option '%s'. It should follow the format 'http://host_name:port'. Missing scheme.",
-                                host, HOSTS_OPTION.key()));
-            }
-            return httpHost;
-        } catch (Exception e) {
-            throw new ValidationException(
-                    String.format(
-                            "Could not parse host '%s' in option '%s'. It should follow the format 'http://host_name:port'.",
-                            host, HOSTS_OPTION.key()),
-                    e);
-        }
     }
 }

@@ -23,6 +23,7 @@ import org.apache.flink.annotation.VisibleForTesting;
 import org.apache.flink.api.connector.sink2.Sink;
 import org.apache.flink.api.connector.sink2.SinkWriter;
 import org.apache.flink.connector.base.DeliveryGuarantee;
+import org.apache.flink.connector.elasticsearch.sink.BulkResponseInspector.BulkResponseInspectorFactory;
 
 import org.apache.http.HttpHost;
 
@@ -58,6 +59,7 @@ public class ElasticsearchSink<IN> implements Sink<IN> {
     private final ElasticsearchEmitter<? super IN> emitter;
     private final BulkProcessorConfig buildBulkProcessorConfig;
     private final BulkProcessorBuilderFactory bulkProcessorBuilderFactory;
+    private final BulkResponseInspectorFactory bulkResponseInspectorFactory;
     private final NetworkClientConfig networkClientConfig;
     private final DeliveryGuarantee deliveryGuarantee;
 
@@ -67,9 +69,11 @@ public class ElasticsearchSink<IN> implements Sink<IN> {
             DeliveryGuarantee deliveryGuarantee,
             BulkProcessorBuilderFactory bulkProcessorBuilderFactory,
             BulkProcessorConfig buildBulkProcessorConfig,
-            NetworkClientConfig networkClientConfig) {
+            NetworkClientConfig networkClientConfig,
+            BulkResponseInspectorFactory bulkResponseInspectorFactory) {
         this.hosts = checkNotNull(hosts);
         this.bulkProcessorBuilderFactory = checkNotNull(bulkProcessorBuilderFactory);
+        this.bulkResponseInspectorFactory = checkNotNull(bulkResponseInspectorFactory);
         checkArgument(!hosts.isEmpty(), "Hosts cannot be empty.");
         this.emitter = checkNotNull(emitter);
         this.deliveryGuarantee = checkNotNull(deliveryGuarantee);
@@ -85,6 +89,7 @@ public class ElasticsearchSink<IN> implements Sink<IN> {
                 deliveryGuarantee == DeliveryGuarantee.AT_LEAST_ONCE,
                 buildBulkProcessorConfig,
                 bulkProcessorBuilderFactory,
+                bulkResponseInspectorFactory.apply(context::metricGroup),
                 networkClientConfig,
                 context.metricGroup(),
                 context.getMailboxExecutor());
@@ -93,5 +98,10 @@ public class ElasticsearchSink<IN> implements Sink<IN> {
     @VisibleForTesting
     DeliveryGuarantee getDeliveryGuarantee() {
         return deliveryGuarantee;
+    }
+
+    @VisibleForTesting
+    BulkResponseInspectorFactory getBulkResponseInspectorFactory() {
+        return bulkResponseInspectorFactory;
     }
 }

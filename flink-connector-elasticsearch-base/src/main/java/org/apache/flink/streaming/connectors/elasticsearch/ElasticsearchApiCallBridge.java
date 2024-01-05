@@ -67,11 +67,23 @@ public interface ElasticsearchApiCallBridge<C extends AutoCloseable> extends Ser
     ElasticsearchInputSplit[] createInputSplitsInternal(
             C client, String index, String type, int minNumSplits);
 
-    Tuple2<String, String[]> search(C client, SearchRequest searchRequest) throws IOException;
-
     Tuple2<String, String[]> scroll(C client, SearchScrollRequest searchScrollRequest)
             throws IOException;
 
+
+    /**
+     * Executes a search using the Search API.
+     *
+     * @param client the Elasticsearch client.
+     * @param searchRequest A request to execute search against one or more indices (or all).
+     */
+    Tuple2<String, String[]> search(C client, SearchRequest searchRequest) throws IOException;
+
+    /**
+     * Closes this client and releases any system resources associated with it.
+     *
+     * @param client the Elasticsearch client.
+     */
     void close(C client) throws IOException;
 
     /**

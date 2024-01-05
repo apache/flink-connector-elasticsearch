@@ -42,16 +42,16 @@ under the License.
   <tbody>
     <tr>
         <td>6.x</td>
-        <td>{{< connector_artifact flink-connector-elasticsearch6 3.0.0 >}}</td>
+        <td>{{< connector_artifact flink-connector-elasticsearch6 elastic >}}</td>
     </tr>
     <tr>
         <td>7.x</td>
-        <td>{{< connector_artifact flink-connector-elasticsearch7 3.0.0 >}}</td>
+        <td>{{< connector_artifact flink-connector-elasticsearch7 elastic >}}</td>
     </tr>
   </tbody>
 </table>
 
-{{< py_download_link "elastic" >}}
+{{< py_connector_download_link "elastic" >}}
 
 请注意，流连接器目前不是二进制发行版的一部分。
 有关如何将程序和用于集群执行的库一起打包，参考[此文档]({{< ref "docs/dev/configuration/overview" >}})。

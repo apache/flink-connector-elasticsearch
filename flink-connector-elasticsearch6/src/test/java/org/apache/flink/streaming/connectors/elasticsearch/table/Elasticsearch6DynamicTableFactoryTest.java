@@ -35,13 +35,13 @@ import java.util.Collections;
 
 import static org.apache.flink.streaming.connectors.elasticsearch.table.TestContext.context;
 
-/** Tests for validation in {@link Elasticsearch6DynamicSinkFactory}. */
-public class Elasticsearch6DynamicSinkFactoryTest extends TestLogger {
+/** Tests for validation in {@link Elasticsearch6DynamicTableFactory}. */
+public class Elasticsearch6DynamicTableFactoryTest extends TestLogger {
     @Rule public ExpectedException thrown = ExpectedException.none();
 
     @Test
     public void validateEmptyConfiguration() {
-        Elasticsearch6DynamicSinkFactory sinkFactory = new Elasticsearch6DynamicSinkFactory();
+        Elasticsearch6DynamicTableFactory factory = new Elasticsearch6DynamicTableFactory();
 
         thrown.expect(ValidationException.class);
         thrown.expectMessage(
@@ -52,16 +52,16 @@ public class Elasticsearch6DynamicSinkFactoryTest extends TestLogger {
                         + "document-type\n"
                         + "hosts\n"
                         + "index");
-        sinkFactory.createDynamicTableSink(context().build());
+        factory.createDynamicTableSink(context().build());
     }
 
     @Test
     public void validateWrongIndex() {
-        Elasticsearch6DynamicSinkFactory sinkFactory = new Elasticsearch6DynamicSinkFactory();
+        Elasticsearch6DynamicTableFactory factory = new Elasticsearch6DynamicTableFactory();
 
         thrown.expect(ValidationException.class);
         thrown.expectMessage("'index' must not be empty");
-        sinkFactory.createDynamicTableSink(
+        factory.createDynamicTableSink(
                 context()
                         .withOption("index", "")
                         .withOption("document-type", "MyType")
@@ -71,12 +71,12 @@ public class Elasticsearch6DynamicSinkFactoryTest extends TestLogger {
 
     @Test
     public void validateWrongHosts() {
-        Elasticsearch6DynamicSinkFactory sinkFactory = new Elasticsearch6DynamicSinkFactory();
+        Elasticsearch6DynamicTableFactory factory = new Elasticsearch6DynamicTableFactory();
 
         thrown.expect(ValidationException.class);
         thrown.expectMessage(
                 "Could not parse host 'wrong-host' in option 'hosts'. It should follow the format 'http://host_name:port'.");
-        sinkFactory.createDynamicTableSink(
+        factory.createDynamicTableSink(
                 context()
                         .withOption("index", "MyIndex")
                         .withOption("document-type", "MyType")
@@ -86,12 +86,12 @@ public class Elasticsearch6DynamicSinkFactoryTest extends TestLogger {
 
     @Test
     public void validateWrongFlushSize() {
-        Elasticsearch6DynamicSinkFactory sinkFactory = new Elasticsearch6DynamicSinkFactory();
+        Elasticsearch6DynamicTableFactory factory = new Elasticsearch6DynamicTableFactory();
 
         thrown.expect(ValidationException.class);
         thrown.expectMessage(
                 "'sink.bulk-flush.max-size' must be in MB granularity. Got: 1024 bytes");
-        sinkFactory.createDynamicTableSink(
+        factory.createDynamicTableSink(
                 context()
                         .withOption(ElasticsearchConnectorOptions.INDEX_OPTION.key(), "MyIndex")
                         .withOption(
@@ -107,11 +107,11 @@ public class Elasticsearch6DynamicSinkFactoryTest extends TestLogger {
 
     @Test
     public void validateWrongRetries() {
-        Elasticsearch6DynamicSinkFactory sinkFactory = new Elasticsearch6DynamicSinkFactory();
+        Elasticsearch6DynamicTableFactory factory = new Elasticsearch6DynamicTableFactory();
 
         thrown.expect(ValidationException.class);
         thrown.expectMessage("'sink.bulk-flush.backoff.max-retries' must be at least 1. Got: 0");
-        sinkFactory.createDynamicTableSink(
+        factory.createDynamicTableSink(
                 context()
                         .withOption(ElasticsearchConnectorOptions.INDEX_OPTION.key(), "MyIndex")
                         .withOption(
@@ -128,11 +128,11 @@ public class Elasticsearch6DynamicSinkFactoryTest extends TestLogger {
 
     @Test
     public void validateWrongMaxActions() {
-        Elasticsearch6DynamicSinkFactory sinkFactory = new Elasticsearch6DynamicSinkFactory();
+        Elasticsearch6DynamicTableFactory factory = new Elasticsearch6DynamicTableFactory();
 
         thrown.expect(ValidationException.class);
         thrown.expectMessage("'sink.bulk-flush.max-actions' must be at least 1. Got: -2");
-        sinkFactory.createDynamicTableSink(
+        factory.createDynamicTableSink(
                 context()
                         .withOption(ElasticsearchConnectorOptions.INDEX_OPTION.key(), "MyIndex")
                         .withOption(
@@ -148,11 +148,11 @@ public class Elasticsearch6DynamicSinkFactoryTest extends TestLogger {
 
     @Test
     public void validateWrongBackoffDelay() {
-        Elasticsearch6DynamicSinkFactory sinkFactory = new Elasticsearch6DynamicSinkFactory();
+        Elasticsearch6DynamicTableFactory factory = new Elasticsearch6DynamicTableFactory();
 
         thrown.expect(ValidationException.class);
         thrown.expectMessage("Invalid value for option 'sink.bulk-flush.backoff.delay'.");
-        sinkFactory.createDynamicTableSink(
+        factory.createDynamicTableSink(
                 context()
                         .withOption(ElasticsearchConnectorOptions.INDEX_OPTION.key(), "MyIndex")
                         .withOption(
@@ -168,7 +168,7 @@ public class Elasticsearch6DynamicSinkFactoryTest extends TestLogger {
 
     @Test
     public void validatePrimaryKeyOnIllegalColumn() {
-        Elasticsearch6DynamicSinkFactory sinkFactory = new Elasticsearch6DynamicSinkFactory();
+        Elasticsearch6DynamicTableFactory factory = new Elasticsearch6DynamicTableFactory();
 
         thrown.expect(ValidationException.class);
         thrown.expectMessage(
@@ -176,7 +176,7 @@ public class Elasticsearch6DynamicSinkFactoryTest extends TestLogger {
                         + "[ARRAY, MAP, MULTISET, ROW, RAW, VARBINARY].\n"
                         + " Elasticsearch sink does not support primary keys on columns of types: "
                         + "[ARRAY, MAP, MULTISET, STRUCTURED_TYPE, ROW, RAW, BINARY, VARBINARY].");
-        sinkFactory.createDynamicTableSink(
+        factory.createDynamicTableSink(
                 context()
                         .withSchema(
                                 new ResolvedSchema(
@@ -230,12 +230,12 @@ public class Elasticsearch6DynamicSinkFactoryTest extends TestLogger {
 
     @Test
     public void validateWrongCredential() {
-        Elasticsearch6DynamicSinkFactory sinkFactory = new Elasticsearch6DynamicSinkFactory();
+        Elasticsearch6DynamicTableFactory factory = new Elasticsearch6DynamicTableFactory();
 
         thrown.expect(ValidationException.class);
         thrown.expectMessage(
                 "'username' and 'password' must be set at the same time. Got: username 'username' and password ''");
-        sinkFactory.createDynamicTableSink(
+        factory.createDynamicTableSink(
                 context()
                         .withOption(ElasticsearchConnectorOptions.INDEX_OPTION.key(), "MyIndex")
                         .withOption(

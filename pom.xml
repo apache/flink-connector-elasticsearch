@@ -50,9 +50,7 @@ under the License.
 	</modules>
 
 	<properties>
-		<flink.version>1.17.0</flink.version>
-		<flink.shaded.version>16.1</flink.shaded.version>
-		<scala.binary.version>2.12</scala.binary.version>
+		<flink.version>1.17.1</flink.version>
 
 		<jackson-bom.version>2.13.4.20221013</jackson-bom.version>
 		<junit4.version>4.13.2</junit4.version>
@@ -73,12 +71,6 @@ under the License.
 	</properties>
 
 	<dependencies>
-		<dependency>
-			<groupId>org.apache.flink</groupId>
-			<artifactId>flink-shaded-force-shading</artifactId>
-			<version>${flink.shaded.version}</version>
-		</dependency>
-
 		<!-- Root dependencies for all projects -->
 
 		<!-- Logging API -->
@@ -285,6 +277,20 @@ under the License.
 				<version>${log4j.version}</version>
 			</dependency>
 
+			<!-- For dependency convergence  -->
+			<dependency>
+				<groupId>org.apache.commons</groupId>
+				<artifactId>commons-compress</artifactId>
+				<version>1.24.0</version>
+			</dependency>
+
+			<!-- For dependency convergence  -->
+			<dependency>
+				<groupId>org.xerial.snappy</groupId>
+				<artifactId>snappy-java</artifactId>
+				<version>1.1.10.4</version>
+			</dependency>
+
 			<!-- For dependency convergence -->
 			<dependency>
 				<groupId>com.fasterxml.jackson</groupId>
@@ -408,9 +414,6 @@ under the License.
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-checkstyle-plugin</artifactId>
-				<configuration>
-					<skip>true</skip>
-				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>com.diffplug.spotless</groupId>

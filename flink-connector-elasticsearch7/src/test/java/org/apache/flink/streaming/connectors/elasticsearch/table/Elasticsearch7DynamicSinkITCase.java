@@ -20,6 +20,7 @@ package org.apache.flink.streaming.connectors.elasticsearch.table;
 
 import org.apache.flink.api.common.time.Deadline;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
+import org.apache.flink.connector.elasticsearch.test.DockerImageVersions;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.table.api.DataTypes;
@@ -95,8 +96,7 @@ public class Elasticsearch7DynamicSinkITCase extends Elasticsearch7DynamicTableT
 
         SinkFunctionProvider sinkRuntimeProvider =
                 (SinkFunctionProvider)
-                        sinkFactory
-                                .createDynamicTableSink(
+                        sinkFactory.createDynamicTableSink(
                                         context()
                                                 .withSchema(schema)
                                                 .withOption(

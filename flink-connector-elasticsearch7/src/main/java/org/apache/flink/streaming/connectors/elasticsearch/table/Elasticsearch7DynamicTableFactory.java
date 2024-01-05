@@ -31,14 +31,23 @@ import org.apache.flink.table.connector.format.DecodingFormat;
 import org.apache.flink.table.connector.format.EncodingFormat;
 import org.apache.flink.table.connector.sink.DynamicTableSink;
 import org.apache.flink.table.connector.source.DynamicTableSource;
+import org.apache.flink.table.connector.source.DynamicTableSource;
+import org.apache.flink.table.connector.source.lookup.LookupOptions;
+import org.apache.flink.table.connector.source.lookup.cache.DefaultLookupCache;
+import org.apache.flink.table.connector.source.lookup.cache.LookupCache;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.factories.DeserializationFormatFactory;
+import org.apache.flink.table.factories.DeserializationFormatFactory;
+import org.apache.flink.table.factories.DynamicTableFactory;
 import org.apache.flink.table.factories.DynamicTableSinkFactory;
 import org.apache.flink.table.factories.DynamicTableSourceFactory;
 import org.apache.flink.table.factories.FactoryUtil;
 import org.apache.flink.table.factories.SerializationFormatFactory;
+import org.apache.flink.table.types.DataType;
 import org.apache.flink.table.utils.TableSchemaUtils;
 import org.apache.flink.util.StringUtils;
+
+import javax.annotation.Nullable;
 
 import java.time.ZoneId;
 import java.util.Set;
@@ -66,8 +75,17 @@ import static org.apache.flink.streaming.connectors.elasticsearch.table.Elastics
 import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.SCROLL_MAX_SIZE_OPTION;
 import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.SCROLL_TIMEOUT_OPTION;
 import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.USERNAME_OPTION;
+import static org.apache.flink.table.connector.source.lookup.LookupOptions.CACHE_TYPE;
+import static org.apache.flink.table.connector.source.lookup.LookupOptions.MAX_RETRIES;
+import static org.apache.flink.table.connector.source.lookup.LookupOptions.PARTIAL_CACHE_CACHE_MISSING_KEY;
+import static org.apache.flink.table.connector.source.lookup.LookupOptions.PARTIAL_CACHE_EXPIRE_AFTER_ACCESS;
+import static org.apache.flink.table.connector.source.lookup.LookupOptions.PARTIAL_CACHE_EXPIRE_AFTER_WRITE;
+import static org.apache.flink.table.connector.source.lookup.LookupOptions.PARTIAL_CACHE_MAX_ROWS;
 
-/** A {@link DynamicTableSinkFactory} for discovering {@link Elasticsearch7DynamicSink}. */
+/**
+ * A {@link DynamicTableFactory} for discovering {@link Elasticsearch7DynamicSource} and {@link
+ * Elasticsearch7DynamicSink}.
+ */
 @Internal
 public class Elasticsearch7DynamicTableFactory
         implements DynamicTableSourceFactory, DynamicTableSinkFactory {
@@ -92,18 +110,29 @@ public class Elasticsearch7DynamicTableFactory
                             LOOKUP_CACHE_TTL,
                             LOOKUP_MAX_RETRIES,
                             PASSWORD_OPTION,
-                            USERNAME_OPTION)
+                            USERNAME_OPTION,
+                            CACHE_TYPE,
+                            PARTIAL_CACHE_EXPIRE_AFTER_ACCESS,
+                            PARTIAL_CACHE_EXPIRE_AFTER_WRITE,
+                            PARTIAL_CACHE_MAX_ROWS,
+                            PARTIAL_CACHE_CACHE_MISSING_KEY,
+                            MAX_RETRIES)
                     .collect(Collectors.toSet());
 
     @Override
     public DynamicTableSource createDynamicTableSource(Context context) {
-
-        TableSchema schema = context.getCatalogTable().getSchema();
+        DataType physicalRowDataType = context.getPhysicalRowDataType();
         final FactoryUtil.TableFactoryHelper helper =
                 FactoryUtil.createTableFactoryHelper(this, context);
+        final ReadableConfig options = helper.getOptions();
         final DecodingFormat<DeserializationSchema<RowData>> format =
-                helper.discoverDecodingFormat(DeserializationFormatFactory.class, FORMAT_OPTION);
+                helper.discoverDecodingFormat(
+                        DeserializationFormatFactory.class,
+                        org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions
+                                .FORMAT_OPTION);
+
         helper.validate();
+
         Configuration configuration = new Configuration();
         context.getCatalogTable().getOptions().forEach(configuration::setString);
         Elasticsearch7Configuration config =
@@ -112,8 +141,9 @@ public class Elasticsearch7DynamicTableFactory
         return new Elasticsearch7DynamicSource(
                 format,
                 config,
-                TableSchemaUtils.getPhysicalSchema(schema),
-                new ElasticsearchLookupOptions.Builder().build());
+                physicalRowDataType,
+                options.get(MAX_RETRIES),
+                getLookupCache(options));
     }
 
     @Override
@@ -140,6 +170,17 @@ public class Elasticsearch7DynamicTableFactory
                 config,
                 TableSchemaUtils.getPhysicalSchema(tableSchema),
                 getLocalTimeZoneId(context.getConfiguration()));
+    }
+
+    @Nullable
+    private LookupCache getLookupCache(ReadableConfig tableOptions) {
+        LookupCache cache = null;
+        if (tableOptions
+                .get(LookupOptions.CACHE_TYPE)
+                .equals(LookupOptions.LookupCacheType.PARTIAL)) {
+            cache = DefaultLookupCache.fromConfig(tableOptions);
+        }
+        return cache;
     }
 
     ZoneId getLocalTimeZoneId(ReadableConfig readableConfig) {
@@ -196,45 +237,6 @@ public class Elasticsearch7DynamicTableFactory
                                     config.getUsername().get(),
                                     config.getPassword().orElse("")));
         }
-    }
-
-    private void validateSource(
-            Elasticsearch7Configuration config, Configuration originalConfiguration) {
-        config.getHosts(); // validate hosts
-        validate(
-                config.getIndex().length() >= 1,
-                () -> String.format("'%s' must not be empty", INDEX_OPTION.key()));
-        validate(
-                config.getScrollMaxSize().map(scrollMaxSize -> scrollMaxSize >= 1).orElse(true),
-                () ->
-                        String.format(
-                                "'%s' must be at least 1. Got: %s",
-                                SCROLL_MAX_SIZE_OPTION.key(), config.getScrollMaxSize().get()));
-        validate(
-                config.getScrollTimeout().map(scrollTimeout -> scrollTimeout >= 1).orElse(true),
-                () ->
-                        String.format(
-                                "'%s' must be at least 1. Got: %s",
-                                SCROLL_TIMEOUT_OPTION.key(), config.getScrollTimeout().get()));
-        long cacheMaxSize = config.getCacheMaxSize();
-        validate(
-                cacheMaxSize == -1 || cacheMaxSize >= 1,
-                () ->
-                        String.format(
-                                "'%s' must be at least 1. Got: %s",
-                                LOOKUP_CACHE_MAX_ROWS.key(), cacheMaxSize));
-        validate(
-                config.getCacheExpiredMs().getSeconds() >= 1,
-                () ->
-                        String.format(
-                                "'%s' must be at least 1. Got: %s",
-                                LOOKUP_CACHE_TTL.key(), config.getCacheExpiredMs().getSeconds()));
-        validate(
-                config.getMaxRetryTimes() >= 1,
-                () ->
-                        String.format(
-                                "'%s' must be at least 1. Got: %s",
-                                LOOKUP_MAX_RETRIES.key(), config.getMaxRetryTimes()));
     }
 
     private static void validate(boolean condition, Supplier<String> message) {

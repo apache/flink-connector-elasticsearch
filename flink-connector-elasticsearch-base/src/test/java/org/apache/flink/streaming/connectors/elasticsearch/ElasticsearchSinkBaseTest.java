@@ -608,15 +608,18 @@ public class ElasticsearchSinkBaseTest {
         }
 
         @Override
-        public ElasticsearchInputSplit[] createInputSplitsInternal(
-                Client client, String index, String type, int minNumSplits) {
-            return new ElasticsearchInputSplit[0];
-        }
-
-        @Override
         public Tuple2<String, String[]> search(Client client, SearchRequest searchRequest)
                 throws IOException {
             return null;
+        }
+
+        @Override
+        public void close(Client client) throws IOException {}
+
+        @Override
+        public ElasticsearchInputSplit[] createInputSplitsInternal(
+                Client client, String index, String type, int minNumSplits) {
+            return new ElasticsearchInputSplit[0];
         }
 
         @Override
@@ -624,9 +627,6 @@ public class ElasticsearchSinkBaseTest {
                 Client client, SearchScrollRequest searchScrollRequest) throws IOException {
             return null;
         }
-
-        @Override
-        public void close(Client client) throws IOException {}
 
         @Nullable
         @Override

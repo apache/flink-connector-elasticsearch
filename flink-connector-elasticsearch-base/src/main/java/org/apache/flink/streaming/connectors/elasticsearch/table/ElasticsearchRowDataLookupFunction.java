@@ -1,15 +1,36 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.apache.flink.streaming.connectors.elasticsearch.table;
 
+import org.apache.flink.annotation.Internal;
 import org.apache.flink.api.common.serialization.DeserializationSchema;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.streaming.connectors.elasticsearch.ElasticsearchApiCallBridge;
+import org.apache.flink.table.connector.source.LookupTableSource;
 import org.apache.flink.table.data.GenericRowData;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.data.util.DataFormatConverters;
 import org.apache.flink.table.data.util.DataFormatConverters.DataFormatConverter;
 import org.apache.flink.table.functions.FunctionContext;
-import org.apache.flink.table.functions.TableFunction;
+import org.apache.flink.table.functions.LookupFunction;
 import org.apache.flink.table.types.DataType;
+import org.apache.flink.util.FlinkRuntimeException;
 import org.apache.flink.util.Preconditions;
 
 import org.elasticsearch.action.search.SearchRequest;
@@ -26,6 +47,8 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -33,8 +56,9 @@ import java.util.stream.IntStream;
 
 import static org.apache.flink.util.Preconditions.checkNotNull;
 
-public class ElasticsearchRowDataLookupFunction<C extends AutoCloseable>
-        extends TableFunction<RowData> {
+/** A lookup function implementing {@link LookupTableSource} in Elasticsearch connector. */
+@Internal
+public class ElasticsearchRowDataLookupFunction<C extends AutoCloseable> extends LookupFunction {
 
     private static final Logger LOG =
             LoggerFactory.getLogger(ElasticsearchRowDataLookupFunction.class);
@@ -42,20 +66,17 @@ public class ElasticsearchRowDataLookupFunction<C extends AutoCloseable>
     private final DeserializationSchema<RowData> deserializationSchema;
 
     private final String index;
-
     private final String type;
 
     private final String[] producedNames;
-
     private final String[] lookupKeys;
-
+    private final int maxRetryTimes;
     // converters to convert data from internal to external in order to generate keys for the cache.
     private final DataFormatConverter[] converters;
     private SearchRequest searchRequest;
     private SearchSourceBuilder searchSourceBuilder;
     private final long cacheMaxSize;
     private final long cacheExpireMs;
-    private final long maxRetryTimes;
     private final ElasticsearchApiCallBridge<C> callBridge;
 
     private transient C client;
@@ -64,6 +85,7 @@ public class ElasticsearchRowDataLookupFunction<C extends AutoCloseable>
     public ElasticsearchRowDataLookupFunction(
             DeserializationSchema<RowData> deserializationSchema,
             ElasticsearchLookupOptions lookupOptions,
+            int maxRetryTimes,
             String index,
             String type,
             String[] producedNames,
@@ -73,6 +95,7 @@ public class ElasticsearchRowDataLookupFunction<C extends AutoCloseable>
 
         checkNotNull(deserializationSchema, "No DeserializationSchema supplied.");
         checkNotNull(lookupOptions, "No ElasticsearchLookupOptions supplied.");
+        checkNotNull(maxRetryTimes, "No maxRetryTimes supplied.");
         checkNotNull(producedNames, "No fieldNames supplied.");
         checkNotNull(producedTypes, "No fieldTypes supplied.");
         checkNotNull(lookupKeys, "No keyNames supplied.");
@@ -103,6 +126,8 @@ public class ElasticsearchRowDataLookupFunction<C extends AutoCloseable>
 
     @Override
     public void open(FunctionContext context) throws Exception {
+        this.client = callBridge.createClient();
+
         this.cache =
                 cacheMaxSize == -1 || cacheExpireMs == -1
                         ? null
@@ -121,8 +146,49 @@ public class ElasticsearchRowDataLookupFunction<C extends AutoCloseable>
         }
         searchSourceBuilder = new SearchSourceBuilder();
         searchSourceBuilder.fetchSource(producedNames, null);
+        deserializationSchema.open(null);
     }
 
+
+    @Override
+    public Collection<RowData> lookup(RowData keyRow) {
+        BoolQueryBuilder lookupCondition = new BoolQueryBuilder();
+        for (int i = 0; i < lookupKeys.length; i++) {
+            lookupCondition.must(
+                    new TermQueryBuilder(lookupKeys[i], converters[i].toExternal(keyRow, i)));
+        }
+        searchSourceBuilder.query(lookupCondition);
+        searchRequest.source(searchSourceBuilder);
+
+        for (int retry = 0; retry <= maxRetryTimes; retry++) {
+            try {
+                ArrayList<RowData> rows = new ArrayList<>();
+                Tuple2<String, String[]> searchResponse = callBridge.search(client, searchRequest);
+                if (searchResponse.f1.length > 0) {
+                    String[] result = searchResponse.f1;
+                    for (String s : result) {
+                        RowData row = parseSearchHit(s);
+                        rows.add(row);
+                    }
+                    rows.trimToSize();
+                    return rows;
+                }
+            } catch (IOException e) {
+                LOG.error(String.format("Elasticsearch search error, retry times = %d", retry), e);
+                if (retry >= maxRetryTimes) {
+                    throw new FlinkRuntimeException("Execution of Elasticsearch search failed.", e);
+                }
+                try {
+                    Thread.sleep(1000L * retry);
+                } catch (InterruptedException e1) {
+                    LOG.warn(
+                            "Interrupted while waiting to retry failed elasticsearch search, aborting");
+                    throw new FlinkRuntimeException(e1);
+                }
+            }
+        }
+        return Collections.emptyList();
+    }
     /**
      * This is a lookup method which is called by Flink framework in runtime.
      *

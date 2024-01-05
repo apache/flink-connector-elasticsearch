@@ -26,7 +26,7 @@ import static org.apache.flink.connector.elasticsearch.table.TestContext.context
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /** Tests for validation in {@link Elasticsearch6DynamicSinkFactory}. */
-public class Elasticsearch6DynamicSinkFactoryTest extends ElasticsearchDynamicSinkFactoryBaseTest {
+public class Elasticsearch6DynamicTableFactoryTest extends ElasticsearchDynamicSinkFactoryBaseTest {
     @Override
     ElasticsearchDynamicSinkFactoryBase createSinkFactory() {
         return new Elasticsearch6DynamicSinkFactory();

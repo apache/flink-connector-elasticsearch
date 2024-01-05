@@ -20,24 +20,22 @@ package org.apache.flink.streaming.connectors.elasticsearch7;
 import org.apache.flink.annotation.Internal;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.streaming.connectors.elasticsearch.ElasticsearchApiCallBridge;
-import org.apache.flink.streaming.connectors.elasticsearch.ElasticsearchInputSplit;
 import org.apache.flink.streaming.connectors.elasticsearch.ElasticsearchSinkBase;
 import org.apache.flink.streaming.connectors.elasticsearch.RequestIndexer;
 import org.apache.flink.util.Preconditions;
-
-import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.http.HttpHost;
 import org.elasticsearch.action.bulk.BackoffPolicy;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkProcessor;
 import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.search.SearchScrollRequest;
+import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.search.SearchHit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,6 +44,7 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Stream;
 
 /** Implementation of {@link ElasticsearchApiCallBridge} for Elasticsearch 7 and later versions. */
 @Internal
@@ -61,8 +60,6 @@ public class Elasticsearch7ApiCallBridge
 
     /** The factory to configure the rest client. */
     private final RestClientFactory restClientFactory;
-
-    private final ObjectMapper jsonParser = new ObjectMapper();
 
     public Elasticsearch7ApiCallBridge(
             List<HttpHost> httpHosts, RestClientFactory restClientFactory) {
@@ -92,26 +89,19 @@ public class Elasticsearch7ApiCallBridge
     }
 
     @Override
-    public ElasticsearchInputSplit[] createInputSplitsInternal(
-            RestHighLevelClient client, String index, String type, int minNumSplits) {
-        return new ElasticsearchInputSplit[0];
-    }
-
-    @Override
     public Tuple2<String, String[]> search(RestHighLevelClient client, SearchRequest searchRequest)
             throws IOException {
-        return null;
+        SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
+        SearchHit[] searchHits = searchResponse.getHits().getHits();
+        return new Tuple2<>(
+                searchResponse.getScrollId(),
+                Stream.of(searchHits).map(SearchHit::getSourceAsString).toArray(String[]::new));
     }
 
     @Override
-    public Tuple2<String, String[]> scroll(
-            RestHighLevelClient client, SearchScrollRequest searchScrollRequest)
-            throws IOException {
-        return null;
+    public void close(RestHighLevelClient client) throws IOException {
+        client.close();
     }
-
-    @Override
-    public void close(RestHighLevelClient client) throws IOException {}
 
     @Override
     public Throwable extractFailureCauseFromBulkItemResponse(BulkItemResponse bulkItemResponse) {

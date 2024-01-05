@@ -91,6 +91,7 @@ class ElasticsearchWriter<IN> implements SinkWriter<IN> {
             boolean flushOnCheckpoint,
             BulkProcessorConfig bulkProcessorConfig,
             BulkProcessorBuilderFactory bulkProcessorBuilderFactory,
+            BulkResponseInspector bulkResponseInspector,
             NetworkClientConfig networkClientConfig,
             SinkWriterMetricGroup metricGroup,
             MailboxExecutor mailboxExecutor) {
@@ -102,9 +103,13 @@ class ElasticsearchWriter<IN> implements SinkWriter<IN> {
                         configureRestClientBuilder(
                                 RestClient.builder(hosts.toArray(new HttpHost[0])),
                                 networkClientConfig));
-        this.bulkProcessor = createBulkProcessor(bulkProcessorBuilderFactory, bulkProcessorConfig);
-        this.requestIndexer = new DefaultRequestIndexer(metricGroup.getNumRecordsSendCounter());
+        this.bulkProcessor =
+                createBulkProcessor(
+                        bulkProcessorBuilderFactory,
+                        bulkProcessorConfig,
+                        checkNotNull(bulkResponseInspector));
         checkNotNull(metricGroup);
+        this.requestIndexer = new DefaultRequestIndexer(metricGroup.getNumRecordsSendCounter());
         metricGroup.setCurrentSendTimeGauge(() -> ackTime - lastSendTime);
         this.numBytesOutCounter = metricGroup.getIOMetricGroup().getNumBytesOutCounter();
         try {
@@ -192,10 +197,12 @@ class ElasticsearchWriter<IN> implements SinkWriter<IN> {
 
     private BulkProcessor createBulkProcessor(
             BulkProcessorBuilderFactory bulkProcessorBuilderFactory,
-            BulkProcessorConfig bulkProcessorConfig) {
+            BulkProcessorConfig bulkProcessorConfig,
+            BulkResponseInspector bulkResponseInspector) {
 
         BulkProcessor.Builder builder =
-                bulkProcessorBuilderFactory.apply(client, bulkProcessorConfig, new BulkListener());
+                bulkProcessorBuilderFactory.apply(
+                        client, bulkProcessorConfig, new BulkListener(bulkResponseInspector));
 
         // This makes flush() blocking
         builder.setConcurrentRequests(0);
@@ -204,6 +211,12 @@ class ElasticsearchWriter<IN> implements SinkWriter<IN> {
     }
 
     private class BulkListener implements BulkProcessor.Listener {
+
+        private final BulkResponseInspector bulkResponseInspector;
+
+        public BulkListener(BulkResponseInspector bulkResponseInspector) {
+            this.bulkResponseInspector = bulkResponseInspector;
+        }
 
         @Override
         public void beforeBulk(long executionId, BulkRequest request) {
@@ -227,6 +240,11 @@ class ElasticsearchWriter<IN> implements SinkWriter<IN> {
                     },
                     "elasticsearchErrorCallback");
         }
+
+        private void extractFailures(BulkRequest request, BulkResponse response) {
+            bulkResponseInspector.inspect(request, response);
+            pendingActions -= request.numberOfActions();
+        }
     }
 
     private void enqueueActionInMailbox(
@@ -239,35 +257,6 @@ class ElasticsearchWriter<IN> implements SinkWriter<IN> {
             return;
         }
         mailboxExecutor.execute(action, actionName);
-    }
-
-    private void extractFailures(BulkRequest request, BulkResponse response) {
-        if (!response.hasFailures()) {
-            pendingActions -= request.numberOfActions();
-            return;
-        }
-
-        Throwable chainedFailures = null;
-        for (int i = 0; i < response.getItems().length; i++) {
-            final BulkItemResponse itemResponse = response.getItems()[i];
-            if (!itemResponse.isFailed()) {
-                continue;
-            }
-            final Throwable failure = itemResponse.getFailure().getCause();
-            if (failure == null) {
-                continue;
-            }
-            final RestStatus restStatus = itemResponse.getFailure().getStatus();
-            final DocWriteRequest<?> actionRequest = request.requests().get(i);
-
-            chainedFailures =
-                    firstOrSuppressed(
-                            wrapException(restStatus, failure, actionRequest), chainedFailures);
-        }
-        if (chainedFailures == null) {
-            return;
-        }
-        throw new FlinkRuntimeException(chainedFailures);
     }
 
     private static Throwable wrapException(
@@ -325,6 +314,68 @@ class ElasticsearchWriter<IN> implements SinkWriter<IN> {
                 pendingActions++;
                 bulkProcessor.add(updateRequest);
             }
+        }
+
+        @Override
+        public void flush() {
+            bulkProcessor.flush();
+        }
+    }
+
+    /**
+     * A strict implementation that fails if either the whole bulk request failed or any of its
+     * actions.
+     */
+    static class DefaultBulkResponseInspector implements BulkResponseInspector {
+
+        @VisibleForTesting final FailureHandler failureHandler;
+
+        DefaultBulkResponseInspector() {
+            this(new DefaultFailureHandler());
+        }
+
+        DefaultBulkResponseInspector(FailureHandler failureHandler) {
+            this.failureHandler = checkNotNull(failureHandler);
+        }
+
+        @Override
+        public void inspect(BulkRequest request, BulkResponse response) {
+            if (!response.hasFailures()) {
+                return;
+            }
+
+            Throwable chainedFailures = null;
+            for (int i = 0; i < response.getItems().length; i++) {
+                final BulkItemResponse itemResponse = response.getItems()[i];
+                if (!itemResponse.isFailed()) {
+                    continue;
+                }
+                final Throwable failure = itemResponse.getFailure().getCause();
+                if (failure == null) {
+                    continue;
+                }
+                final RestStatus restStatus = itemResponse.getFailure().getStatus();
+                final DocWriteRequest<?> actionRequest = request.requests().get(i);
+
+                chainedFailures =
+                        firstOrSuppressed(
+                                wrapException(restStatus, failure, actionRequest), chainedFailures);
+            }
+            if (chainedFailures == null) {
+                return;
+            }
+            failureHandler.onFailure(chainedFailures);
+        }
+    }
+
+    static class DefaultFailureHandler implements FailureHandler {
+
+        @Override
+        public void onFailure(Throwable failure) {
+            if (failure instanceof FlinkRuntimeException) {
+                throw (FlinkRuntimeException) failure;
+            }
+            throw new FlinkRuntimeException(failure);
         }
     }
 }

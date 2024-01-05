@@ -19,13 +19,17 @@ package org.apache.flink.connector.elasticsearch.sink;
 
 import org.apache.flink.api.common.operators.MailboxExecutor;
 import org.apache.flink.api.connector.sink2.SinkWriter;
+import org.apache.flink.api.connector.sink2.SinkWriter.Context;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.connector.elasticsearch.ElasticsearchUtil;
+import org.apache.flink.connector.elasticsearch.sink.ElasticsearchWriter.DefaultBulkResponseInspector;
 import org.apache.flink.connector.elasticsearch.test.DockerImageVersions;
 import org.apache.flink.metrics.Counter;
 import org.apache.flink.metrics.Gauge;
+import org.apache.flink.metrics.MetricGroup;
 import org.apache.flink.metrics.groups.OperatorIOMetricGroup;
 import org.apache.flink.metrics.groups.SinkWriterMetricGroup;
+import org.apache.flink.metrics.groups.UnregisteredMetricsGroup;
 import org.apache.flink.metrics.testutils.MetricListener;
 import org.apache.flink.runtime.metrics.MetricNames;
 import org.apache.flink.runtime.metrics.groups.InternalSinkWriterMetricGroup;
@@ -69,6 +73,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import static org.apache.flink.connector.elasticsearch.sink.TestClientBase.DOCUMENT_TYPE;
 import static org.apache.flink.connector.elasticsearch.sink.TestClientBase.buildMessage;
@@ -121,8 +126,30 @@ class ElasticsearchWriterITCase {
         final BulkProcessorConfig bulkProcessorConfig =
                 new BulkProcessorConfig(flushAfterNActions, -1, -1, FlushBackoffType.NONE, 0, 0);
 
+        SinkWriterMetricGroup metricGroup =
+                InternalSinkWriterMetricGroup.wrap(
+                        new TestingSinkWriterMetricGroup.Builder()
+                                .setIoMetricGroupSupplier(
+                                        UnregisteredMetricsGroup::createOperatorIOMetricGroup)
+                                .setParentMetricGroup(
+                                        UnregisteredMetricsGroup.createOperatorMetricGroup())
+                                .build());
+        final UpdatingEmitter updatingEmitter =
+                new UpdatingEmitter(index, context.getDataFieldName()) {
+                    @Override
+                    public void emit(
+                            Tuple2<Integer, String> element,
+                            Context context,
+                            RequestIndexer indexer) {
+                        super.emit(element, context, indexer);
+                        if (element.f0 == 8) {
+                            indexer.flush();
+                        }
+                    }
+                };
+
         try (final ElasticsearchWriter<Tuple2<Integer, String>> writer =
-                createWriter(index, false, bulkProcessorConfig)) {
+                createWriter(false, bulkProcessorConfig, metricGroup, updatingEmitter)) {
             writer.write(Tuple2.of(1, buildMessage(1)), null);
             writer.write(Tuple2.of(2, buildMessage(2)), null);
             writer.write(Tuple2.of(3, buildMessage(3)), null);
@@ -143,6 +170,11 @@ class ElasticsearchWriterITCase {
             // Force flush
             writer.blockingFlushAllActions();
             context.assertThatIdsAreWritten(index, 1, 2, 3, 4, 5, 6);
+
+            writer.write(Tuple2.of(7, "test-7"), null);
+            context.assertThatIdsAreNotWritten(index, 7);
+            writer.write(Tuple2.of(8, "test-8"), null);
+            context.assertThatIdsAreWritten(index, 1, 2, 3, 4, 5, 6, 7, 8);
         }
     }
 
@@ -193,15 +225,16 @@ class ElasticsearchWriterITCase {
         final String index = "test-inc-byte-out";
         final OperatorIOMetricGroup operatorIOMetricGroup =
                 UnregisteredMetricGroups.createUnregisteredOperatorMetricGroup().getIOMetricGroup();
-        final InternalSinkWriterMetricGroup metricGroup =
-                InternalSinkWriterMetricGroup.mock(
-                        metricListener.getMetricGroup(), operatorIOMetricGroup);
         final int flushAfterNActions = 2;
         final BulkProcessorConfig bulkProcessorConfig =
                 new BulkProcessorConfig(flushAfterNActions, -1, -1, FlushBackoffType.NONE, 0, 0);
 
         try (final ElasticsearchWriter<Tuple2<Integer, String>> writer =
-                createWriter(index, false, bulkProcessorConfig, metricGroup)) {
+                createWriter(
+                        index,
+                        false,
+                        bulkProcessorConfig,
+                        getSinkWriterMetricGroup(operatorIOMetricGroup))) {
             final Counter numBytesOut = operatorIOMetricGroup.getNumBytesOutCounter();
             assertThat(numBytesOut.getCount()).isZero();
             writer.write(Tuple2.of(1, buildMessage(1)), null);
@@ -267,10 +300,7 @@ class ElasticsearchWriterITCase {
     private ElasticsearchWriter<Tuple2<Integer, String>> createWriter(
             String index, boolean flushOnCheckpoint, BulkProcessorConfig bulkProcessorConfig) {
         return createWriter(
-                index,
-                flushOnCheckpoint,
-                bulkProcessorConfig,
-                InternalSinkWriterMetricGroup.mock(metricListener.getMetricGroup()));
+                index, flushOnCheckpoint, bulkProcessorConfig, getSinkWriterMetricGroup());
     }
 
     private ElasticsearchWriter<Tuple2<Integer, String>> createWriter(
@@ -278,15 +308,62 @@ class ElasticsearchWriterITCase {
             boolean flushOnCheckpoint,
             BulkProcessorConfig bulkProcessorConfig,
             SinkWriterMetricGroup metricGroup) {
+        return createWriter(
+                flushOnCheckpoint,
+                bulkProcessorConfig,
+                metricGroup,
+                new UpdatingEmitter(index, context.getDataFieldName()));
+    }
+
+    private static ElasticsearchWriter<Tuple2<Integer, String>> createWriter(
+            boolean flushOnCheckpoint,
+            BulkProcessorConfig bulkProcessorConfig,
+            SinkWriterMetricGroup metricGroup,
+            UpdatingEmitter updatingEmitter) {
         return new ElasticsearchWriter<>(
                 Collections.singletonList(HttpHost.create(ES_CONTAINER.getHttpHostAddress())),
-                new UpdatingEmitter(index, context.getDataFieldName()),
+                updatingEmitter,
                 flushOnCheckpoint,
                 bulkProcessorConfig,
                 new TestBulkProcessorBuilderFactory(),
+                new DefaultBulkResponseInspector(),
                 new NetworkClientConfig(null, null, null, null, null, null),
                 metricGroup,
                 new TestMailbox());
+    }
+
+    private TestingSinkWriterMetricGroup getSinkWriterMetricGroup() {
+        final OperatorIOMetricGroup operatorIOMetricGroup =
+                UnregisteredMetricGroups.createUnregisteredOperatorMetricGroup().getIOMetricGroup();
+        return getSinkWriterMetricGroup(operatorIOMetricGroup);
+    }
+
+    private TestingSinkWriterMetricGroup getSinkWriterMetricGroup(
+            OperatorIOMetricGroup operatorIOMetricGroup) {
+        MetricGroup parentMetricGroup = metricListener.getMetricGroup();
+        Counter numRecordsOutErrors = parentMetricGroup.counter(MetricNames.NUM_RECORDS_OUT_ERRORS);
+        Counter numRecordsSendErrors =
+                parentMetricGroup.counter(MetricNames.NUM_RECORDS_SEND_ERRORS, numRecordsOutErrors);
+        Counter numRecordsWritten =
+                parentMetricGroup.counter(
+                        MetricNames.NUM_RECORDS_SEND,
+                        operatorIOMetricGroup.getNumRecordsOutCounter());
+        Counter numBytesWritten =
+                parentMetricGroup.counter(
+                        MetricNames.NUM_BYTES_SEND, operatorIOMetricGroup.getNumBytesOutCounter());
+        Consumer<Gauge<Long>> currentSendTimeGaugeConsumer =
+                currentSendTimeGauge ->
+                        parentMetricGroup.gauge(
+                                MetricNames.CURRENT_SEND_TIME, currentSendTimeGauge);
+        return new TestingSinkWriterMetricGroup.Builder()
+                .setParentMetricGroup(parentMetricGroup)
+                .setIoMetricGroupSupplier(() -> operatorIOMetricGroup)
+                .setNumRecordsOutErrorsCounterSupplier(() -> numRecordsOutErrors)
+                .setNumRecordsSendErrorsCounterSupplier(() -> numRecordsSendErrors)
+                .setNumRecordsSendCounterSupplier(() -> numRecordsWritten)
+                .setNumBytesSendCounterSupplier(() -> numBytesWritten)
+                .setCurrentSendTimeGaugeConsumer(currentSendTimeGaugeConsumer)
+                .build();
     }
 
     private static class TestBulkProcessorBuilderFactory implements BulkProcessorBuilderFactory {
