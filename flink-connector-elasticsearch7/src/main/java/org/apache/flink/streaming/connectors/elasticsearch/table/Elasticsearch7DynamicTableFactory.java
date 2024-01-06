@@ -121,7 +121,7 @@ public class Elasticsearch7DynamicTableFactory
 
     @Override
     public DynamicTableSource createDynamicTableSource(Context context) {
-        DataType physicalRowDataType = context.getPhysicalRowDataType();
+        TableSchema schema = context.getCatalogTable().getSchema();
         final FactoryUtil.TableFactoryHelper helper =
                 FactoryUtil.createTableFactoryHelper(this, context);
         final ReadableConfig options = helper.getOptions();
@@ -141,9 +141,8 @@ public class Elasticsearch7DynamicTableFactory
         return new Elasticsearch7DynamicSource(
                 format,
                 config,
-                physicalRowDataType,
-                options.get(MAX_RETRIES),
-                getLookupCache(options));
+                TableSchemaUtils.getPhysicalSchema(schema),
+                new ElasticsearchLookupOptions.Builder().setMaxRetryTimes(options.get(MAX_RETRIES)).build());
     }
 
     @Override
@@ -170,17 +169,6 @@ public class Elasticsearch7DynamicTableFactory
                 config,
                 TableSchemaUtils.getPhysicalSchema(tableSchema),
                 getLocalTimeZoneId(context.getConfiguration()));
-    }
-
-    @Nullable
-    private LookupCache getLookupCache(ReadableConfig tableOptions) {
-        LookupCache cache = null;
-        if (tableOptions
-                .get(LookupOptions.CACHE_TYPE)
-                .equals(LookupOptions.LookupCacheType.PARTIAL)) {
-            cache = DefaultLookupCache.fromConfig(tableOptions);
-        }
-        return cache;
     }
 
     ZoneId getLocalTimeZoneId(ReadableConfig readableConfig) {

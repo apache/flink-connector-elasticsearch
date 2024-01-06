@@ -135,6 +135,7 @@ public class Elasticsearch7DynamicSource
                         this.format.createRuntimeDecoder(
                                 lookupContext, physicalSchema.toRowDataType()),
                         lookupOptions,
+                        config.getMaxRetryTimes(),
                         config.getIndex(),
                         config.getDocumentType(),
                         columnNames,

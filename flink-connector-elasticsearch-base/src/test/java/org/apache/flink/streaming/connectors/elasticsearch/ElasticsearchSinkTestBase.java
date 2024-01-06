@@ -56,7 +56,7 @@ import static org.junit.Assert.assertEquals;
  * @param <C> Elasticsearch client type
  * @param <A> The address type to use
  */
-public abstract class ElasticsearchSinkTestBase<T, C extends AutoCloseable, A>
+public abstract class ElasticsearchSinkTestBase<T,C extends AutoCloseable, A>
         extends AbstractTestBase {
 
     protected static final String CLUSTER_NAME = "test-cluster";
@@ -175,9 +175,9 @@ public abstract class ElasticsearchSinkTestBase<T, C extends AutoCloseable, A>
      */
     public void runNullAddressesTest() {
         assertThatThrownBy(
-                        () ->
-                                createElasticsearchSink(
-                                        1, null, SourceSinkDataTestKit.getJsonSinkFunction("test")))
+                () ->
+                        createElasticsearchSink(
+                                1, null, SourceSinkDataTestKit.getJsonSinkFunction("test")))
                 .isInstanceOfAny(IllegalArgumentException.class, NullPointerException.class);
     }
 
@@ -186,11 +186,11 @@ public abstract class ElasticsearchSinkTestBase<T, C extends AutoCloseable, A>
      */
     public void runEmptyAddressesTest() {
         assertThatThrownBy(
-                        () ->
-                                createElasticsearchSink(
-                                        1,
-                                        Collections.emptyList(),
-                                        SourceSinkDataTestKit.getJsonSinkFunction("test")))
+                () ->
+                        createElasticsearchSink(
+                                1,
+                                Collections.emptyList(),
+                                SourceSinkDataTestKit.getJsonSinkFunction("test")))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -226,18 +226,18 @@ public abstract class ElasticsearchSinkTestBase<T, C extends AutoCloseable, A>
      * because the Elasticsearch Java API to do so is incompatible across different versions.
      */
     protected abstract ElasticsearchSinkBase<Tuple2<Integer, String>, C>
-            createElasticsearchSinkForEmbeddedNode(
-                    int bulkFlushMaxActions,
-                    ElasticsearchSinkFunction<Tuple2<Integer, String>> elasticsearchSinkFunction)
-                    throws Exception;
+    createElasticsearchSinkForEmbeddedNode(
+            int bulkFlushMaxActions,
+            ElasticsearchSinkFunction<Tuple2<Integer, String>> elasticsearchSinkFunction)
+            throws Exception;
 
     /**
      * Creates a version-specific Elasticsearch sink to connect to a specific Elasticsearch node.
      */
     protected abstract ElasticsearchSinkBase<Tuple2<Integer, String>, C>
-            createElasticsearchSinkForNode(
-                    int bulkFlushMaxActions,
-                    ElasticsearchSinkFunction<Tuple2<Integer, String>> elasticsearchSinkFunction,
-                    String ipAddress)
-                    throws Exception;
+    createElasticsearchSinkForNode(
+            int bulkFlushMaxActions,
+            ElasticsearchSinkFunction<Tuple2<Integer, String>> elasticsearchSinkFunction,
+            String ipAddress)
+            throws Exception;
 }

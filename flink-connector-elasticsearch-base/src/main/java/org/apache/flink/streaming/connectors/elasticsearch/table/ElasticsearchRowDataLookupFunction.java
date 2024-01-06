@@ -157,6 +157,17 @@ public class ElasticsearchRowDataLookupFunction<C extends AutoCloseable> extends
             lookupCondition.must(
                     new TermQueryBuilder(lookupKeys[i], converters[i].toExternal(keyRow, i)));
         }
+
+        if (cache != null) {
+            List<RowData> cachedRows = cache.get(keyRow);
+            if (cachedRows != null) {
+                for (RowData cachedRow : cachedRows) {
+                    collect(cachedRow);
+                }
+                return new ArrayList<>();
+            }
+        }
+
         searchSourceBuilder.query(lookupCondition);
         searchRequest.source(searchSourceBuilder);
 
@@ -188,70 +199,6 @@ public class ElasticsearchRowDataLookupFunction<C extends AutoCloseable> extends
             }
         }
         return Collections.emptyList();
-    }
-    /**
-     * This is a lookup method which is called by Flink framework in runtime.
-     *
-     * @param keys lookup keys
-     */
-    public void eval(Object... keys) {
-        RowData keyRow = GenericRowData.of(keys);
-        if (cache != null) {
-            List<RowData> cachedRows = cache.get(keyRow);
-            if (cachedRows != null) {
-                for (RowData cachedRow : cachedRows) {
-                    collect(cachedRow);
-                }
-                return;
-            }
-        }
-
-        BoolQueryBuilder lookupCondition = new BoolQueryBuilder();
-        for (int i = 0; i < lookupKeys.length; i++) {
-            lookupCondition.must(
-                    new TermQueryBuilder(lookupKeys[i], converters[i].toExternal(keys[i])));
-        }
-        searchSourceBuilder.query(lookupCondition);
-        searchRequest.source(searchSourceBuilder);
-
-        Tuple2<String, String[]> searchResponse = null;
-
-        for (int retry = 1; retry <= maxRetryTimes; retry++) {
-            try {
-                searchResponse = callBridge.search(client, searchRequest);
-                if (searchResponse.f1.length > 0) {
-                    String[] result = searchResponse.f1;
-                    // if cache disabled
-                    if (cache == null) {
-                        for (int i = 0; i < result.length; i++) {
-                            RowData row = parseSearchHit(result[i]);
-                            collect(row);
-                        }
-                    } else { // if cache enabled
-                        ArrayList<RowData> rows = new ArrayList<>();
-                        for (int i = 0; i < result.length; i++) {
-                            RowData row = parseSearchHit(result[i]);
-                            collect(row);
-                            rows.add(row);
-                        }
-                        cache.put(keyRow, rows);
-                    }
-                }
-                break;
-            } catch (IOException e) {
-                LOG.error(String.format("Elasticsearch search error, retry times = %d", retry), e);
-                if (retry >= maxRetryTimes) {
-                    throw new RuntimeException("Execution of Elasticsearch search failed.", e);
-                }
-                try {
-                    Thread.sleep(1000 * retry);
-                } catch (InterruptedException e1) {
-                    LOG.warn(
-                            "Interrupted while waiting to retry failed elasticsearch search, aborting");
-                    throw new RuntimeException(e1);
-                }
-            }
-        }
     }
 
     private RowData parseSearchHit(String hit) {

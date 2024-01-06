@@ -45,7 +45,7 @@ import java.util.Map;
 
 /** IT cases for the {@link ElasticsearchSink}. */
 public class ElasticsearchSinkITCase<T>
-        extends ElasticsearchSinkTestBase<T, RestHighLevelClient, HttpHost> {
+        extends ElasticsearchSinkTestBase<T,RestHighLevelClient, HttpHost> {
 
     private static final Logger LOG = LoggerFactory.getLogger(ElasticsearchSinkITCase.class);
 
@@ -105,6 +105,8 @@ public class ElasticsearchSinkITCase<T>
         return builder.build();
     }
 
+
+    @Override
     protected ElasticSearchInputFormatBase createElasticsearchInputFormat(
             Map<String, String> userConfig,
             DeserializationSchema<T> deserializationSchema,
