@@ -39,6 +39,11 @@ under the License.
 		<module>flink-connector-elasticsearch7-e2e-tests</module>
     </modules>
 
+	<properties>
+		<surefire.module.config><!-- required by
+		Elasticsearch6SinkE2ECase -->  --add-opens=java.base/java.util=ALL-UNNAMED </surefire.module.config>
+	</properties>
+
 	<profiles>
 		<profile>
 			<id>run-end-to-end-tests</id>
@@ -63,6 +68,7 @@ under the License.
 									<systemPropertyVariables>
 										<moduleDir>${project.basedir}</moduleDir>
 									</systemPropertyVariables>
+									<argLine>${flink.surefire.baseArgLine} -Xmx${flink.XmxUnitTest}</argLine>
 								</configuration>
 							</execution>
 						</executions>
