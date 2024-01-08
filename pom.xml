@@ -339,6 +339,13 @@ under the License.
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
+
+			<dependency>
+				<groupId>org.apache.commons</groupId>
+				<artifactId>commons-compress</artifactId>
+				<version>1.24.0</version>
+			</dependency>
+
 		</dependencies>
 	</dependencyManagement>
 
