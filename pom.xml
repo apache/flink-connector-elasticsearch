@@ -303,6 +303,13 @@ under the License.
 				<version>${jackson-bom.version}</version>
 			</dependency>
 
+			<!-- For dependency convergence  -->
+			<dependency>
+				<groupId>org.yaml</groupId>
+				<artifactId>snakeyaml</artifactId>
+				<version>1.31</version>
+			</dependency>
+
 			<!-- For dependency convergence -->
 			<dependency>
 				<groupId>org.junit</groupId>
