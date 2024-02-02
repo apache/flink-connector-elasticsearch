@@ -161,17 +161,22 @@ class ElasticsearchWriter<IN> implements SinkWriter<IN> {
         if (networkClientConfig.getConnectionPathPrefix() != null) {
             builder.setPathPrefix(networkClientConfig.getConnectionPathPrefix());
         }
-        if (networkClientConfig.getPassword() != null
-                && networkClientConfig.getUsername() != null) {
-            final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-            credentialsProvider.setCredentials(
-                    AuthScope.ANY,
-                    new UsernamePasswordCredentials(
-                            networkClientConfig.getUsername(), networkClientConfig.getPassword()));
+
+        final CredentialsProvider credentialsProvider = getCredentialsProvider(networkClientConfig);
+        if (credentialsProvider != null || networkClientConfig.getSSLContextSupplier() != null) {
             builder.setHttpClientConfigCallback(
-                    httpClientBuilder ->
-                            httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider));
+                    httpClientBuilder -> {
+                        if (credentialsProvider != null) {
+                            httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider);
+                        }
+                        if (networkClientConfig.getSSLContextSupplier() != null) {
+                            httpClientBuilder.setSSLContext(
+                                    networkClientConfig.getSSLContextSupplier().get());
+                        }
+                        return httpClientBuilder;
+                    });
         }
+
         if (networkClientConfig.getConnectionRequestTimeout() != null
                 || networkClientConfig.getConnectionTimeout() != null
                 || networkClientConfig.getSocketTimeout() != null) {
@@ -193,6 +198,25 @@ class ElasticsearchWriter<IN> implements SinkWriter<IN> {
                     });
         }
         return builder;
+    }
+
+    /**
+     * Get an http client credentials provider given network client config.
+     *
+     * <p>If network client config is not configured with username or password, return null.
+     */
+    private static CredentialsProvider getCredentialsProvider(
+            NetworkClientConfig networkClientConfig) {
+        CredentialsProvider credentialsProvider = null;
+        if (networkClientConfig.getPassword() != null
+                && networkClientConfig.getUsername() != null) {
+            credentialsProvider = new BasicCredentialsProvider();
+            credentialsProvider.setCredentials(
+                    AuthScope.ANY,
+                    new UsernamePasswordCredentials(
+                            networkClientConfig.getUsername(), networkClientConfig.getPassword()));
+        }
+        return credentialsProvider;
     }
 
     private BulkProcessor createBulkProcessor(
