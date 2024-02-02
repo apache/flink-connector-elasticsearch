@@ -26,8 +26,11 @@ import org.apache.flink.connector.elasticsearch.sink.BulkResponseInspector.BulkR
 import org.apache.flink.connector.elasticsearch.sink.ElasticsearchWriter.DefaultBulkResponseInspector;
 import org.apache.flink.connector.elasticsearch.sink.ElasticsearchWriter.DefaultFailureHandler;
 import org.apache.flink.util.InstantiationUtil;
+import org.apache.flink.util.function.SerializableSupplier;
 
 import org.apache.http.HttpHost;
+
+import javax.net.ssl.SSLContext;
 
 import java.util.Arrays;
 import java.util.List;
@@ -60,6 +63,7 @@ public abstract class ElasticsearchSinkBuilderBase<
     private Integer connectionTimeout;
     private Integer connectionRequestTimeout;
     private Integer socketTimeout;
+    private SerializableSupplier<SSLContext> sslContextSupplier;
     private FailureHandler failureHandler = new DefaultFailureHandler();
     private BulkResponseInspectorFactory bulkResponseInspectorFactory;
 
@@ -264,6 +268,17 @@ public abstract class ElasticsearchSinkBuilderBase<
     }
 
     /**
+     * Sets the supplier for getting an {@link SSLContext} instance.
+     *
+     * @param sslContextSupplier the serializable SSLContext supplier function
+     * @return this builder
+     */
+    public B setSslContextSupplier(SerializableSupplier<SSLContext> sslContextSupplier) {
+        this.sslContextSupplier = checkNotNull(sslContextSupplier);
+        return self();
+    }
+
+    /**
      * Overrides the default {@link FailureHandler}. A custom failure handler can handle partial
      * failures gracefully. See {@link #bulkResponseInspectorFactory} for more extensive control.
      *
@@ -336,7 +351,8 @@ public abstract class ElasticsearchSinkBuilderBase<
                 connectionPathPrefix,
                 connectionRequestTimeout,
                 connectionTimeout,
-                socketTimeout);
+                socketTimeout,
+                sslContextSupplier);
     }
 
     private BulkProcessorConfig buildBulkProcessorConfig() {
