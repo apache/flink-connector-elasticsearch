@@ -163,7 +163,9 @@ class ElasticsearchWriter<IN> implements SinkWriter<IN> {
         }
 
         final CredentialsProvider credentialsProvider = getCredentialsProvider(networkClientConfig);
-        if (credentialsProvider != null || networkClientConfig.getSSLContextSupplier() != null) {
+        if (credentialsProvider != null
+                || networkClientConfig.getSSLContextSupplier() != null
+                || networkClientConfig.getSslHostnameVerifier() != null) {
             builder.setHttpClientConfigCallback(
                     httpClientBuilder -> {
                         if (credentialsProvider != null) {
@@ -172,6 +174,10 @@ class ElasticsearchWriter<IN> implements SinkWriter<IN> {
                         if (networkClientConfig.getSSLContextSupplier() != null) {
                             httpClientBuilder.setSSLContext(
                                     networkClientConfig.getSSLContextSupplier().get());
+                        }
+                        if (networkClientConfig.getSslHostnameVerifier() != null) {
+                            httpClientBuilder.setSSLHostnameVerifier(
+                                    networkClientConfig.getSslHostnameVerifier().get());
                         }
                         return httpClientBuilder;
                     });
