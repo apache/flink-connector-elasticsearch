@@ -21,6 +21,7 @@ package org.apache.flink.connector.elasticsearch.sink;
 import org.apache.flink.util.function.SerializableSupplier;
 
 import javax.annotation.Nullable;
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 
 import java.io.Serializable;
@@ -34,6 +35,7 @@ class NetworkClientConfig implements Serializable {
     @Nullable private final Integer connectionTimeout;
     @Nullable private final Integer socketTimeout;
     @Nullable private final SerializableSupplier<SSLContext> sslContextSupplier;
+    @Nullable private final SerializableSupplier<HostnameVerifier> sslHostnameVerifier;
 
     NetworkClientConfig(
             @Nullable String username,
@@ -42,7 +44,8 @@ class NetworkClientConfig implements Serializable {
             @Nullable Integer connectionRequestTimeout,
             @Nullable Integer connectionTimeout,
             @Nullable Integer socketTimeout,
-            @Nullable SerializableSupplier<SSLContext> sslContextSupplier) {
+            @Nullable SerializableSupplier<SSLContext> sslContextSupplier,
+            @Nullable SerializableSupplier<HostnameVerifier> sslHostnameVerifier) {
         this.username = username;
         this.password = password;
         this.connectionPathPrefix = connectionPathPrefix;
@@ -50,6 +53,7 @@ class NetworkClientConfig implements Serializable {
         this.connectionTimeout = connectionTimeout;
         this.socketTimeout = socketTimeout;
         this.sslContextSupplier = sslContextSupplier;
+        this.sslHostnameVerifier = sslHostnameVerifier;
     }
 
     @Nullable
@@ -85,5 +89,10 @@ class NetworkClientConfig implements Serializable {
     @Nullable
     public SerializableSupplier<SSLContext> getSSLContextSupplier() {
         return sslContextSupplier;
+    }
+
+    @Nullable
+    public SerializableSupplier<HostnameVerifier> getSslHostnameVerifier() {
+        return sslHostnameVerifier;
     }
 }

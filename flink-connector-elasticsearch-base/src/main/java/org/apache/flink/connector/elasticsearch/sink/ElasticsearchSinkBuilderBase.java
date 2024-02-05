@@ -30,6 +30,7 @@ import org.apache.flink.util.function.SerializableSupplier;
 
 import org.apache.http.HttpHost;
 
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 
 import java.util.Arrays;
@@ -64,6 +65,7 @@ public abstract class ElasticsearchSinkBuilderBase<
     private Integer connectionRequestTimeout;
     private Integer socketTimeout;
     private SerializableSupplier<SSLContext> sslContextSupplier;
+    private SerializableSupplier<HostnameVerifier> hostnameVerifierSupplier;
     private FailureHandler failureHandler = new DefaultFailureHandler();
     private BulkResponseInspectorFactory bulkResponseInspectorFactory;
 
@@ -279,6 +281,18 @@ public abstract class ElasticsearchSinkBuilderBase<
     }
 
     /**
+     * Sets the supplier for getting an SSL {@link HostnameVerifier} instance.
+     *
+     * @param sslHostnameVerifierSupplier the serializable hostname verifier supplier function
+     * @return this builder
+     */
+    public B setSslHostnameVerifier(
+            SerializableSupplier<HostnameVerifier> sslHostnameVerifierSupplier) {
+        this.hostnameVerifierSupplier = sslHostnameVerifierSupplier;
+        return self();
+    }
+
+    /**
      * Overrides the default {@link FailureHandler}. A custom failure handler can handle partial
      * failures gracefully. See {@link #bulkResponseInspectorFactory} for more extensive control.
      *
@@ -352,7 +366,8 @@ public abstract class ElasticsearchSinkBuilderBase<
                 connectionRequestTimeout,
                 connectionTimeout,
                 socketTimeout,
-                sslContextSupplier);
+                sslContextSupplier,
+                hostnameVerifierSupplier);
     }
 
     private BulkProcessorConfig buildBulkProcessorConfig() {
