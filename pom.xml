@@ -53,12 +53,12 @@ under the License.
 	<properties>
 		<flink.version>1.17.1</flink.version>
 
-		<jackson-bom.version>2.13.4.20221013</jackson-bom.version>
+		<jackson-bom.version>2.15.3</jackson-bom.version>
 		<junit4.version>4.13.2</junit4.version>
-		<junit5.version>5.9.1</junit5.version>
-		<assertj.version>3.23.1</assertj.version>
-		<testcontainers.version>1.17.2</testcontainers.version>
-		<mockito.version>3.4.6</mockito.version>
+		<junit5.version>5.10.2</junit5.version>
+		<assertj.version>3.25.3</assertj.version>
+		<testcontainers.version>1.19.7</testcontainers.version>
+		<mockito.version>3.12.4</mockito.version>
 
 		<japicmp.skip>false</japicmp.skip>
 		<japicmp.referenceVersion>3.0.0-1.16</japicmp.referenceVersion>
