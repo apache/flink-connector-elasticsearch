@@ -23,8 +23,10 @@ import org.apache.flink.api.common.serialization.DeserializationSchema;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.streaming.connectors.elasticsearch.ElasticsearchApiCallBridge;
 import org.apache.flink.table.connector.source.LookupTableSource;
+import org.apache.flink.table.data.GenericRowData;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.data.util.DataFormatConverters;
+import org.apache.flink.table.data.util.DataFormatConverters.DataFormatConverter;
 import org.apache.flink.table.functions.FunctionContext;
 import org.apache.flink.table.functions.LookupFunction;
 import org.apache.flink.table.types.DataType;
@@ -33,6 +35,9 @@ import org.apache.flink.util.Preconditions;
 
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.common.Strings;
+import org.elasticsearch.common.cache.Cache;
+import org.elasticsearch.common.cache.CacheBuilder;
+import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.TermQueryBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
@@ -44,6 +49,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -56,7 +62,6 @@ public class ElasticsearchRowDataLookupFunction<C extends AutoCloseable> extends
 
     private static final Logger LOG =
             LoggerFactory.getLogger(ElasticsearchRowDataLookupFunction.class);
-    private static final long serialVersionUID = 1L;
 
     private final DeserializationSchema<RowData> deserializationSchema;
 
@@ -67,16 +72,19 @@ public class ElasticsearchRowDataLookupFunction<C extends AutoCloseable> extends
     private final String[] lookupKeys;
     private final int maxRetryTimes;
     // converters to convert data from internal to external in order to generate keys for the cache.
-    private final DataFormatConverters.DataFormatConverter[] converters;
+    private final DataFormatConverter[] converters;
     private SearchRequest searchRequest;
     private SearchSourceBuilder searchSourceBuilder;
-
+    private final long cacheMaxSize;
+    private final long cacheExpireMs;
     private final ElasticsearchApiCallBridge<C> callBridge;
 
     private transient C client;
+    private transient Cache<RowData, List<RowData>> cache;
 
     public ElasticsearchRowDataLookupFunction(
             DeserializationSchema<RowData> deserializationSchema,
+            ElasticsearchLookupOptions lookupOptions,
             int maxRetryTimes,
             String index,
             String type,
@@ -86,6 +94,7 @@ public class ElasticsearchRowDataLookupFunction<C extends AutoCloseable> extends
             ElasticsearchApiCallBridge<C> callBridge) {
 
         checkNotNull(deserializationSchema, "No DeserializationSchema supplied.");
+        checkNotNull(lookupOptions, "No ElasticsearchLookupOptions supplied.");
         checkNotNull(maxRetryTimes, "No maxRetryTimes supplied.");
         checkNotNull(producedNames, "No fieldNames supplied.");
         checkNotNull(producedTypes, "No fieldTypes supplied.");
@@ -93,12 +102,15 @@ public class ElasticsearchRowDataLookupFunction<C extends AutoCloseable> extends
         checkNotNull(callBridge, "No ElasticsearchApiCallBridge supplied.");
 
         this.deserializationSchema = deserializationSchema;
-        this.maxRetryTimes = maxRetryTimes;
+        this.cacheExpireMs = lookupOptions.getCacheExpireMs();
+        this.cacheMaxSize = lookupOptions.getCacheMaxSize();
+        this.maxRetryTimes = lookupOptions.getMaxRetryTimes();
+
         this.index = index;
         this.type = type;
         this.producedNames = producedNames;
         this.lookupKeys = lookupKeys;
-        this.converters = new DataFormatConverters.DataFormatConverter[lookupKeys.length];
+        this.converters = new DataFormatConverter[lookupKeys.length];
         Map<String, Integer> nameToIndex =
                 IntStream.range(0, producedNames.length)
                         .boxed()
@@ -109,7 +121,6 @@ public class ElasticsearchRowDataLookupFunction<C extends AutoCloseable> extends
                     position != null, "Lookup keys %s not selected", Arrays.toString(lookupKeys));
             converters[i] = DataFormatConverters.getConverterForDataType(producedTypes[position]);
         }
-
         this.callBridge = callBridge;
     }
 
@@ -117,6 +128,14 @@ public class ElasticsearchRowDataLookupFunction<C extends AutoCloseable> extends
     public void open(FunctionContext context) throws Exception {
         this.client = callBridge.createClient();
 
+        this.cache =
+                cacheMaxSize == -1 || cacheExpireMs == -1
+                        ? null
+                        : CacheBuilder.<RowData, List<RowData>>builder()
+                                .setExpireAfterWrite(TimeValue.timeValueMillis(cacheExpireMs))
+                                .setMaximumWeight(cacheMaxSize)
+                                .build();
+        this.client = callBridge.createClient();
         // Set searchRequest in open method in case of amount of calling in eval method when every
         // record comes.
         this.searchRequest = new SearchRequest(index);
@@ -130,6 +149,7 @@ public class ElasticsearchRowDataLookupFunction<C extends AutoCloseable> extends
         deserializationSchema.open(null);
     }
 
+
     @Override
     public Collection<RowData> lookup(RowData keyRow) {
         BoolQueryBuilder lookupCondition = new BoolQueryBuilder();
@@ -137,6 +157,17 @@ public class ElasticsearchRowDataLookupFunction<C extends AutoCloseable> extends
             lookupCondition.must(
                     new TermQueryBuilder(lookupKeys[i], converters[i].toExternal(keyRow, i)));
         }
+
+        if (cache != null) {
+            List<RowData> cachedRows = cache.get(keyRow);
+            if (cachedRows != null) {
+                for (RowData cachedRow : cachedRows) {
+                    collect(cachedRow);
+                }
+                return new ArrayList<>();
+            }
+        }
+
         searchSourceBuilder.query(lookupCondition);
         searchRequest.source(searchSourceBuilder);
 
@@ -147,7 +178,7 @@ public class ElasticsearchRowDataLookupFunction<C extends AutoCloseable> extends
                 if (searchResponse.f1.length > 0) {
                     String[] result = searchResponse.f1;
                     for (String s : result) {
-                        RowData row = parseSearchResult(s);
+                        RowData row = parseSearchHit(s);
                         rows.add(row);
                     }
                     rows.trimToSize();
@@ -170,10 +201,10 @@ public class ElasticsearchRowDataLookupFunction<C extends AutoCloseable> extends
         return Collections.emptyList();
     }
 
-    private RowData parseSearchResult(String result) {
+    private RowData parseSearchHit(String hit) {
         RowData row = null;
         try {
-            row = deserializationSchema.deserialize(result.getBytes());
+            row = deserializationSchema.deserialize(hit.getBytes());
         } catch (IOException e) {
             LOG.error("Deserialize search hit failed: " + e.getMessage());
         }
