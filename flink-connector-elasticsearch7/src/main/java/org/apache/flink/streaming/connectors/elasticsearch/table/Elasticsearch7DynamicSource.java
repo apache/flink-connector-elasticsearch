@@ -76,11 +76,11 @@ public class Elasticsearch7DynamicSource implements LookupTableSource, SupportsP
                     new Elasticsearch7DynamicSink.AuthRestClientFactory(
                             config.getPathPrefix().orElse(null),
                             config.getUsername().get(),
-                            config.getPassword().get());
+                            config.getPassword().get(), config.getSkipVerifySsl().get());
         } else {
             restClientFactory =
                     new Elasticsearch7DynamicSink.DefaultRestClientFactory(
-                            config.getPathPrefix().orElse(null));
+                            config.getPathPrefix().orElse(null), config.getSkipVerifySsl().get());
         }
 
         Elasticsearch7ApiCallBridge elasticsearch7ApiCallBridge =

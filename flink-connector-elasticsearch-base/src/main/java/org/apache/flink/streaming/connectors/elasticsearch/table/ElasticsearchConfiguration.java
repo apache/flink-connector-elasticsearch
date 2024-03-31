@@ -150,6 +150,10 @@ class ElasticsearchConfiguration {
         return config.getOptional(ElasticsearchConnectorOptions.CONNECTION_PATH_PREFIX);
     }
 
+    public Optional<Boolean> getSkipVerifySsl() {
+        return config.getOptional(ElasticsearchConnectorOptions.CONNECT_SKIP_VERIFY_SSL);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {

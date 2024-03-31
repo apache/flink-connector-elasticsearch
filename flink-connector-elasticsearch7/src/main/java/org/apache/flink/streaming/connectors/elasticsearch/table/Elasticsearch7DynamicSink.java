@@ -37,7 +37,10 @@ import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.TrustAllStrategy;
 import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.ssl.SSLContexts;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.update.UpdateRequest;
@@ -46,6 +49,9 @@ import org.elasticsearch.common.xcontent.XContentType;
 
 import javax.annotation.Nullable;
 
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
@@ -167,10 +173,12 @@ final class Elasticsearch7DynamicSink implements DynamicTableSink {
                         new AuthRestClientFactory(
                                 config.getPathPrefix().orElse(null),
                                 config.getUsername().get(),
-                                config.getPassword().get()));
+                                config.getPassword().get(), config.getSkipVerifySsl().get()));
             } else {
                 builder.setRestClientFactory(
-                        new DefaultRestClientFactory(config.getPathPrefix().orElse(null)));
+                        new DefaultRestClientFactory(
+                                config.getPathPrefix().orElse(null),
+                                config.getSkipVerifySsl().get()));
             }
 
             final ElasticsearchSink<RowData> sink = builder.build();
@@ -198,15 +206,31 @@ final class Elasticsearch7DynamicSink implements DynamicTableSink {
     static class DefaultRestClientFactory implements RestClientFactory {
 
         private final String pathPrefix;
+        private final Boolean skipVerifySsl;
 
-        public DefaultRestClientFactory(@Nullable String pathPrefix) {
+        public DefaultRestClientFactory(@Nullable String pathPrefix, Boolean skipVerifySsl) {
             this.pathPrefix = pathPrefix;
+            this.skipVerifySsl = skipVerifySsl;
         }
 
         @Override
         public void configureRestClientBuilder(RestClientBuilder restClientBuilder) {
             if (pathPrefix != null) {
                 restClientBuilder.setPathPrefix(pathPrefix);
+            }
+            if (skipVerifySsl) {
+                restClientBuilder.setHttpClientConfigCallback(
+                        httpClientBuilder -> {
+                            try {
+                                return httpClientBuilder.setSSLContext(SSLContexts
+                                        .custom()
+                                        .loadTrustMaterial(null, TrustAllStrategy.INSTANCE)
+                                        .build());
+                            } catch (NoSuchAlgorithmException | KeyManagementException |
+                                     KeyStoreException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
             }
         }
 
@@ -236,12 +260,17 @@ final class Elasticsearch7DynamicSink implements DynamicTableSink {
         private final String username;
         private final String password;
         private transient CredentialsProvider credentialsProvider;
+        private final Boolean skipVerifySsl;
 
         public AuthRestClientFactory(
-                @Nullable String pathPrefix, String username, String password) {
+                @Nullable String pathPrefix,
+                String username,
+                String password,
+                Boolean skipVerifySsl) {
             this.pathPrefix = pathPrefix;
             this.password = password;
             this.username = username;
+            this.skipVerifySsl = skipVerifySsl;
         }
 
         @Override
@@ -254,10 +283,28 @@ final class Elasticsearch7DynamicSink implements DynamicTableSink {
                 credentialsProvider.setCredentials(
                         AuthScope.ANY, new UsernamePasswordCredentials(username, password));
             }
-            restClientBuilder.setHttpClientConfigCallback(
-                    httpAsyncClientBuilder ->
-                            httpAsyncClientBuilder.setDefaultCredentialsProvider(
-                                    credentialsProvider));
+            if (skipVerifySsl) {
+                restClientBuilder.setHttpClientConfigCallback(httpClientBuilder -> {
+                    try {
+                        return httpClientBuilder
+                                .setDefaultCredentialsProvider(credentialsProvider)
+                                .setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE)
+                                .setSSLContext(SSLContexts
+                                        .custom()
+                                        .loadTrustMaterial(null, TrustAllStrategy.INSTANCE)
+                                        .build());
+                    } catch (NoSuchAlgorithmException e) {
+                        throw new RuntimeException(e);
+                    } catch (KeyManagementException e) {
+                        throw new RuntimeException(e);
+                    } catch (KeyStoreException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+            } else {
+                restClientBuilder.setHttpClientConfigCallback(httpClientBuilder ->
+                        httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider));
+            }
         }
 
         @Override

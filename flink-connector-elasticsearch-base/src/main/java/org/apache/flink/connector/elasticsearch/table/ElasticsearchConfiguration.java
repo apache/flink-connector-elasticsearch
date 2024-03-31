@@ -41,6 +41,7 @@ import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnec
 import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions.CONNECTION_PATH_PREFIX_OPTION;
 import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions.CONNECTION_REQUEST_TIMEOUT;
 import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions.CONNECTION_TIMEOUT;
+import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions.CONNECT_SKIP_VERIFY_SSL;
 import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions.DELIVERY_GUARANTEE_OPTION;
 import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions.HOSTS_OPTION;
 import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions.INDEX_OPTION;
@@ -114,6 +115,10 @@ class ElasticsearchConfiguration {
 
     public Optional<Duration> getConnectionTimeout() {
         return config.getOptional(CONNECTION_TIMEOUT);
+    }
+
+    public Optional<Boolean> getConnectionSkipVerifySsl() {
+        return config.getOptional(CONNECT_SKIP_VERIFY_SSL);
     }
 
     public Optional<Duration> getSocketTimeout() {

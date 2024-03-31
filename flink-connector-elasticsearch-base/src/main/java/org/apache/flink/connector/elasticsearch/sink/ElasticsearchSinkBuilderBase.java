@@ -58,6 +58,7 @@ public abstract class ElasticsearchSinkBuilderBase<
     private String password;
     private String connectionPathPrefix;
     private Integer connectionTimeout;
+    private Boolean connectionSkipVerifySsl;
     private Integer connectionRequestTimeout;
     private Integer socketTimeout;
     private FailureHandler failureHandler = new DefaultFailureHandler();
@@ -250,6 +251,11 @@ public abstract class ElasticsearchSinkBuilderBase<
         return self();
     }
 
+    public B setConnectionSkipVerifySsl(boolean skip) {
+        this.connectionSkipVerifySsl = skip;
+        return self();
+    }
+
     /**
      * Sets the timeout for waiting for data or, put differently, a maximum period inactivity
      * between two consecutive data packets.
@@ -336,6 +342,7 @@ public abstract class ElasticsearchSinkBuilderBase<
                 connectionPathPrefix,
                 connectionRequestTimeout,
                 connectionTimeout,
+                connectionSkipVerifySsl,
                 socketTimeout);
     }
 
