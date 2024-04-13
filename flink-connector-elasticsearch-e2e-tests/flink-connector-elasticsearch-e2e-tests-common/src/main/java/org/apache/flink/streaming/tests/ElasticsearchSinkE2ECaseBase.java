@@ -72,7 +72,8 @@ public abstract class ElasticsearchSinkE2ECaseBase<T extends Comparable<T>>
                     .bindWithFlinkContainer(flink.getFlinkContainers().getJobManager())
                     .build();
 
-    @Override
+    /** Could be removed together with dropping support of Flink 1.19. */
+    @Deprecated
     protected void checkResultWithSemantic(
             ExternalSystemDataReader<T> reader, List<T> testData, CheckpointingMode semantic)
             throws Exception {
@@ -93,8 +94,45 @@ public abstract class ElasticsearchSinkE2ECaseBase<T extends Comparable<T>>
                 READER_RETRY_ATTEMPTS);
     }
 
+    protected void checkResultWithSemantic(
+            ExternalSystemDataReader<T> reader,
+            List<T> testData,
+            org.apache.flink.core.execution.CheckpointingMode semantic)
+            throws Exception {
+        waitUntilCondition(
+                () -> {
+                    try {
+                        List<T> result = reader.poll(Duration.ofMillis(READER_TIMEOUT));
+                        assertThat(sort(result).iterator())
+                                .matchesRecordsFromSource(
+                                        Collections.singletonList(sort(testData)),
+                                        convertFromCheckpointingMode(semantic));
+                        return true;
+                    } catch (Throwable t) {
+                        LOG.warn("Polled results not as expected", t);
+                        return false;
+                    }
+                },
+                5000,
+                READER_RETRY_ATTEMPTS);
+    }
+
     private List<T> sort(List<T> list) {
         return list.stream().sorted().collect(Collectors.toList());
+    }
+
+    /** Could be removed together with dropping support of Flink 1.19. */
+    @Deprecated
+    private static org.apache.flink.streaming.api.CheckpointingMode convertFromCheckpointingMode(
+            org.apache.flink.core.execution.CheckpointingMode semantic) {
+        switch (semantic) {
+            case EXACTLY_ONCE:
+                return org.apache.flink.streaming.api.CheckpointingMode.EXACTLY_ONCE;
+            case AT_LEAST_ONCE:
+                return org.apache.flink.streaming.api.CheckpointingMode.AT_LEAST_ONCE;
+            default:
+                throw new IllegalArgumentException("Unsupported semantic: " + semantic);
+        }
     }
 
     abstract String getElasticsearchContainerName();
