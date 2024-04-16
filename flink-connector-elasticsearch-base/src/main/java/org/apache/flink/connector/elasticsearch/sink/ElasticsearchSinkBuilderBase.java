@@ -271,7 +271,6 @@ public abstract class ElasticsearchSinkBuilderBase<
         return self();
     }
 
-
     /**
      * Allows to bypass the certificates chain validation and connect to insecure network endpoints
      * (for example, servers which use self-signed certificates).
@@ -373,7 +372,9 @@ public abstract class ElasticsearchSinkBuilderBase<
 
     private NetworkClientConfig buildNetworkClientConfig() {
         checkArgument(!hosts.isEmpty(), "Hosts cannot be empty.");
-        checkArgument(!Optional.ofNullable(allowInsecure).orElse(Boolean.FALSE) || sslContextSupplier == null,
+        checkArgument(
+                !Optional.ofNullable(allowInsecure).orElse(Boolean.FALSE)
+                        || sslContextSupplier == null,
                 "allowInsecure=true and sslContextSupplier are mutually exclusive.");
         return new NetworkClientConfig(
                 username,

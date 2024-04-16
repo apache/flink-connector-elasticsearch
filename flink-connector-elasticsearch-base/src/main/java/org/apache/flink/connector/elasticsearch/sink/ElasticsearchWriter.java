@@ -182,12 +182,14 @@ class ElasticsearchWriter<IN> implements SinkWriter<IN> {
                         if (networkClientConfig.isAllowInsecure().orElse(false)) {
                             try {
                                 httpClientBuilder.setSSLContext(
-                                        SSLContexts
-                                                .custom().loadTrustMaterial(TrustAllStrategy.INSTANCE).build());
+                                        SSLContexts.custom()
+                                                .loadTrustMaterial(TrustAllStrategy.INSTANCE)
+                                                .build());
                             } catch (final NoSuchAlgorithmException
-                                           | KeyStoreException
-                                           | KeyManagementException ex) {
-                                throw new IllegalStateException("Unable to create custom SSL context", ex);
+                                    | KeyStoreException
+                                    | KeyManagementException ex) {
+                                throw new IllegalStateException(
+                                        "Unable to create custom SSL context", ex);
                             }
                         } else if (networkClientConfig.getSSLContextSupplier() != null) {
                             // client creates SSL context using the configured supplier

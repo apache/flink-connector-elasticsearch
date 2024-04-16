@@ -93,11 +93,12 @@ abstract class ElasticsearchSinkBuilderBaseTest<B extends ElasticsearchSinkBuild
     @Test
     void testThrowIfBothAllowInsecureAndSslContextProviderSet() {
         assertThatThrownBy(
-                () ->
-                        createMinimalBuilder()
-                                .setAllowInsecure(true)
-                                .setSslContextSupplier((SerializableSupplier<SSLContext>) () -> null)
-                                .build())
+                        () ->
+                                createMinimalBuilder()
+                                        .setAllowInsecure(true)
+                                        .setSslContextSupplier(
+                                                (SerializableSupplier<SSLContext>) () -> null)
+                                        .build())
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
