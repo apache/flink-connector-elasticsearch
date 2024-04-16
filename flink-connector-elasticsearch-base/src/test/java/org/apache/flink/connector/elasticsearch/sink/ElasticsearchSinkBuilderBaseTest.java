@@ -23,6 +23,7 @@ import org.apache.flink.connector.elasticsearch.sink.BulkResponseInspector.BulkR
 import org.apache.flink.connector.elasticsearch.sink.ElasticsearchWriter.DefaultBulkResponseInspector;
 import org.apache.flink.metrics.MetricGroup;
 import org.apache.flink.util.TestLoggerExtension;
+import org.apache.flink.util.function.SerializableSupplier;
 
 import org.apache.http.HttpHost;
 import org.junit.jupiter.api.DynamicTest;
@@ -30,6 +31,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestFactory;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
+
+import javax.net.ssl.SSLContext;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
@@ -85,6 +88,17 @@ abstract class ElasticsearchSinkBuilderBaseTest<B extends ElasticsearchSinkBuild
                                         .setEmitter((element, indexer, context) -> {})
                                         .build())
                 .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void testThrowIfBothAllowInsecureAndSslContextProviderSet() {
+        assertThatThrownBy(
+                () ->
+                        createMinimalBuilder()
+                                .setAllowInsecure(true)
+                                .setSslContextSupplier((SerializableSupplier<SSLContext>) () -> null)
+                                .build())
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

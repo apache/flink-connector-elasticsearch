@@ -35,6 +35,7 @@ import javax.net.ssl.SSLContext;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import static org.apache.flink.util.Preconditions.checkArgument;
 import static org.apache.flink.util.Preconditions.checkNotNull;
@@ -372,7 +373,8 @@ public abstract class ElasticsearchSinkBuilderBase<
 
     private NetworkClientConfig buildNetworkClientConfig() {
         checkArgument(!hosts.isEmpty(), "Hosts cannot be empty.");
-
+        checkArgument(!Optional.ofNullable(allowInsecure).orElse(Boolean.FALSE) || sslContextSupplier == null,
+                "allowInsecure=true and sslContextSupplier are mutually exclusive.");
         return new NetworkClientConfig(
                 username,
                 password,
