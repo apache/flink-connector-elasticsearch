@@ -64,6 +64,7 @@ public abstract class ElasticsearchSinkBuilderBase<
     private Integer connectionTimeout;
     private Integer connectionRequestTimeout;
     private Integer socketTimeout;
+    private Boolean allowInsecure;
     private SerializableSupplier<SSLContext> sslContextSupplier;
     private SerializableSupplier<HostnameVerifier> hostnameVerifierSupplier;
     private FailureHandler failureHandler = new DefaultFailureHandler();
@@ -269,6 +270,19 @@ public abstract class ElasticsearchSinkBuilderBase<
         return self();
     }
 
+
+    /**
+     * Allows to bypass the certificates chain validation and connect to insecure network endpoints
+     * (for example, servers which use self-signed certificates).
+     *
+     * @param allowInsecure allow or not to insecure network endpoints
+     * @return this builder
+     */
+    public B setAllowInsecure(boolean allowInsecure) {
+        this.allowInsecure = allowInsecure;
+        return self();
+    }
+
     /**
      * Sets the supplier for getting an {@link SSLContext} instance.
      *
@@ -366,6 +380,7 @@ public abstract class ElasticsearchSinkBuilderBase<
                 connectionRequestTimeout,
                 connectionTimeout,
                 socketTimeout,
+                allowInsecure,
                 sslContextSupplier,
                 hostnameVerifierSupplier);
     }
@@ -409,6 +424,9 @@ public abstract class ElasticsearchSinkBuilderBase<
                 + '\''
                 + ", connectionPathPrefix='"
                 + connectionPathPrefix
+                + '\''
+                + ", allowInsecure='"
+                + allowInsecure
                 + '\''
                 + '}';
     }
