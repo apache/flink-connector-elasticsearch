@@ -30,9 +30,7 @@ import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
-import org.apache.http.conn.ssl.TrustAllStrategy;
 import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.apache.http.ssl.SSLContexts;
 import org.elasticsearch.action.DocWriteRequest;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkProcessor;
@@ -49,9 +47,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 import static org.apache.flink.util.ExceptionUtils.firstOrSuppressed;
@@ -169,7 +164,6 @@ class ElasticsearchWriter<IN> implements SinkWriter<IN> {
 
         final CredentialsProvider credentialsProvider = getCredentialsProvider(networkClientConfig);
         if (credentialsProvider != null
-                || networkClientConfig.isAllowInsecure().orElse(Boolean.FALSE)
                 || networkClientConfig.getSSLContextSupplier() != null
                 || networkClientConfig.getSslHostnameVerifier() != null) {
             builder.setHttpClientConfigCallback(
@@ -178,20 +172,7 @@ class ElasticsearchWriter<IN> implements SinkWriter<IN> {
                             httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider);
                         }
 
-                        // client uses trust-all model in case of self-signed certs
-                        if (networkClientConfig.isAllowInsecure().orElse(false)) {
-                            try {
-                                httpClientBuilder.setSSLContext(
-                                        SSLContexts.custom()
-                                                .loadTrustMaterial(TrustAllStrategy.INSTANCE)
-                                                .build());
-                            } catch (final NoSuchAlgorithmException
-                                    | KeyStoreException
-                                    | KeyManagementException ex) {
-                                throw new IllegalStateException(
-                                        "Unable to create custom SSL context", ex);
-                            }
-                        } else if (networkClientConfig.getSSLContextSupplier() != null) {
+                        if (networkClientConfig.getSSLContextSupplier() != null) {
                             // client creates SSL context using the configured supplier
                             httpClientBuilder.setSSLContext(
                                     networkClientConfig.getSSLContextSupplier().get());

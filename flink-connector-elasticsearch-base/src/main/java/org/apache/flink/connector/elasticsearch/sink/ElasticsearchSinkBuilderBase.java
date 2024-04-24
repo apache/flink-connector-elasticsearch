@@ -29,13 +29,17 @@ import org.apache.flink.util.InstantiationUtil;
 import org.apache.flink.util.function.SerializableSupplier;
 
 import org.apache.http.HttpHost;
+import org.apache.http.conn.ssl.TrustAllStrategy;
+import org.apache.http.ssl.SSLContexts;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 import static org.apache.flink.util.Preconditions.checkArgument;
 import static org.apache.flink.util.Preconditions.checkNotNull;
@@ -65,7 +69,6 @@ public abstract class ElasticsearchSinkBuilderBase<
     private Integer connectionTimeout;
     private Integer connectionRequestTimeout;
     private Integer socketTimeout;
-    private Boolean allowInsecure;
     private SerializableSupplier<SSLContext> sslContextSupplier;
     private SerializableSupplier<HostnameVerifier> hostnameVerifierSupplier;
     private FailureHandler failureHandler = new DefaultFailureHandler();
@@ -275,11 +278,21 @@ public abstract class ElasticsearchSinkBuilderBase<
      * Allows to bypass the certificates chain validation and connect to insecure network endpoints
      * (for example, servers which use self-signed certificates).
      *
-     * @param allowInsecure allow or not to insecure network endpoints
      * @return this builder
      */
-    public B setAllowInsecure(boolean allowInsecure) {
-        this.allowInsecure = allowInsecure;
+    public B allowInsecure() {
+        this.sslContextSupplier =
+                () -> {
+                    try {
+                        return SSLContexts.custom()
+                                .loadTrustMaterial(TrustAllStrategy.INSTANCE)
+                                .build();
+                    } catch (final NoSuchAlgorithmException
+                            | KeyStoreException
+                            | KeyManagementException ex) {
+                        throw new IllegalStateException("Unable to create custom SSL context", ex);
+                    }
+                };
         return self();
     }
 
@@ -372,10 +385,6 @@ public abstract class ElasticsearchSinkBuilderBase<
 
     private NetworkClientConfig buildNetworkClientConfig() {
         checkArgument(!hosts.isEmpty(), "Hosts cannot be empty.");
-        checkArgument(
-                !Optional.ofNullable(allowInsecure).orElse(Boolean.FALSE)
-                        || sslContextSupplier == null,
-                "allowInsecure=true and sslContextSupplier are mutually exclusive.");
         return new NetworkClientConfig(
                 username,
                 password,
@@ -383,7 +392,6 @@ public abstract class ElasticsearchSinkBuilderBase<
                 connectionRequestTimeout,
                 connectionTimeout,
                 socketTimeout,
-                allowInsecure,
                 sslContextSupplier,
                 hostnameVerifierSupplier);
     }
@@ -427,9 +435,6 @@ public abstract class ElasticsearchSinkBuilderBase<
                 + '\''
                 + ", connectionPathPrefix='"
                 + connectionPathPrefix
-                + '\''
-                + ", allowInsecure='"
-                + allowInsecure
                 + '\''
                 + '}';
     }

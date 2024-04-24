@@ -25,7 +25,6 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 
 import java.io.Serializable;
-import java.util.Optional;
 
 class NetworkClientConfig implements Serializable {
 
@@ -35,7 +34,6 @@ class NetworkClientConfig implements Serializable {
     @Nullable private final Integer connectionRequestTimeout;
     @Nullable private final Integer connectionTimeout;
     @Nullable private final Integer socketTimeout;
-    @Nullable private final Boolean allowInsecure;
     @Nullable private final SerializableSupplier<SSLContext> sslContextSupplier;
     @Nullable private final SerializableSupplier<HostnameVerifier> sslHostnameVerifier;
 
@@ -46,7 +44,6 @@ class NetworkClientConfig implements Serializable {
             @Nullable Integer connectionRequestTimeout,
             @Nullable Integer connectionTimeout,
             @Nullable Integer socketTimeout,
-            @Nullable Boolean allowInsecure,
             @Nullable SerializableSupplier<SSLContext> sslContextSupplier,
             @Nullable SerializableSupplier<HostnameVerifier> sslHostnameVerifier) {
         this.username = username;
@@ -55,7 +52,6 @@ class NetworkClientConfig implements Serializable {
         this.connectionRequestTimeout = connectionRequestTimeout;
         this.connectionTimeout = connectionTimeout;
         this.socketTimeout = socketTimeout;
-        this.allowInsecure = allowInsecure;
         this.sslContextSupplier = sslContextSupplier;
         this.sslHostnameVerifier = sslHostnameVerifier;
     }
@@ -88,10 +84,6 @@ class NetworkClientConfig implements Serializable {
     @Nullable
     public String getConnectionPathPrefix() {
         return connectionPathPrefix;
-    }
-
-    public Optional<Boolean> isAllowInsecure() {
-        return Optional.ofNullable(allowInsecure);
     }
 
     @Nullable
