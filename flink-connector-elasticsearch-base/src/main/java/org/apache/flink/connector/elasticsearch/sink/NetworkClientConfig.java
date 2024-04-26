@@ -29,6 +29,7 @@ class NetworkClientConfig implements Serializable {
     @Nullable private final String connectionPathPrefix;
     @Nullable private final Integer connectionRequestTimeout;
     @Nullable private final Integer connectionTimeout;
+    @Nullable private final Boolean connectionSkipVerifySsl;
     @Nullable private final Integer socketTimeout;
 
     NetworkClientConfig(
@@ -37,12 +38,14 @@ class NetworkClientConfig implements Serializable {
             @Nullable String connectionPathPrefix,
             @Nullable Integer connectionRequestTimeout,
             @Nullable Integer connectionTimeout,
+            @Nullable Boolean connectionSkipVerifySsl,
             @Nullable Integer socketTimeout) {
         this.username = username;
         this.password = password;
         this.connectionPathPrefix = connectionPathPrefix;
         this.connectionRequestTimeout = connectionRequestTimeout;
         this.connectionTimeout = connectionTimeout;
+        this.connectionSkipVerifySsl = connectionSkipVerifySsl;
         this.socketTimeout = socketTimeout;
     }
 
@@ -69,6 +72,11 @@ class NetworkClientConfig implements Serializable {
     @Nullable
     public Integer getSocketTimeout() {
         return socketTimeout;
+    }
+
+    @Nullable
+    public Boolean getConnectionSkipVerifySsl() {
+        return connectionSkipVerifySsl;
     }
 
     @Nullable

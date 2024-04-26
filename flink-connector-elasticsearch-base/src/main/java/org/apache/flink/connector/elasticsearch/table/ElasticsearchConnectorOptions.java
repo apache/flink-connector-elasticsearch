@@ -145,4 +145,10 @@ public class ElasticsearchConnectorOptions {
                     .enumType(DeliveryGuarantee.class)
                     .defaultValue(DeliveryGuarantee.AT_LEAST_ONCE)
                     .withDescription("Optional delivery guarantee when committing.");
+
+    public static final ConfigOption<Boolean> CONNECT_SKIP_VERIFY_SSL =
+            ConfigOptions.key("connection.skip-verify-ssl")
+                    .booleanType()
+                    .defaultValue(false)
+                    .withDescription("Skip verify ssl certificate or not");
 }

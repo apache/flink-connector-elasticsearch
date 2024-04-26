@@ -46,6 +46,12 @@ public class ElasticsearchConnectorOptions {
                     .noDefaultValue()
                     .withDescription("Elasticsearch hosts to connect to.");
 
+    public static final ConfigOption<Boolean> CONNECT_SKIP_VERIFY_SSL =
+            ConfigOptions.key("connection.skip-verify-ssl")
+                    .booleanType()
+                    .defaultValue(false)
+                    .withDescription("Skip verify ssl certificate or not");
+
     public static final ConfigOption<String> INDEX_OPTION =
             ConfigOptions.key("index")
                     .stringType()

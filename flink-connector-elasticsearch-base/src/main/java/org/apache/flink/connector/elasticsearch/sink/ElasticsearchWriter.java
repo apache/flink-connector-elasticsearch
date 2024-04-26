@@ -30,7 +30,10 @@ import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.TrustAllStrategy;
 import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.ssl.SSLContexts;
 import org.elasticsearch.action.DocWriteRequest;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkProcessor;
@@ -47,6 +50,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 import static org.apache.flink.util.ExceptionUtils.firstOrSuppressed;
@@ -172,6 +178,24 @@ class ElasticsearchWriter<IN> implements SinkWriter<IN> {
                     httpClientBuilder ->
                             httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider));
         }
+
+        if (networkClientConfig.getConnectionSkipVerifySsl()) {
+            builder.setHttpClientConfigCallback(httpClientBuilder -> httpClientBuilder.setSSLHostnameVerifier(
+                    NoopHostnameVerifier.INSTANCE));
+            builder.setHttpClientConfigCallback(httpClientBuilder -> {
+                try {
+                    return httpClientBuilder
+                            .setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE)
+                            .setSSLContext(SSLContexts.custom()
+                                    .loadTrustMaterial(null, TrustAllStrategy.INSTANCE)
+                                    .build());
+                } catch (NoSuchAlgorithmException | KeyManagementException |
+                         KeyStoreException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+        }
+
         if (networkClientConfig.getConnectionRequestTimeout() != null
                 || networkClientConfig.getConnectionTimeout() != null
                 || networkClientConfig.getSocketTimeout() != null) {

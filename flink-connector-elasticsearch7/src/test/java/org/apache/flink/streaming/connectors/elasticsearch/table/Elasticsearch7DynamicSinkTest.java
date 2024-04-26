@@ -92,7 +92,7 @@ public class Elasticsearch7DynamicSinkTest extends TestLogger {
         verify(provider.builderSpy).setBulkFlushMaxSizeMb(1);
         verify(provider.builderSpy)
                 .setRestClientFactory(
-                        new Elasticsearch7DynamicSink.DefaultRestClientFactory("/myapp"));
+                        new Elasticsearch7DynamicSink.DefaultRestClientFactory("/myapp", true));
         verify(provider.sinkSpy).disableFlushOnCheckpoint();
     }
 
@@ -124,7 +124,8 @@ public class Elasticsearch7DynamicSinkTest extends TestLogger {
         verify(provider.builderSpy).setBulkFlushMaxActions(1000);
         verify(provider.builderSpy).setBulkFlushMaxSizeMb(2);
         verify(provider.builderSpy)
-                .setRestClientFactory(new Elasticsearch7DynamicSink.DefaultRestClientFactory(null));
+                .setRestClientFactory(new Elasticsearch7DynamicSink.DefaultRestClientFactory(
+                        null, true));
         verify(provider.sinkSpy, never()).disableFlushOnCheckpoint();
     }
 
@@ -160,7 +161,7 @@ public class Elasticsearch7DynamicSinkTest extends TestLogger {
         verify(provider.builderSpy)
                 .setRestClientFactory(
                         new Elasticsearch7DynamicSink.AuthRestClientFactory(
-                                null, USERNAME, PASSWORD));
+                                null, USERNAME, PASSWORD, true));
         verify(provider.sinkSpy, never()).disableFlushOnCheckpoint();
     }
 
