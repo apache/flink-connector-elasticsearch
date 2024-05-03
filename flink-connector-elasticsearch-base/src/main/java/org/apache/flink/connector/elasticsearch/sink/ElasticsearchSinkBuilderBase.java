@@ -26,9 +26,18 @@ import org.apache.flink.connector.elasticsearch.sink.BulkResponseInspector.BulkR
 import org.apache.flink.connector.elasticsearch.sink.ElasticsearchWriter.DefaultBulkResponseInspector;
 import org.apache.flink.connector.elasticsearch.sink.ElasticsearchWriter.DefaultFailureHandler;
 import org.apache.flink.util.InstantiationUtil;
+import org.apache.flink.util.function.SerializableSupplier;
 
 import org.apache.http.HttpHost;
+import org.apache.http.conn.ssl.TrustAllStrategy;
+import org.apache.http.ssl.SSLContexts;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLContext;
+
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -60,6 +69,8 @@ public abstract class ElasticsearchSinkBuilderBase<
     private Integer connectionTimeout;
     private Integer connectionRequestTimeout;
     private Integer socketTimeout;
+    private SerializableSupplier<SSLContext> sslContextSupplier;
+    private SerializableSupplier<HostnameVerifier> hostnameVerifierSupplier;
     private FailureHandler failureHandler = new DefaultFailureHandler();
     private BulkResponseInspectorFactory bulkResponseInspectorFactory;
 
@@ -264,6 +275,51 @@ public abstract class ElasticsearchSinkBuilderBase<
     }
 
     /**
+     * Allows to bypass the certificates chain validation and connect to insecure network endpoints
+     * (for example, servers which use self-signed certificates).
+     *
+     * @return this builder
+     */
+    public B allowInsecure() {
+        this.sslContextSupplier =
+                () -> {
+                    try {
+                        return SSLContexts.custom()
+                                .loadTrustMaterial(TrustAllStrategy.INSTANCE)
+                                .build();
+                    } catch (final NoSuchAlgorithmException
+                            | KeyStoreException
+                            | KeyManagementException ex) {
+                        throw new IllegalStateException("Unable to create custom SSL context", ex);
+                    }
+                };
+        return self();
+    }
+
+    /**
+     * Sets the supplier for getting an {@link SSLContext} instance.
+     *
+     * @param sslContextSupplier the serializable SSLContext supplier function
+     * @return this builder
+     */
+    public B setSslContextSupplier(SerializableSupplier<SSLContext> sslContextSupplier) {
+        this.sslContextSupplier = checkNotNull(sslContextSupplier);
+        return self();
+    }
+
+    /**
+     * Sets the supplier for getting an SSL {@link HostnameVerifier} instance.
+     *
+     * @param sslHostnameVerifierSupplier the serializable hostname verifier supplier function
+     * @return this builder
+     */
+    public B setSslHostnameVerifier(
+            SerializableSupplier<HostnameVerifier> sslHostnameVerifierSupplier) {
+        this.hostnameVerifierSupplier = sslHostnameVerifierSupplier;
+        return self();
+    }
+
+    /**
      * Overrides the default {@link FailureHandler}. A custom failure handler can handle partial
      * failures gracefully. See {@link #bulkResponseInspectorFactory} for more extensive control.
      *
@@ -329,14 +385,15 @@ public abstract class ElasticsearchSinkBuilderBase<
 
     private NetworkClientConfig buildNetworkClientConfig() {
         checkArgument(!hosts.isEmpty(), "Hosts cannot be empty.");
-
         return new NetworkClientConfig(
                 username,
                 password,
                 connectionPathPrefix,
                 connectionRequestTimeout,
                 connectionTimeout,
-                socketTimeout);
+                socketTimeout,
+                sslContextSupplier,
+                hostnameVerifierSupplier);
     }
 
     private BulkProcessorConfig buildBulkProcessorConfig() {

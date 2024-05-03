@@ -327,7 +327,7 @@ class ElasticsearchWriterITCase {
                 bulkProcessorConfig,
                 new TestBulkProcessorBuilderFactory(),
                 new DefaultBulkResponseInspector(),
-                new NetworkClientConfig(null, null, null, null, null, null),
+                new NetworkClientConfig(null, null, null, null, null, null, null, null),
                 metricGroup,
                 new TestMailbox());
     }

@@ -104,4 +104,9 @@ public class ElasticsearchSink<IN> implements Sink<IN> {
     BulkResponseInspectorFactory getBulkResponseInspectorFactory() {
         return bulkResponseInspectorFactory;
     }
+
+    @VisibleForTesting
+    NetworkClientConfig getNetworkClientConfig() {
+        return networkClientConfig;
+    }
 }

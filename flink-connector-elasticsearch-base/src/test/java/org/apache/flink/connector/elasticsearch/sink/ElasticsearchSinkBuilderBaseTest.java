@@ -54,7 +54,8 @@ abstract class ElasticsearchSinkBuilderBaseTest<B extends ElasticsearchSinkBuild
                                 .setBulkFlushBackoffStrategy(FlushBackoffType.CONSTANT, 1, 1),
                         createMinimalBuilder()
                                 .setConnectionUsername("username")
-                                .setConnectionPassword("password"));
+                                .setConnectionPassword("password"),
+                        createMinimalBuilder().allowInsecure());
 
         return DynamicTest.stream(
                 validBuilders,
@@ -66,6 +67,17 @@ abstract class ElasticsearchSinkBuilderBaseTest<B extends ElasticsearchSinkBuild
     void testDefaultDeliveryGuarantee() {
         assertThat(createMinimalBuilder().build().getDeliveryGuarantee())
                 .isEqualTo(DeliveryGuarantee.AT_LEAST_ONCE);
+    }
+
+    @Test
+    void testAllowInsecureSetSslContextSupplier() {
+        assertThat(
+                        createMinimalBuilder()
+                                .allowInsecure()
+                                .build()
+                                .getNetworkClientConfig()
+                                .getSSLContextSupplier())
+                .isNotNull();
     }
 
     @Test
