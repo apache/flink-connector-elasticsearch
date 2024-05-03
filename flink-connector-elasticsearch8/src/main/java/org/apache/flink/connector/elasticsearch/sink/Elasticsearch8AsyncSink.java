@@ -21,21 +21,17 @@
 
 package org.apache.flink.connector.elasticsearch.sink;
 
+import org.apache.flink.annotation.VisibleForTesting;
 import org.apache.flink.connector.base.sink.AsyncSinkBase;
 import org.apache.flink.connector.base.sink.writer.BufferedRequestState;
 import org.apache.flink.connector.base.sink.writer.ElementConverter;
 import org.apache.flink.core.io.SimpleVersionedSerializer;
 
-import org.apache.http.Header;
-import org.apache.http.HttpHost;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
-
-import static org.apache.flink.util.Preconditions.checkNotNull;
 
 /**
  * Elasticsearch8AsyncSink Apache Flink's Async Sink that submits Operations into an Elasticsearch
@@ -47,15 +43,7 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
 public class Elasticsearch8AsyncSink<InputT> extends AsyncSinkBase<InputT, Operation> {
     private static final Logger LOG = LoggerFactory.getLogger(Elasticsearch8AsyncSink.class);
 
-    private final String username;
-
-    private final String password;
-
-    private final String certificateFingerprint;
-
-    private final List<HttpHost> httpHosts;
-
-    private final List<Header> headers;
+    @VisibleForTesting protected final NetworkConfig networkConfig;
 
     protected Elasticsearch8AsyncSink(
             ElementConverter<InputT, Operation> converter,
@@ -65,11 +53,7 @@ public class Elasticsearch8AsyncSink<InputT> extends AsyncSinkBase<InputT, Opera
             long maxBatchSizeInBytes,
             long maxTimeInBufferMS,
             long maxRecordSizeInByte,
-            String username,
-            String password,
-            String certificateFingerprint,
-            List<HttpHost> httpHosts,
-            List<Header> headers) {
+            NetworkConfig networkConfig) {
         super(
                 converter,
                 maxBatchSize,
@@ -79,11 +63,7 @@ public class Elasticsearch8AsyncSink<InputT> extends AsyncSinkBase<InputT, Opera
                 maxTimeInBufferMS,
                 maxRecordSizeInByte);
 
-        this.username = username;
-        this.password = password;
-        this.certificateFingerprint = certificateFingerprint;
-        this.httpHosts = checkNotNull(httpHosts, "Hosts must not be null");
-        this.headers = headers;
+        this.networkConfig = networkConfig;
     }
 
     @Override
@@ -98,11 +78,7 @@ public class Elasticsearch8AsyncSink<InputT> extends AsyncSinkBase<InputT, Opera
                 getMaxBatchSizeInBytes(),
                 getMaxTimeInBufferMS(),
                 getMaxRecordSizeInBytes(),
-                username,
-                password,
-                certificateFingerprint,
-                httpHosts,
-                headers,
+                networkConfig,
                 Collections.emptyList());
     }
 
@@ -118,11 +94,7 @@ public class Elasticsearch8AsyncSink<InputT> extends AsyncSinkBase<InputT, Opera
                 getMaxBatchSizeInBytes(),
                 getMaxTimeInBufferMS(),
                 getMaxRecordSizeInBytes(),
-                username,
-                password,
-                certificateFingerprint,
-                httpHosts,
-                headers,
+                networkConfig,
                 recoveredState);
     }
 
