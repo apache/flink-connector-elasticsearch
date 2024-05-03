@@ -34,12 +34,13 @@ import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 
+import java.io.Serializable;
 import java.util.List;
 
 import static org.apache.flink.util.Preconditions.checkState;
 
-/** NetworkConfigConfig A factory that creates valid ElasticsearchClient instances. */
-public class NetworkConfig {
+/** A factory that creates valid ElasticsearchClient instances. */
+public class NetworkConfig implements Serializable {
     private final List<HttpHost> hosts;
 
     private final List<Header> headers;
@@ -64,7 +65,7 @@ public class NetworkConfig {
         this.certificateFingerprint = certificateFingerprint;
     }
 
-    public ElasticsearchAsyncClient create() {
+    public ElasticsearchAsyncClient createEsClient() {
         return new ElasticsearchAsyncClient(
                 new RestClientTransport(this.getRestClient(), new JacksonJsonpMapper()));
     }

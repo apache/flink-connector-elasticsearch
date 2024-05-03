@@ -35,8 +35,6 @@ import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
 import co.elastic.clients.elasticsearch.core.BulkRequest;
 import co.elastic.clients.elasticsearch.core.BulkResponse;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
-import org.apache.http.Header;
-import org.apache.http.HttpHost;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -85,11 +83,7 @@ public class Elasticsearch8AsyncWriter<InputT> extends AsyncSinkWriter<InputT, O
             long maxBatchSizeInBytes,
             long maxTimeInBufferMS,
             long maxRecordSizeInBytes,
-            String username,
-            String password,
-            String certificateFingerprint,
-            List<HttpHost> httpHosts,
-            List<Header> headers,
+            NetworkConfig networkConfig,
             Collection<BufferedRequestState<Operation>> state) {
         super(
                 elementConverter,
@@ -104,9 +98,7 @@ public class Elasticsearch8AsyncWriter<InputT> extends AsyncSinkWriter<InputT, O
                         .build(),
                 state);
 
-        this.esClient =
-                new NetworkConfig(httpHosts, username, password, headers, certificateFingerprint)
-                        .create();
+        this.esClient = networkConfig.createEsClient();
         final SinkWriterMetricGroup metricGroup = context.metricGroup();
         checkNotNull(metricGroup);
 

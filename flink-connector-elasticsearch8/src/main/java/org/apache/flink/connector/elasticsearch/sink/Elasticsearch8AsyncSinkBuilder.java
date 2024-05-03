@@ -94,7 +94,7 @@ public class Elasticsearch8AsyncSinkBuilder<InputT>
      */
     public Elasticsearch8AsyncSinkBuilder<InputT> setHeaders(Header... headers) {
         checkNotNull(hosts);
-        checkArgument(headers.length > 0, "Hosts cannot be empty");
+        checkArgument(headers.length > 0, "Headers cannot be empty");
         this.headers = Arrays.asList(headers);
         return this;
     }
@@ -108,7 +108,7 @@ public class Elasticsearch8AsyncSinkBuilder<InputT>
      */
     public Elasticsearch8AsyncSinkBuilder<InputT> setCertificateFingerprint(
             String certificateFingerprint) {
-        checkNotNull(username, "certificateFingerprint must not be null");
+        checkNotNull(certificateFingerprint, "certificateFingerprint must not be null");
         this.certificateFingerprint = certificateFingerprint;
         return this;
     }
@@ -171,16 +171,17 @@ public class Elasticsearch8AsyncSinkBuilder<InputT>
                 Optional.ofNullable(getMaxBatchSizeInBytes()).orElse(DEFAULT_MAX_BATCH_SIZE_IN_B),
                 Optional.ofNullable(getMaxTimeInBufferMS()).orElse(DEFAULT_MAX_TIME_IN_BUFFER_MS),
                 Optional.ofNullable(getMaxRecordSizeInBytes()).orElse(DEFAULT_MAX_RECORD_SIZE_IN_B),
-                username,
-                password,
-                certificateFingerprint,
-                hosts,
-                headers);
+                buildNetworkConfig());
     }
 
     private OperationConverter<InputT> buildOperationConverter(
             ElementConverter<InputT, BulkOperationVariant> converter) {
         return converter != null ? new OperationConverter<>(converter) : null;
+    }
+
+    private NetworkConfig buildNetworkConfig() {
+        checkArgument(!hosts.isEmpty(), "Hosts cannot be empty.");
+        return new NetworkConfig(hosts, username, password, headers, certificateFingerprint);
     }
 
     /** A wrapper that evolves the Operation, since a BulkOperationVariant is not Serializable. */

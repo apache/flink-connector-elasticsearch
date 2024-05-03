@@ -245,11 +245,7 @@ public class Elasticsearch8AsyncWriterITCase extends ElasticsearchSinkBaseITCase
                         5 * 1024 * 1024,
                         5000,
                         1024 * 1024,
-                        null,
-                        null,
-                        null,
-                        esHost,
-                        null) {
+                        new NetworkConfig(esHost, null, null, null, null)) {
                     @Override
                     public StatefulSinkWriter createWriter(InitContext context) {
                         return new Elasticsearch8AsyncWriter<DummyData>(
@@ -261,11 +257,7 @@ public class Elasticsearch8AsyncWriterITCase extends ElasticsearchSinkBaseITCase
                                 getMaxBatchSizeInBytes(),
                                 getMaxTimeInBufferMS(),
                                 getMaxRecordSizeInBytes(),
-                                null,
-                                null,
-                                null,
-                                esHost,
-                                null,
+                                networkConfig,
                                 Collections.emptyList()) {
                             @Override
                             protected void submitRequestEntries(
