@@ -21,9 +21,10 @@
 
 package org.apache.flink.connector.elasticsearch.sink;
 
+import org.apache.flink.util.function.SerializableSupplier;
+
 import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
-import co.elastic.clients.transport.TransportUtils;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
 import org.apache.http.Header;
 import org.apache.http.HttpHost;
@@ -33,6 +34,10 @@ import org.apache.http.client.CredentialsProvider;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
+
+import javax.annotation.Nullable;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLContext;
 
 import java.io.Serializable;
 import java.util.List;
@@ -49,20 +54,24 @@ public class NetworkConfig implements Serializable {
 
     private final String password;
 
-    private final String certificateFingerprint;
+    @Nullable private final SerializableSupplier<SSLContext> sslContextSupplier;
+
+    @Nullable private final SerializableSupplier<HostnameVerifier> sslHostnameVerifier;
 
     public NetworkConfig(
             List<HttpHost> hosts,
             String username,
             String password,
             List<Header> headers,
-            String certificateFingerprint) {
-        checkState(hosts.size() > 0, "Hosts must not be null");
+            SerializableSupplier<SSLContext> sslContextSupplier,
+            SerializableSupplier<HostnameVerifier> sslHostnameVerifier) {
+        checkState(!hosts.isEmpty(), "Hosts must not be empty");
         this.hosts = hosts;
         this.username = username;
         this.password = password;
         this.headers = headers;
-        this.certificateFingerprint = certificateFingerprint;
+        this.sslContextSupplier = sslContextSupplier;
+        this.sslHostnameVerifier = sslHostnameVerifier;
     }
 
     public ElasticsearchAsyncClient createEsClient() {
@@ -80,10 +89,13 @@ public class NetworkConfig implements Serializable {
                                                 getCredentials());
                                     }
 
-                                    if (certificateFingerprint != null) {
-                                        httpClientBuilder.setSSLContext(
-                                                TransportUtils.sslContextFromCaFingerprint(
-                                                        certificateFingerprint));
+                                    if (sslContextSupplier != null) {
+                                        httpClientBuilder.setSSLContext(sslContextSupplier.get());
+                                    }
+
+                                    if (sslHostnameVerifier != null) {
+                                        httpClientBuilder.setSSLHostnameVerifier(
+                                                sslHostnameVerifier.get());
                                     }
 
                                     return httpClientBuilder;

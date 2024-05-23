@@ -22,7 +22,6 @@
 package org.apache.flink.connector.elasticsearch.sink;
 
 import org.apache.flink.connector.base.sink.writer.TestSinkInitContext;
-import org.apache.flink.connector.elasticsearch.sink.Elasticsearch8AsyncSinkITCase.DummyData;
 import org.apache.flink.metrics.Gauge;
 
 import co.elastic.clients.elasticsearch.core.bulk.IndexOperation;
@@ -43,6 +42,9 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 
+import static org.apache.flink.connector.elasticsearch.sink.Elasticsearch8TestUtils.DummyData;
+import static org.apache.flink.connector.elasticsearch.sink.Elasticsearch8TestUtils.assertIdsAreNotWritten;
+import static org.apache.flink.connector.elasticsearch.sink.Elasticsearch8TestUtils.assertIdsAreWritten;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /** Integration tests for {@link Elasticsearch8AsyncWriter}. */
@@ -79,12 +81,12 @@ public class Elasticsearch8AsyncWriterITCase extends ElasticsearchSinkBaseITCase
             writer.write(new DummyData("test-2", "test-2"), null);
 
             writer.flush(false);
-            assertIdsAreWritten(index, new String[] {"test-1", "test-2"});
+            assertIdsAreWritten(client, index, new String[] {"test-1", "test-2"});
 
             writer.write(new DummyData("3", "test-3"), null);
 
             writer.flush(true);
-            assertIdsAreWritten(index, new String[] {"test-3"});
+            assertIdsAreWritten(client, index, new String[] {"test-3"});
         }
     }
 
@@ -99,18 +101,18 @@ public class Elasticsearch8AsyncWriterITCase extends ElasticsearchSinkBaseITCase
             writer.write(new DummyData("test-1", "test-1"), null);
             writer.flush(true);
 
-            assertIdsAreWritten(index, new String[] {"test-1"});
+            assertIdsAreWritten(client, index, new String[] {"test-1"});
 
             writer.write(new DummyData("test-2", "test-2"), null);
             writer.write(new DummyData("test-3", "test-3"), null);
 
-            assertIdsAreNotWritten(index, new String[] {"test-2", "test-3"});
+            assertIdsAreNotWritten(client, index, new String[] {"test-2", "test-3"});
             context.getTestProcessingTimeService().advance(6000L);
 
             await();
         }
 
-        assertIdsAreWritten(index, new String[] {"test-2", "test-3"});
+        assertIdsAreWritten(client, index, new String[] {"test-2", "test-3"});
     }
 
     @Test
@@ -131,7 +133,7 @@ public class Elasticsearch8AsyncWriterITCase extends ElasticsearchSinkBaseITCase
         }
 
         assertThat(context.getNumBytesOutCounter().getCount()).isGreaterThan(0);
-        assertIdsAreWritten(index, new String[] {"test-1", "test-2", "test-3"});
+        assertIdsAreWritten(client, index, new String[] {"test-1", "test-2", "test-3"});
     }
 
     @Test
@@ -152,7 +154,7 @@ public class Elasticsearch8AsyncWriterITCase extends ElasticsearchSinkBaseITCase
         }
 
         assertThat(context.getNumRecordsOutCounter().getCount()).isEqualTo(3);
-        assertIdsAreWritten(index, new String[] {"test-1", "test-2", "test-3"});
+        assertIdsAreWritten(client, index, new String[] {"test-1", "test-2", "test-3"});
     }
 
     @Test
@@ -175,7 +177,7 @@ public class Elasticsearch8AsyncWriterITCase extends ElasticsearchSinkBaseITCase
             assertThat(currentSendTime.get().getValue()).isGreaterThan(0L);
         }
 
-        assertIdsAreWritten(index, new String[] {"test-1", "test-2", "test-3"});
+        assertIdsAreWritten(client, index, new String[] {"test-1", "test-2", "test-3"});
     }
 
     @Test
@@ -207,8 +209,8 @@ public class Elasticsearch8AsyncWriterITCase extends ElasticsearchSinkBaseITCase
         await();
 
         assertThat(context.metricGroup().getNumRecordsOutErrorsCounter().getCount()).isEqualTo(1);
-        assertIdsAreWritten(index, new String[] {"test-2"});
-        assertIdsAreNotWritten(index, new String[] {"test-1"});
+        assertIdsAreWritten(client, index, new String[] {"test-2"});
+        assertIdsAreNotWritten(client, index, new String[] {"test-1"});
     }
 
     private Elasticsearch8AsyncSinkBuilder.OperationConverter<DummyData>
@@ -245,7 +247,7 @@ public class Elasticsearch8AsyncWriterITCase extends ElasticsearchSinkBaseITCase
                         5 * 1024 * 1024,
                         5000,
                         1024 * 1024,
-                        new NetworkConfig(esHost, null, null, null, null)) {
+                        new NetworkConfig(esHost, null, null, null, null, null)) {
                     @Override
                     public StatefulSinkWriter createWriter(InitContext context) {
                         return new Elasticsearch8AsyncWriter<DummyData>(
