@@ -45,9 +45,9 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.io.IOException;
 
-import static org.apache.flink.connector.elasticsearch.sink.Elasticsearch8TestUtils.DummyData;
-import static org.apache.flink.connector.elasticsearch.sink.Elasticsearch8TestUtils.ELASTICSEARCH_IMAGE;
-import static org.apache.flink.connector.elasticsearch.sink.Elasticsearch8TestUtils.assertIdsAreWritten;
+import static org.apache.flink.connector.elasticsearch.sink.ElasticsearchSinkBaseITCase.DummyData;
+import static org.apache.flink.connector.elasticsearch.sink.ElasticsearchSinkBaseITCase.ELASTICSEARCH_IMAGE;
+import static org.apache.flink.connector.elasticsearch.sink.ElasticsearchSinkBaseITCase.assertIdsAreWritten;
 
 /** Integration tests for {@link Elasticsearch8AsyncSink} against a secure Elasticsearch cluster. */
 @Testcontainers
@@ -75,7 +75,7 @@ class Elasticsearch8AsyncSinkSecureITCase {
     }
 
     @Test
-    public void testWriteToSecureElasticsearch8() throws Exception {
+    void testWriteToSecureElasticsearch8() throws Exception {
         final String index = "test-write-to-secure-elasticsearch8";
 
         try (StreamExecutionEnvironment env =
@@ -115,7 +115,7 @@ class Elasticsearch8AsyncSinkSecureITCase {
         assertIdsAreWritten(client, index, new String[] {"first_v1_index", "second_v1_index"});
     }
 
-    public static ElasticsearchContainer createSecureElasticsearchContainer() {
+    static ElasticsearchContainer createSecureElasticsearchContainer() {
         ElasticsearchContainer container =
                 new ElasticsearchContainer(ELASTICSEARCH_IMAGE)
                         .withPassword(ES_CLUSTER_PASSWORD) /* set password */

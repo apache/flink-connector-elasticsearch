@@ -36,8 +36,6 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.io.IOException;
 
-import static org.apache.flink.connector.elasticsearch.sink.Elasticsearch8TestUtils.DummyData;
-import static org.apache.flink.connector.elasticsearch.sink.Elasticsearch8TestUtils.assertIdsAreWritten;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 /** Integration tests for {@link Elasticsearch8AsyncSink}. */

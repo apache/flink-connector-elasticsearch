@@ -42,9 +42,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 
-import static org.apache.flink.connector.elasticsearch.sink.Elasticsearch8TestUtils.DummyData;
-import static org.apache.flink.connector.elasticsearch.sink.Elasticsearch8TestUtils.assertIdsAreNotWritten;
-import static org.apache.flink.connector.elasticsearch.sink.Elasticsearch8TestUtils.assertIdsAreWritten;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /** Integration tests for {@link Elasticsearch8AsyncWriter}. */
