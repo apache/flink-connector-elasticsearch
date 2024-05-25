@@ -24,14 +24,11 @@ package org.apache.flink.connector.elasticsearch.sink;
 import org.apache.flink.connector.base.sink.writer.TestSinkInitContext;
 import org.apache.flink.metrics.Gauge;
 
-import co.elastic.clients.elasticsearch.core.bulk.IndexOperation;
 import co.elastic.clients.elasticsearch.core.bulk.UpdateOperation;
 import org.apache.http.HttpHost;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.Timeout;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -45,7 +42,6 @@ import java.util.function.Consumer;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /** Integration tests for {@link Elasticsearch8AsyncWriter}. */
-@Testcontainers
 public class Elasticsearch8AsyncWriterITCase extends ElasticsearchSinkBaseITCase {
     private TestSinkInitContext context;
 
@@ -56,17 +52,9 @@ public class Elasticsearch8AsyncWriterITCase extends ElasticsearchSinkBaseITCase
     @BeforeEach
     void setUp() {
         this.context = new TestSinkInitContext();
-        this.client = getRestClient();
     }
 
-    @AfterEach
-    void shutdown() throws IOException {
-        if (client != null) {
-            client.close();
-        }
-    }
-
-    @Test
+    @TestTemplate
     @Timeout(5)
     public void testBulkOnFlush() throws IOException, InterruptedException {
         String index = "test-bulk-on-flush";
@@ -78,16 +66,16 @@ public class Elasticsearch8AsyncWriterITCase extends ElasticsearchSinkBaseITCase
             writer.write(new DummyData("test-2", "test-2"), null);
 
             writer.flush(false);
-            assertIdsAreWritten(client, index, new String[] {"test-1", "test-2"});
+            assertIdsAreWritten(index, new String[] {"test-1", "test-2"});
 
             writer.write(new DummyData("3", "test-3"), null);
 
             writer.flush(true);
-            assertIdsAreWritten(client, index, new String[] {"test-3"});
+            assertIdsAreWritten(index, new String[] {"test-3"});
         }
     }
 
-    @Test
+    @TestTemplate
     @Timeout(5)
     public void testBulkOnBufferTimeFlush() throws Exception {
         String index = "test-bulk-on-time-in-buffer";
@@ -98,21 +86,21 @@ public class Elasticsearch8AsyncWriterITCase extends ElasticsearchSinkBaseITCase
             writer.write(new DummyData("test-1", "test-1"), null);
             writer.flush(true);
 
-            assertIdsAreWritten(client, index, new String[] {"test-1"});
+            assertIdsAreWritten(index, new String[] {"test-1"});
 
             writer.write(new DummyData("test-2", "test-2"), null);
             writer.write(new DummyData("test-3", "test-3"), null);
 
-            assertIdsAreNotWritten(client, index, new String[] {"test-2", "test-3"});
+            assertIdsAreNotWritten(index, new String[] {"test-2", "test-3"});
             context.getTestProcessingTimeService().advance(6000L);
 
             await();
         }
 
-        assertIdsAreWritten(client, index, new String[] {"test-2", "test-3"});
+        assertIdsAreWritten(index, new String[] {"test-2", "test-3"});
     }
 
-    @Test
+    @TestTemplate
     @Timeout(5)
     public void testBytesSentMetric() throws Exception {
         String index = "test-bytes-sent-metrics";
@@ -130,10 +118,10 @@ public class Elasticsearch8AsyncWriterITCase extends ElasticsearchSinkBaseITCase
         }
 
         assertThat(context.getNumBytesOutCounter().getCount()).isGreaterThan(0);
-        assertIdsAreWritten(client, index, new String[] {"test-1", "test-2", "test-3"});
+        assertIdsAreWritten(index, new String[] {"test-1", "test-2", "test-3"});
     }
 
-    @Test
+    @TestTemplate
     @Timeout(5)
     public void testRecordsSentMetric() throws Exception {
         String index = "test-records-sent-metric";
@@ -151,10 +139,10 @@ public class Elasticsearch8AsyncWriterITCase extends ElasticsearchSinkBaseITCase
         }
 
         assertThat(context.getNumRecordsOutCounter().getCount()).isEqualTo(3);
-        assertIdsAreWritten(client, index, new String[] {"test-1", "test-2", "test-3"});
+        assertIdsAreWritten(index, new String[] {"test-1", "test-2", "test-3"});
     }
 
-    @Test
+    @TestTemplate
     @Timeout(5)
     public void testSendTimeMetric() throws Exception {
         String index = "test-send-time-metric";
@@ -174,10 +162,10 @@ public class Elasticsearch8AsyncWriterITCase extends ElasticsearchSinkBaseITCase
             assertThat(currentSendTime.get().getValue()).isGreaterThan(0L);
         }
 
-        assertIdsAreWritten(client, index, new String[] {"test-1", "test-2", "test-3"});
+        assertIdsAreWritten(index, new String[] {"test-1", "test-2", "test-3"});
     }
 
-    @Test
+    @TestTemplate
     @Timeout(5)
     public void testHandlePartiallyFailedBulk() throws Exception {
         String index = "test-partially-failed-bulk";
@@ -198,7 +186,7 @@ public class Elasticsearch8AsyncWriterITCase extends ElasticsearchSinkBaseITCase
                                         .build());
 
         try (final Elasticsearch8AsyncWriter<DummyData> writer =
-                createWriter(index, maxBatchSize, elementConverter)) {
+                createWriter(maxBatchSize, elementConverter)) {
             writer.write(new DummyData("test-1", "test-1-updated"), null);
             writer.write(new DummyData("test-2", "test-2-updated"), null);
         }
@@ -206,34 +194,35 @@ public class Elasticsearch8AsyncWriterITCase extends ElasticsearchSinkBaseITCase
         await();
 
         assertThat(context.metricGroup().getNumRecordsOutErrorsCounter().getCount()).isEqualTo(1);
-        assertIdsAreWritten(client, index, new String[] {"test-2"});
-        assertIdsAreNotWritten(client, index, new String[] {"test-1"});
-    }
-
-    private Elasticsearch8AsyncSinkBuilder.OperationConverter<DummyData>
-            getDefaultTestElementConverter(String index) {
-        return new Elasticsearch8AsyncSinkBuilder.OperationConverter<>(
-                (element, ctx) ->
-                        new IndexOperation.Builder<DummyData>()
-                                .id(element.getId())
-                                .document(element)
-                                .index(index)
-                                .build());
+        assertIdsAreWritten(index, new String[] {"test-2"});
+        assertIdsAreNotWritten(index, new String[] {"test-1"});
     }
 
     private Elasticsearch8AsyncWriter<DummyData> createWriter(String index, int maxBatchSize)
             throws IOException {
-        return createWriter(index, maxBatchSize, getDefaultTestElementConverter(index));
+        return createWriter(
+                maxBatchSize,
+                new Elasticsearch8AsyncSinkBuilder.OperationConverter<>(
+                        getElementConverterForDummyData(index)));
+    }
+
+    private NetworkConfig createNetworkConfig() {
+        final List<HttpHost> esHost = Collections.singletonList(getHost());
+        return secure
+                ? new NetworkConfig(
+                        esHost,
+                        ES_CLUSTER_USERNAME,
+                        ES_CLUSTER_PASSWORD,
+                        null,
+                        () -> ES_CONTAINER_SECURE.createSslContextFromCa(),
+                        null)
+                : new NetworkConfig(esHost, null, null, null, null, null);
     }
 
     private Elasticsearch8AsyncWriter<DummyData> createWriter(
-            String index,
             int maxBatchSize,
             Elasticsearch8AsyncSinkBuilder.OperationConverter<DummyData> elementConverter)
             throws IOException {
-        List<HttpHost> esHost =
-                Collections.singletonList(
-                        new HttpHost(ES_CONTAINER.getHost(), ES_CONTAINER.getFirstMappedPort()));
 
         Elasticsearch8AsyncSink<DummyData> sink =
                 new Elasticsearch8AsyncSink<DummyData>(
@@ -244,7 +233,7 @@ public class Elasticsearch8AsyncWriterITCase extends ElasticsearchSinkBaseITCase
                         5 * 1024 * 1024,
                         5000,
                         1024 * 1024,
-                        new NetworkConfig(esHost, null, null, null, null, null)) {
+                        createNetworkConfig()) {
                     @Override
                     public StatefulSinkWriter createWriter(InitContext context) {
                         return new Elasticsearch8AsyncWriter<DummyData>(

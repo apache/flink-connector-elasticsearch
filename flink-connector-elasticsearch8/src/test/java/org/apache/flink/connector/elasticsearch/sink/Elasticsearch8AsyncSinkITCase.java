@@ -27,59 +27,29 @@ import org.apache.flink.api.common.state.CheckpointListener;
 import org.apache.flink.streaming.api.environment.LocalStreamEnvironment;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
-import co.elastic.clients.elasticsearch.core.bulk.IndexOperation;
-import org.apache.http.HttpHost;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.testcontainers.junit.jupiter.Testcontainers;
-
-import java.io.IOException;
+import org.junit.jupiter.api.TestTemplate;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 /** Integration tests for {@link Elasticsearch8AsyncSink}. */
-@Testcontainers
 public class Elasticsearch8AsyncSinkITCase extends ElasticsearchSinkBaseITCase {
     private static boolean failed;
 
     @BeforeEach
     void setUp() {
-        this.client = getRestClient();
         failed = false;
     }
 
-    @AfterEach
-    void shutdown() throws IOException {
-        if (client != null) {
-            client.close();
-        }
-    }
-
-    @Test
+    @TestTemplate
     public void testWriteToElasticsearch() throws Exception {
         String index = "test-write-to-elasticsearch";
 
         try (StreamExecutionEnvironment env =
                 StreamExecutionEnvironment.getExecutionEnvironment().setParallelism(1)) {
-
             env.setRestartStrategy(RestartStrategies.noRestart());
 
-            final Elasticsearch8AsyncSink<DummyData> sink =
-                    Elasticsearch8AsyncSinkBuilder.<DummyData>builder()
-                            .setMaxBatchSize(5)
-                            .setHosts(
-                                    new HttpHost(
-                                            ES_CONTAINER.getHost(),
-                                            ES_CONTAINER.getFirstMappedPort()))
-                            .setElementConverter(
-                                    (element, ctx) ->
-                                            new IndexOperation.Builder<>()
-                                                    .index(index)
-                                                    .id(element.getId())
-                                                    .document(element)
-                                                    .build())
-                            .build();
+            Elasticsearch8AsyncSink<DummyData> sink = getSinkForDummyData(index);
 
             env.fromElements("first", "second", "third", "fourth", "fifth")
                     .map(
@@ -90,32 +60,17 @@ public class Elasticsearch8AsyncSinkITCase extends ElasticsearchSinkBaseITCase {
             env.execute();
         }
 
-        assertIdsAreWritten(client, index, new String[] {"first_v1_index", "second_v1_index"});
+        assertIdsAreWritten(index, new String[] {"first_v1_index", "second_v1_index"});
     }
 
-    @Test
+    @TestTemplate
     public void testRecovery() throws Exception {
         String index = "test-recovery";
 
         try (final StreamExecutionEnvironment env = new LocalStreamEnvironment()) {
-
             env.enableCheckpointing(100L);
 
-            final Elasticsearch8AsyncSink<DummyData> sink =
-                    Elasticsearch8AsyncSinkBuilder.<DummyData>builder()
-                            .setMaxBatchSize(5)
-                            .setHosts(
-                                    new HttpHost(
-                                            ES_CONTAINER.getHost(),
-                                            ES_CONTAINER.getFirstMappedPort()))
-                            .setElementConverter(
-                                    (element, ctx) ->
-                                            new IndexOperation.Builder<>()
-                                                    .index(index)
-                                                    .id(element.getId())
-                                                    .document(element)
-                                                    .build())
-                            .build();
+            final Elasticsearch8AsyncSink<DummyData> sink = getSinkForDummyData(index);
 
             env.fromElements("first", "second", "third", "fourth", "fifth")
                     .map(
