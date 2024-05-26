@@ -79,7 +79,8 @@ public class ElasticsearchSinkBaseITCase {
                 .build();
     }
 
-    public void assertIdsAreWritten(String index, String[] ids) throws IOException {
+    public static void assertIdsAreWritten(RestClient client, String index, String[] ids)
+            throws IOException {
         client.performRequest(new Request("GET", "_refresh"));
         Response response = client.performRequest(new Request("GET", index + "/_search/"));
         String responseEntity = EntityUtils.toString(response.getEntity());
@@ -92,7 +93,8 @@ public class ElasticsearchSinkBaseITCase {
         }
     }
 
-    public void assertIdsAreNotWritten(String index, String[] ids) throws IOException {
+    public static void assertIdsAreNotWritten(RestClient client, String index, String[] ids)
+            throws IOException {
         client.performRequest(new Request("GET", "_refresh"));
         Response response = client.performRequest(new Request("GET", index + "/_search/"));
         String responseEntity = EntityUtils.toString(response.getEntity());
@@ -101,6 +103,26 @@ public class ElasticsearchSinkBaseITCase {
 
         for (String id : ids) {
             assertThat(responseEntity).doesNotContain(id);
+        }
+    }
+
+    /** DummyData is a POJO to helping during integration tests. */
+    public static class DummyData {
+        private final String id;
+
+        private final String name;
+
+        public DummyData(String id, String name) {
+            this.id = id;
+            this.name = name;
+        }
+
+        public String getId() {
+            return id;
+        }
+
+        public String getName() {
+            return name;
         }
     }
 }

@@ -24,11 +24,21 @@ package org.apache.flink.connector.elasticsearch.sink;
 import org.apache.flink.api.connector.sink2.SinkWriter;
 import org.apache.flink.connector.base.sink.AsyncSinkBaseBuilder;
 import org.apache.flink.connector.base.sink.writer.ElementConverter;
+import org.apache.flink.util.function.SerializableSupplier;
 
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperationVariant;
+import co.elastic.clients.transport.TransportUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpHost;
+import org.apache.http.conn.ssl.TrustAllStrategy;
+import org.apache.http.ssl.SSLContexts;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLContext;
+
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -58,9 +68,6 @@ public class Elasticsearch8AsyncSinkBuilder<InputT>
     /** The headers to be sent with the requests made to Elasticsearch cluster. */
     private List<Header> headers;
 
-    /** The Certificate Fingerprint will be used to verify the HTTPS connection. */
-    private String certificateFingerprint;
-
     /** The username to authenticate the connection with the Elasticsearch cluster. */
     private String username;
 
@@ -72,6 +79,10 @@ public class Elasticsearch8AsyncSinkBuilder<InputT>
      * buffered.
      */
     private ElementConverter<InputT, BulkOperationVariant> elementConverter;
+
+    private SerializableSupplier<SSLContext> sslContextSupplier;
+
+    private SerializableSupplier<HostnameVerifier> sslHostnameVerifier;
 
     /**
      * setHosts set the hosts where the Elasticsearch cluster is reachable.
@@ -100,8 +111,29 @@ public class Elasticsearch8AsyncSinkBuilder<InputT>
     }
 
     /**
-     * setCertificateFingerprint set the certificate fingerprint to be used to verify the HTTPS
-     * connection.
+     * Allows to bypass the certificates chain validation and connect to insecure network endpoints
+     * (for example, servers which use self-signed certificates).
+     *
+     * @return this builder
+     */
+    public Elasticsearch8AsyncSinkBuilder<InputT> allowInsecure() {
+        this.sslContextSupplier =
+                () -> {
+                    try {
+                        return SSLContexts.custom()
+                                .loadTrustMaterial(TrustAllStrategy.INSTANCE)
+                                .build();
+                    } catch (final NoSuchAlgorithmException
+                            | KeyStoreException
+                            | KeyManagementException ex) {
+                        throw new IllegalStateException("Unable to create custom SSL context", ex);
+                    }
+                };
+        return this;
+    }
+
+    /**
+     * Set the certificate fingerprint to be used to verify the HTTPS connection.
      *
      * @param certificateFingerprint the certificate fingerprint
      * @return {@code Elasticsearch8AsyncSinkBuilder}
@@ -109,7 +141,32 @@ public class Elasticsearch8AsyncSinkBuilder<InputT>
     public Elasticsearch8AsyncSinkBuilder<InputT> setCertificateFingerprint(
             String certificateFingerprint) {
         checkNotNull(certificateFingerprint, "certificateFingerprint must not be null");
-        this.certificateFingerprint = certificateFingerprint;
+        this.sslContextSupplier =
+                () -> TransportUtils.sslContextFromCaFingerprint(certificateFingerprint);
+        return this;
+    }
+
+    /**
+     * Sets the supplier for getting an {@link SSLContext} instance.
+     *
+     * @param sslContextSupplier the serializable SSLContext supplier function
+     * @return this builder
+     */
+    public Elasticsearch8AsyncSinkBuilder<InputT> setSslContextSupplier(
+            SerializableSupplier<SSLContext> sslContextSupplier) {
+        this.sslContextSupplier = checkNotNull(sslContextSupplier);
+        return this;
+    }
+
+    /**
+     * Sets the supplier for getting an SSL {@link HostnameVerifier} instance.
+     *
+     * @param sslHostnameVerifierSupplier the serializable hostname verifier supplier function
+     * @return this builder
+     */
+    public Elasticsearch8AsyncSinkBuilder<InputT> setSslHostnameVerifier(
+            SerializableSupplier<HostnameVerifier> sslHostnameVerifierSupplier) {
+        this.sslHostnameVerifier = sslHostnameVerifierSupplier;
         return this;
     }
 
@@ -181,7 +238,8 @@ public class Elasticsearch8AsyncSinkBuilder<InputT>
 
     private NetworkConfig buildNetworkConfig() {
         checkArgument(!hosts.isEmpty(), "Hosts cannot be empty.");
-        return new NetworkConfig(hosts, username, password, headers, certificateFingerprint);
+        return new NetworkConfig(
+                hosts, username, password, headers, sslContextSupplier, sslHostnameVerifier);
     }
 
     /** A wrapper that evolves the Operation, since a BulkOperationVariant is not Serializable. */

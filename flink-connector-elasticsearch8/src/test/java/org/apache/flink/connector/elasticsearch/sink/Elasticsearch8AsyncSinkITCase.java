@@ -90,7 +90,7 @@ public class Elasticsearch8AsyncSinkITCase extends ElasticsearchSinkBaseITCase {
             env.execute();
         }
 
-        assertIdsAreWritten(index, new String[] {"first_v1_index", "second_v1_index"});
+        assertIdsAreWritten(client, index, new String[] {"first_v1_index", "second_v1_index"});
     }
 
     @Test
@@ -147,26 +147,6 @@ public class Elasticsearch8AsyncSinkITCase extends ElasticsearchSinkBaseITCase {
                 failed = true;
                 throw new Exception();
             }
-        }
-    }
-
-    /** DummyData is a POJO to helping during integration tests. */
-    public static class DummyData {
-        private final String id;
-
-        private final String name;
-
-        public DummyData(String id, String name) {
-            this.id = id;
-            this.name = name;
-        }
-
-        public String getId() {
-            return id;
-        }
-
-        public String getName() {
-            return name;
         }
     }
 }
