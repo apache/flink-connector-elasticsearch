@@ -67,6 +67,15 @@ under the License.
 			<optional>true</optional>
 		</dependency>
 
+		<!-- Elasticsearch table descriptor testing -->
+		<dependency>
+			<groupId>org.apache.flink</groupId>
+			<artifactId>flink-table-common</artifactId>
+			<version>${flink.version}</version>
+			<scope>provided</scope>
+			<optional>true</optional>
+		</dependency>
+
 		<!-- Elasticsearch -->
 
 		<dependency>
@@ -179,6 +188,21 @@ under the License.
 			<version>${flink.version}</version>
 			<scope>provided</scope>
 			<optional>true</optional>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.flink</groupId>
+			<artifactId>flink-table-planner_${scala.binary.version}</artifactId>
+			<version>${flink.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.flink</groupId>
+			<artifactId>flink-table-planner_${scala.binary.version}</artifactId>
+			<version>${flink.version}</version>
+			<type>test-jar</type>
+			<scope>test</scope>
 		</dependency>
 
 		<!-- ArchUit test dependencies -->
