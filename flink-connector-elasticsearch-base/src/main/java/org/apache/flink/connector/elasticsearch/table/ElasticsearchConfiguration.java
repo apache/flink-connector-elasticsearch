@@ -46,6 +46,7 @@ import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnec
 import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions.INDEX_OPTION;
 import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions.KEY_DELIMITER_OPTION;
 import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions.PASSWORD_OPTION;
+import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions.RETRY_ON_CONFLICT_NUM;
 import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions.SOCKET_TIMEOUT;
 import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions.USERNAME_OPTION;
 import static org.apache.flink.table.factories.FactoryUtil.SINK_PARALLELISM;
@@ -128,5 +129,9 @@ class ElasticsearchConfiguration {
 
     public Optional<Integer> getParallelism() {
         return config.getOptional(SINK_PARALLELISM);
+    }
+
+    public int getRetryOnConflictNum() {
+        return config.getOptional(RETRY_ON_CONFLICT_NUM).get();
     }
 }
