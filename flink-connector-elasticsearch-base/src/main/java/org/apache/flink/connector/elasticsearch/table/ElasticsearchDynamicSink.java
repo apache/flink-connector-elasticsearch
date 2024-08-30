@@ -128,7 +128,7 @@ class ElasticsearchDynamicSink implements DynamicTableSink {
                         XContentType.JSON,
                         documentType,
                         createKeyExtractor(),
-                        config.getRetryOnConflictNum());
+                        config.getRetriesOnConflict());
 
         ElasticsearchSinkBuilderBase<RowData, ? extends ElasticsearchSinkBuilderBase> builder =
                 builderSupplier.get();

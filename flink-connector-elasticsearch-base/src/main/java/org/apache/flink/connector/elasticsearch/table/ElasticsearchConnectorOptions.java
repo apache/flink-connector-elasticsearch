@@ -146,8 +146,8 @@ public class ElasticsearchConnectorOptions {
                     .defaultValue(DeliveryGuarantee.AT_LEAST_ONCE)
                     .withDescription("Optional delivery guarantee when committing.");
 
-    public static final ConfigOption<Integer> RETRY_ON_CONFLICT_NUM =
-            ConfigOptions.key("sink.retry-on-conflict-num")
+    public static final ConfigOption<Integer> RETRIES_ON_CONFLICT_OPTION =
+            ConfigOptions.key("sink.retries-on-conflict")
                     .intType()
                     .defaultValue(0)
                     .withDescription(

@@ -63,7 +63,7 @@ import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnec
 import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions.INDEX_OPTION;
 import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions.KEY_DELIMITER_OPTION;
 import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions.PASSWORD_OPTION;
-import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions.RETRY_ON_CONFLICT_NUM;
+import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions.RETRIES_ON_CONFLICT_OPTION;
 import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions.SOCKET_TIMEOUT;
 import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions.USERNAME_OPTION;
 import static org.apache.flink.table.factories.FactoryUtil.SINK_PARALLELISM;
@@ -227,7 +227,7 @@ abstract class ElasticsearchDynamicSinkFactoryBase implements DynamicTableSinkFa
                         PASSWORD_OPTION,
                         USERNAME_OPTION,
                         SINK_PARALLELISM,
-                        RETRY_ON_CONFLICT_NUM)
+                        RETRIES_ON_CONFLICT_OPTION)
                 .collect(Collectors.toSet());
     }
 

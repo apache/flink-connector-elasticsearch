@@ -149,7 +149,7 @@ final class Elasticsearch6DynamicSink implements DynamicTableSink {
                             XContentType.JSON,
                             REQUEST_FACTORY,
                             KeyExtractor.createKeyExtractor(schema, config.getKeyDelimiter()),
-                            config.getRetryOnConflictNum());
+                            config.getRetriesOnConflict());
 
             final ElasticsearchSink.Builder<RowData> builder =
                     builderProvider.createBuilder(config.getHosts(), upsertFunction);
