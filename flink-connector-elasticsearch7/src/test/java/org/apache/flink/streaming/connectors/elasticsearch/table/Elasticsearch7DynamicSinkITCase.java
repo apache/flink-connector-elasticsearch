@@ -38,19 +38,13 @@ import org.apache.flink.table.data.TimestampData;
 import org.apache.flink.table.types.DataType;
 import org.apache.flink.table.types.logical.LogicalType;
 import org.apache.flink.types.RowKind;
-import org.apache.flink.util.TestLogger;
 
-import org.apache.http.HttpHost;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.search.SearchHits;
-import org.junit.ClassRule;
 import org.junit.Test;
-import org.testcontainers.elasticsearch.ElasticsearchContainer;
-import org.testcontainers.utility.DockerImageName;
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -63,22 +57,13 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 
+import static org.apache.flink.streaming.connectors.elasticsearch.table.Elasticsearch7DynamicTableTestBase.elasticsearchContainer;
 import static org.apache.flink.streaming.connectors.elasticsearch.table.TestContext.context;
 import static org.apache.flink.table.api.Expressions.row;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /** IT tests for {@link Elasticsearch7DynamicSink}. */
-public class Elasticsearch7DynamicSinkITCase extends TestLogger {
-
-    @ClassRule
-    public static ElasticsearchContainer elasticsearchContainer =
-            new ElasticsearchContainer(DockerImageName.parse(DockerImageVersions.ELASTICSEARCH_7));
-
-    @SuppressWarnings("deprecation")
-    protected final RestHighLevelClient getClient() {
-        return new RestHighLevelClient(
-                RestClient.builder(HttpHost.create(elasticsearchContainer.getHttpHostAddress())));
-    }
+public class Elasticsearch7DynamicSinkITCase extends Elasticsearch7DynamicTableTestBase {
 
     @Test
     public void testWritingDocuments() throws Exception {
@@ -107,11 +92,11 @@ public class Elasticsearch7DynamicSinkITCase extends TestLogger {
                                 LocalDateTime.parse("2012-12-12T12:12:12")));
 
         String index = "writing-documents";
-        Elasticsearch7DynamicTableFactory factory = new Elasticsearch7DynamicTableFactory();
+        Elasticsearch7DynamicTableFactory sinkFactory = new Elasticsearch7DynamicTableFactory();
 
         SinkFunctionProvider sinkRuntimeProvider =
                 (SinkFunctionProvider)
-                        factory.createDynamicTableSink(
+                        sinkFactory.createDynamicTableSink(
                                         context()
                                                 .withSchema(schema)
                                                 .withOption(

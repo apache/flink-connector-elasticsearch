@@ -82,9 +82,9 @@ public class ElasticsearchSinkITCase
     @Override
     protected ElasticsearchSinkBase<Tuple2<Integer, String>, RestHighLevelClient>
             createElasticsearchSink(
-                    int bulkFlushMaxActions,
-                    List<HttpHost> httpHosts,
-                    ElasticsearchSinkFunction<Tuple2<Integer, String>> elasticsearchSinkFunction) {
+            int bulkFlushMaxActions,
+            List<HttpHost> httpHosts,
+            ElasticsearchSinkFunction<Tuple2<Integer, String>> elasticsearchSinkFunction) {
 
         ElasticsearchSink.Builder<Tuple2<Integer, String>> builder =
                 new ElasticsearchSink.Builder<>(httpHosts, elasticsearchSinkFunction);
