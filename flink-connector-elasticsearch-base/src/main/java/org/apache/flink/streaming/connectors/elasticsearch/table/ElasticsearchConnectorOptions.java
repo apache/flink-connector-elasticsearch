@@ -152,6 +152,14 @@ public class ElasticsearchConnectorOptions {
                             "The format must produce a valid JSON document. "
                                     + "Please refer to the documentation on formats for more details.");
 
+    public static final ConfigOption<Integer> RETRIES_ON_CONFLICT_OPTION =
+            ConfigOptions.key("sink.retries-on-conflict")
+                    .intType()
+                    .defaultValue(0)
+                    .withDescription(
+                            "Sets the number of retries of a version conflict occurs "
+                                    + "because the document was updated between getting it and updating it. Defaults to 0.");
+
     // --------------------------------------------------------------------------------------------
     // Enums
     // --------------------------------------------------------------------------------------------

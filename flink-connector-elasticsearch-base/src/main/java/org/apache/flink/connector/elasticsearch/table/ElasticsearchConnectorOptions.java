@@ -145,4 +145,12 @@ public class ElasticsearchConnectorOptions {
                     .enumType(DeliveryGuarantee.class)
                     .defaultValue(DeliveryGuarantee.AT_LEAST_ONCE)
                     .withDescription("Optional delivery guarantee when committing.");
+
+    public static final ConfigOption<Integer> RETRIES_ON_CONFLICT_OPTION =
+            ConfigOptions.key("sink.retries-on-conflict")
+                    .intType()
+                    .defaultValue(0)
+                    .withDescription(
+                            "Sets the number of retries of a version conflict occurs "
+                                    + "because the document was updated between getting it and updating it. Defaults to 0.");
 }
