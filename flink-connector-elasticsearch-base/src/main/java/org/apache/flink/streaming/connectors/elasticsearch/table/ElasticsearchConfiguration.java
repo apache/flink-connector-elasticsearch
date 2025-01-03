@@ -38,6 +38,7 @@ import static org.apache.flink.streaming.connectors.elasticsearch.table.Elastics
 import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.BULK_FLUSH_INTERVAL_OPTION;
 import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.FAILURE_HANDLER_OPTION;
 import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.PASSWORD_OPTION;
+import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.RETRIES_ON_CONFLICT_OPTION;
 import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.USERNAME_OPTION;
 
 /** Accessor methods to elasticsearch options. */
@@ -108,6 +109,10 @@ class ElasticsearchConfiguration {
 
     public Optional<String> getPassword() {
         return config.getOptional(PASSWORD_OPTION);
+    }
+
+    public int getRetriesOnConflict() {
+        return config.getOptional(RETRIES_ON_CONFLICT_OPTION).get();
     }
 
     public boolean isBulkFlushBackoffEnabled() {
