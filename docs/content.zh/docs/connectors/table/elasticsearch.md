@@ -144,21 +144,8 @@ CREATE TABLE myUserTable (
       </td>
     </tr>
     <tr>
-      <td><h5>sink.delivery-guarantee</h5></td>
-      <td>optional</td>
-      <td style="word-wrap: break-word;">AT_LEAST_ONCE</td>
-      <td>String</td>
-      <td>Optional delivery guarantee when committing. Valid values are:
-      <ul>
-        <li><code>EXACTLY_ONCE</code>: records are only delivered exactly-once also under failover scenarios.</li>
-        <li><code>AT_LEAST_ONCE</code>: records are ensured to be delivered but it may happen that the same record is delivered multiple times.</li>
-        <li><code>NONE</code>:  records are delivered on a best effort basis.</li>
-      </ul>
-      </td>
-    </tr>
-    <tr>
       <td><h5>sink.flush-on-checkpoint</h5></td>
-      <td>optional</td>
+      <td>可选</td>
       <td style="word-wrap: break-word;">true</td>
       <td>Boolean</td>
       <td>在进行 checkpoint 时是否保证刷出缓冲区中的数据。如果关闭这一选项，在进行checkpoint时 sink 将不再为所有进行
@@ -225,28 +212,6 @@ CREATE TABLE myUserTable (
       <td style="word-wrap: break-word;">(none)</td>
       <td>String</td>
       <td>添加到每个 REST 通信中的前缀字符串，例如，<code>'/v1'</code>。</td>
-    </tr>
-    <tr>
-      <td><h5>connection.request-timeout</h5></td>
-      <td>可选</td>
-      <td style="word-wrap: break-word;">(none)</td>
-      <td>Duration</td>
-      <td>从连接管理器请求连接的超时时间。超时时间必须大于或者等于 0，如果设置为 0 则是无限超时。</td>
-    </tr>
-    <tr>
-      <td><h5>connection.timeout</h5></td>
-      <td>可选</td>
-      <td style="word-wrap: break-word;">(none)</td>
-      <td>Duration</td>
-      <td>建立请求的超时时间 。超时时间必须大于或者等于 0 ，如果设置为 0 则是无限超时。</td>
-    </tr>
-    <tr>
-      <td><h5>socket.timeout</h5></td>
-      <td>可选</td>
-      <td style="word-wrap: break-word;">(none)</td>
-      <td>Duration</td>
-      <td>等待数据的 socket 的超时时间 (SO_TIMEOUT)。超时时间必须大于或者等于 0，如果设置为 0 则是无限超时。
-      </td>
     </tr>
     <tr>
       <td><h5>format</h5></td>
