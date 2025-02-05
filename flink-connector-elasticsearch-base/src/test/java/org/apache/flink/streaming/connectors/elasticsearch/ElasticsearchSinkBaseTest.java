@@ -17,9 +17,9 @@
 
 package org.apache.flink.streaming.connectors.elasticsearch;
 
+import org.apache.flink.api.common.functions.DefaultOpenContext;
 import org.apache.flink.api.common.functions.RuntimeContext;
 import org.apache.flink.api.java.tuple.Tuple2;
-import org.apache.flink.configuration.Configuration;
 import org.apache.flink.core.testutils.CheckedThread;
 import org.apache.flink.core.testutils.MultiShotLatch;
 import org.apache.flink.streaming.api.operators.StreamSink;
@@ -430,7 +430,7 @@ public class ElasticsearchSinkBaseTest {
                         new HashMap<>(), sinkFunction, new DummyRetryFailureHandler());
 
         sink.setRuntimeContext(new MockStreamingRuntimeContext(false, 1, 0));
-        sink.open(new Configuration());
+        sink.open(new DefaultOpenContext());
         sink.close();
 
         assertThat(sinkFunction.openCalled).isTrue();

@@ -20,11 +20,11 @@ package org.apache.flink.streaming.connectors.elasticsearch.table;
 
 import org.apache.flink.table.api.DataTypes;
 import org.apache.flink.table.api.TableException;
-import org.apache.flink.table.api.TableSchema;
 import org.apache.flink.table.data.GenericRowData;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.data.StringData;
 import org.apache.flink.table.data.TimestampData;
+import org.apache.flink.table.legacy.api.TableSchema;
 import org.apache.flink.util.TestLogger;
 
 import org.junit.Before;

@@ -18,9 +18,10 @@
 package org.apache.flink.connector.elasticsearch.sink;
 
 import org.apache.flink.api.common.functions.MapFunction;
-import org.apache.flink.api.common.restartstrategy.RestartStrategies;
 import org.apache.flink.api.common.state.CheckpointListener;
 import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.configuration.Configuration;
+import org.apache.flink.configuration.RestartStrategyOptions;
 import org.apache.flink.connector.base.DeliveryGuarantee;
 import org.apache.flink.runtime.testutils.MiniClusterResourceConfiguration;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -177,12 +178,13 @@ abstract class ElasticsearchSinkBaseITCase {
                         .setConnectionPassword(ELASTICSEARCH_PASSWORD)
                         .setDeliveryGuarantee(deliveryGuarantee)
                         .build();
-
-        final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        env.enableCheckpointing(100L);
+        Configuration configuration = new Configuration();
         if (!allowRestarts) {
-            env.setRestartStrategy(RestartStrategies.noRestart());
+            configuration.set(RestartStrategyOptions.RESTART_STRATEGY, "disable");
         }
+        final StreamExecutionEnvironment env =
+                StreamExecutionEnvironment.getExecutionEnvironment(configuration);
+        env.enableCheckpointing(100L);
         DataStream<Long> stream = env.fromSequence(1, 5);
 
         if (additionalMapper != null) {

@@ -21,6 +21,7 @@ import org.apache.flink.connector.elasticsearch.test.DockerImageVersions;
 import org.apache.flink.connector.testframe.junit.annotations.TestContext;
 import org.apache.flink.test.resources.ResourceTestUtils;
 
+import org.junit.jupiter.api.Disabled;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,6 +29,8 @@ import java.util.Arrays;
 
 /** End to end test for Elasticsearch6Sink based on connector testing framework. */
 @SuppressWarnings("unused")
+@Disabled(
+        "FIXME: Skip this test temporarily until bumping a version that includes the fix of https://issues.apache.org/jira/browse/FLINK-36568")
 public class Elasticsearch6SinkE2ECase
         extends ElasticsearchSinkE2ECaseBase<KeyValue<Integer, String>> {
 

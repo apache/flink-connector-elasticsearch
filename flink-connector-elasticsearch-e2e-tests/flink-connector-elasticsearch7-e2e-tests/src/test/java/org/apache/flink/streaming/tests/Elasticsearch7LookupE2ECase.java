@@ -20,7 +20,11 @@ package org.apache.flink.streaming.tests;
 
 import org.apache.flink.connector.elasticsearch.test.DockerImageVersions;
 
+import org.junit.jupiter.api.Disabled;
+
 /** End-to-end test for Elasticsearch7 lookup. */
+@Disabled(
+        "FIXME: Skip this test temporarily until bumping a version that includes the fix of https://issues.apache.org/jira/browse/FLINK-36568")
 public class Elasticsearch7LookupE2ECase extends ElasticsearchLookupE2ECase {
     @Override
     String getElasticsearchContainerName() {
