@@ -251,7 +251,7 @@ input = ...
 # 下面的 set_bulk_flush_max_actions 使 sink 在接收每个元素之后立即提交，否则这些元素将被缓存起来
 es7_sink = Elasticsearch7SinkBuilder() \
     .set_bulk_flush_max_actions(1) \
-    .set_emitter(ElasticsearchEmitter.static('foo', 'id')) \
+    .set_emitter(ElasticsearchEmitter.static_index('foo', 'id')) \
     .set_hosts(['localhost:9200']) \
     .build()
 
