@@ -251,7 +251,7 @@ input = ...
 # The set_bulk_flush_max_actions instructs the sink to emit after every element, otherwise they would be buffered
 es7_sink = Elasticsearch7SinkBuilder() \
     .set_bulk_flush_max_actions(1) \
-    .set_emitter(ElasticsearchEmitter.static('foo', 'id')) \
+    .set_emitter(ElasticsearchEmitter.static_index('foo', 'id')) \
     .set_hosts(['localhost:9200']) \
     .build()
 
