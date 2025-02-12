@@ -22,10 +22,10 @@
 package org.apache.flink.connector.elasticsearch.sink;
 
 import org.apache.flink.api.common.functions.MapFunction;
-import org.apache.flink.api.common.restartstrategy.RestartStrategies;
 import org.apache.flink.api.common.state.CheckpointListener;
 import org.apache.flink.streaming.api.environment.LocalStreamEnvironment;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.util.RestartStrategyUtils;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestTemplate;
@@ -47,7 +47,7 @@ public class Elasticsearch8AsyncSinkITCase extends ElasticsearchSinkBaseITCase {
 
         try (StreamExecutionEnvironment env =
                 StreamExecutionEnvironment.getExecutionEnvironment().setParallelism(1)) {
-            env.setRestartStrategy(RestartStrategies.noRestart());
+            RestartStrategyUtils.configureNoRestartStrategy(env);
 
             Elasticsearch8AsyncSink<DummyData> sink = getSinkForDummyData(index);
 

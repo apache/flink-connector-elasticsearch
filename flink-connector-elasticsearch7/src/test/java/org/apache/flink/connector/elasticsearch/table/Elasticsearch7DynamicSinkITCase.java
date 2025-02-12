@@ -55,8 +55,8 @@ public class Elasticsearch7DynamicSinkITCase extends ElasticsearchDynamicSinkBas
     }
 
     @Override
-    ElasticsearchDynamicSinkFactoryBase getDynamicSinkFactory() {
-        return new Elasticsearch7DynamicSinkFactory();
+    ElasticsearchDynamicTableFactoryBase getDynamicSinkFactory() {
+        return new Elasticsearch7DynamicTableFactory();
     }
 
     @Override
