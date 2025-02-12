@@ -35,6 +35,8 @@ under the License.
 
 	<properties>
 		<elasticsearch.version>6.8.20</elasticsearch.version>
+		<surefire.module.config><!-- required by
+		Elasticsearch6SinkE2ECase -->  --add-opens=java.base/java.util=ALL-UNNAMED </surefire.module.config>
 	</properties>
 
 	<dependencies>
