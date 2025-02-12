@@ -25,11 +25,12 @@ import org.junit.jupiter.api.Test;
 import static org.apache.flink.connector.elasticsearch.table.TestContext.context;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-/** Tests for validation in {@link Elasticsearch7DynamicSinkFactory}. */
-public class Elasticsearch7DynamicTableFactoryTest extends ElasticsearchDynamicSinkFactoryBaseTest {
+/** Tests for validation in {@link Elasticsearch7DynamicTableFactory}. */
+public class Elasticsearch7DynamicTableFactoryTest
+        extends ElasticsearchDynamicTableFactoryBaseTest {
     @Override
-    ElasticsearchDynamicSinkFactoryBase createSinkFactory() {
-        return new Elasticsearch7DynamicSinkFactory();
+    ElasticsearchDynamicTableFactoryBase createSinkFactory() {
+        return new Elasticsearch7DynamicTableFactory();
     }
 
     @Override
@@ -42,7 +43,7 @@ public class Elasticsearch7DynamicTableFactoryTest extends ElasticsearchDynamicS
 
     @Test
     public void validateEmptyConfiguration() {
-        ElasticsearchDynamicSinkFactoryBase sinkFactory = createSinkFactory();
+        ElasticsearchDynamicTableFactoryBase sinkFactory = createSinkFactory();
 
         assertThatThrownBy(() -> sinkFactory.createDynamicTableSink(context().build()))
                 .isInstanceOf(ValidationException.class)
