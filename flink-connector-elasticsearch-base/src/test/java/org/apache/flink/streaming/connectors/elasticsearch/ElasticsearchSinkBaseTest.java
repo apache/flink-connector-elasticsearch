@@ -37,6 +37,7 @@ import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.Requests;
 import org.junit.Test;
@@ -614,6 +615,18 @@ public class ElasticsearchSinkBaseTest {
 
         @Override
         public void close(Client client) throws IOException {}
+
+        @Override
+        public ElasticsearchInputSplit[] createInputSplitsInternal(
+                Client client, String index, String type, int minNumSplits) {
+            return new ElasticsearchInputSplit[0];
+        }
+
+        @Override
+        public Tuple2<String, String[]> scroll(
+                Client client, SearchScrollRequest searchScrollRequest) throws IOException {
+            return null;
+        }
 
         @Nullable
         @Override

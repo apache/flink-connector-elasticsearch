@@ -31,10 +31,12 @@ import org.apache.flink.table.connector.format.DecodingFormat;
 import org.apache.flink.table.connector.format.EncodingFormat;
 import org.apache.flink.table.connector.sink.DynamicTableSink;
 import org.apache.flink.table.connector.source.DynamicTableSource;
+import org.apache.flink.table.connector.source.DynamicTableSource;
 import org.apache.flink.table.connector.source.lookup.LookupOptions;
 import org.apache.flink.table.connector.source.lookup.cache.DefaultLookupCache;
 import org.apache.flink.table.connector.source.lookup.cache.LookupCache;
 import org.apache.flink.table.data.RowData;
+import org.apache.flink.table.factories.DeserializationFormatFactory;
 import org.apache.flink.table.factories.DeserializationFormatFactory;
 import org.apache.flink.table.factories.DynamicTableFactory;
 import org.apache.flink.table.factories.DynamicTableSinkFactory;
@@ -66,7 +68,12 @@ import static org.apache.flink.streaming.connectors.elasticsearch.table.Elastics
 import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.HOSTS_OPTION;
 import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.INDEX_OPTION;
 import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.KEY_DELIMITER_OPTION;
+import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.LOOKUP_CACHE_MAX_ROWS;
+import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.LOOKUP_CACHE_TTL;
+import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.LOOKUP_MAX_RETRIES;
 import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.PASSWORD_OPTION;
+import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.SCROLL_MAX_SIZE_OPTION;
+import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.SCROLL_TIMEOUT_OPTION;
 import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.USERNAME_OPTION;
 import static org.apache.flink.table.connector.source.lookup.LookupOptions.CACHE_TYPE;
 import static org.apache.flink.table.connector.source.lookup.LookupOptions.MAX_RETRIES;
@@ -86,6 +93,8 @@ public class Elasticsearch7DynamicTableFactory
             Stream.of(HOSTS_OPTION, INDEX_OPTION).collect(Collectors.toSet());
     private static final Set<ConfigOption<?>> optionalOptions =
             Stream.of(
+                            SCROLL_MAX_SIZE_OPTION,
+                            SCROLL_TIMEOUT_OPTION,
                             KEY_DELIMITER_OPTION,
                             FAILURE_HANDLER_OPTION,
                             FLUSH_ON_CHECKPOINT_OPTION,
@@ -97,6 +106,9 @@ public class Elasticsearch7DynamicTableFactory
                             BULK_FLUSH_BACKOFF_DELAY_OPTION,
                             CONNECTION_PATH_PREFIX,
                             FORMAT_OPTION,
+                            LOOKUP_CACHE_MAX_ROWS,
+                            LOOKUP_CACHE_TTL,
+                            LOOKUP_MAX_RETRIES,
                             PASSWORD_OPTION,
                             USERNAME_OPTION,
                             CACHE_TYPE,
@@ -109,7 +121,7 @@ public class Elasticsearch7DynamicTableFactory
 
     @Override
     public DynamicTableSource createDynamicTableSource(Context context) {
-        DataType physicalRowDataType = context.getPhysicalRowDataType();
+        TableSchema schema = context.getCatalogTable().getSchema();
         final FactoryUtil.TableFactoryHelper helper =
                 FactoryUtil.createTableFactoryHelper(this, context);
         final ReadableConfig options = helper.getOptions();
@@ -129,9 +141,8 @@ public class Elasticsearch7DynamicTableFactory
         return new Elasticsearch7DynamicSource(
                 format,
                 config,
-                physicalRowDataType,
-                options.get(MAX_RETRIES),
-                getLookupCache(options));
+                TableSchemaUtils.getPhysicalSchema(schema),
+                new ElasticsearchLookupOptions.Builder().setMaxRetryTimes(options.get(MAX_RETRIES)).build());
     }
 
     @Override
@@ -158,17 +169,6 @@ public class Elasticsearch7DynamicTableFactory
                 config,
                 TableSchemaUtils.getPhysicalSchema(tableSchema),
                 getLocalTimeZoneId(context.getConfiguration()));
-    }
-
-    @Nullable
-    private LookupCache getLookupCache(ReadableConfig tableOptions) {
-        LookupCache cache = null;
-        if (tableOptions
-                .get(LookupOptions.CACHE_TYPE)
-                .equals(LookupOptions.LookupCacheType.PARTIAL)) {
-            cache = DefaultLookupCache.fromConfig(tableOptions);
-        }
-        return cache;
     }
 
     ZoneId getLocalTimeZoneId(ReadableConfig readableConfig) {

@@ -41,7 +41,7 @@ public class Elasticsearch7DynamicTableFactoryTest extends TestLogger {
 
     @Test
     public void validateEmptyConfiguration() {
-        Elasticsearch7DynamicTableFactory factory = new Elasticsearch7DynamicTableFactory();
+        Elasticsearch7DynamicTableFactory sinkFactory = new Elasticsearch7DynamicTableFactory();
 
         thrown.expect(ValidationException.class);
         thrown.expectMessage(
@@ -51,16 +51,16 @@ public class Elasticsearch7DynamicTableFactoryTest extends TestLogger {
                         + "\n"
                         + "hosts\n"
                         + "index");
-        factory.createDynamicTableSink(context().build());
+        sinkFactory.createDynamicTableSink(context().build());
     }
 
     @Test
     public void validateWrongIndex() {
-        Elasticsearch7DynamicTableFactory factory = new Elasticsearch7DynamicTableFactory();
+        Elasticsearch7DynamicTableFactory sinkFactory = new Elasticsearch7DynamicTableFactory();
 
         thrown.expect(ValidationException.class);
         thrown.expectMessage("'index' must not be empty");
-        factory.createDynamicTableSink(
+        sinkFactory.createDynamicTableSink(
                 context()
                         .withOption("index", "")
                         .withOption("hosts", "http://localhost:12345")
@@ -69,23 +69,108 @@ public class Elasticsearch7DynamicTableFactoryTest extends TestLogger {
 
     @Test
     public void validateWrongHosts() {
-        Elasticsearch7DynamicTableFactory factory = new Elasticsearch7DynamicTableFactory();
+        Elasticsearch7DynamicTableFactory sinkFactory = new Elasticsearch7DynamicTableFactory();
 
         thrown.expect(ValidationException.class);
         thrown.expectMessage(
                 "Could not parse host 'wrong-host' in option 'hosts'. It should follow the format 'http://host_name:port'.");
-        factory.createDynamicTableSink(
+        sinkFactory.createDynamicTableSink(
                 context().withOption("index", "MyIndex").withOption("hosts", "wrong-host").build());
     }
 
     @Test
+    public void validateWrongScrollMaxSize() {
+        Elasticsearch7DynamicTableFactory tableFactory = new Elasticsearch7DynamicTableFactory();
+
+        thrown.expect(ValidationException.class);
+        thrown.expectMessage("'scan.scroll.max-size' must be at least 1. Got: 0");
+        tableFactory.createDynamicTableSource(
+                context()
+                        .withSchema(ResolvedSchema.of(Column.physical("a", DataTypes.TIME())))
+                        .withOption(ElasticsearchConnectorOptions.INDEX_OPTION.key(), "MyIndex")
+                        .withOption(
+                                ElasticsearchConnectorOptions.HOSTS_OPTION.key(),
+                                "http://localhost:1234")
+                        .withOption(ElasticsearchConnectorOptions.SCROLL_MAX_SIZE_OPTION.key(), "0")
+                        .build());
+    }
+
+    @Test
+    public void validateWrongScrollTimeout() {
+        Elasticsearch7DynamicTableFactory tableFactory = new Elasticsearch7DynamicTableFactory();
+
+        thrown.expect(ValidationException.class);
+        thrown.expectMessage("'scan.scroll.timeout' must be at least 1. Got: 0");
+        tableFactory.createDynamicTableSource(
+                context()
+                        .withSchema(ResolvedSchema.of(Column.physical("a", DataTypes.TIME())))
+                        .withOption(ElasticsearchConnectorOptions.INDEX_OPTION.key(), "MyIndex")
+                        .withOption(
+                                ElasticsearchConnectorOptions.HOSTS_OPTION.key(),
+                                "http://localhost:1234")
+                        .withOption(ElasticsearchConnectorOptions.SCROLL_TIMEOUT_OPTION.key(), "0")
+                        .build());
+    }
+
+    @Test
+    public void validateWrongCacheMaxSize() {
+        Elasticsearch7DynamicTableFactory tableFactory = new Elasticsearch7DynamicTableFactory();
+
+        thrown.expect(ValidationException.class);
+        thrown.expectMessage("'lookup.cache.max-rows' must be at least 1. Got: 0");
+        tableFactory.createDynamicTableSource(
+                context()
+                        .withSchema(ResolvedSchema.of(Column.physical("a", DataTypes.TIME())))
+                        .withOption(ElasticsearchConnectorOptions.INDEX_OPTION.key(), "MyIndex")
+                        .withOption(
+                                ElasticsearchConnectorOptions.HOSTS_OPTION.key(),
+                                "http://localhost:1234")
+                        .withOption(ElasticsearchConnectorOptions.LOOKUP_CACHE_MAX_ROWS.key(), "0")
+                        .build());
+    }
+
+    @Test
+    public void validateWrongCacheTTL() {
+        Elasticsearch7DynamicTableFactory tableFactory = new Elasticsearch7DynamicTableFactory();
+
+        thrown.expect(ValidationException.class);
+        thrown.expectMessage("'lookup.cache.ttl' must be at least 1. Got: 0");
+        tableFactory.createDynamicTableSource(
+                context()
+                        .withSchema(ResolvedSchema.of(Column.physical("a", DataTypes.TIME())))
+                        .withOption(ElasticsearchConnectorOptions.INDEX_OPTION.key(), "MyIndex")
+                        .withOption(
+                                ElasticsearchConnectorOptions.HOSTS_OPTION.key(),
+                                "http://localhost:1234")
+                        .withOption(ElasticsearchConnectorOptions.LOOKUP_CACHE_TTL.key(), "0")
+                        .build());
+    }
+
+    @Test
+    public void validateWrongMaxRetries() {
+        Elasticsearch7DynamicTableFactory tableFactory = new Elasticsearch7DynamicTableFactory();
+
+        thrown.expect(ValidationException.class);
+        thrown.expectMessage("'lookup.max-retries' must be at least 1. Got: 0");
+        tableFactory.createDynamicTableSource(
+                context()
+                        .withSchema(ResolvedSchema.of(Column.physical("a", DataTypes.TIME())))
+                        .withOption(ElasticsearchConnectorOptions.INDEX_OPTION.key(), "MyIndex")
+                        .withOption(
+                                ElasticsearchConnectorOptions.HOSTS_OPTION.key(),
+                                "http://localhost:1234")
+                        .withOption(ElasticsearchConnectorOptions.LOOKUP_MAX_RETRIES.key(), "0")
+                        .build());
+    }
+
+    @Test
     public void validateWrongFlushSize() {
-        Elasticsearch7DynamicTableFactory factory = new Elasticsearch7DynamicTableFactory();
+        Elasticsearch7DynamicTableFactory sinkFactory = new Elasticsearch7DynamicTableFactory();
 
         thrown.expect(ValidationException.class);
         thrown.expectMessage(
                 "'sink.bulk-flush.max-size' must be in MB granularity. Got: 1024 bytes");
-        factory.createDynamicTableSink(
+        sinkFactory.createDynamicTableSink(
                 context()
                         .withOption(ElasticsearchConnectorOptions.INDEX_OPTION.key(), "MyIndex")
                         .withOption(
@@ -99,11 +184,11 @@ public class Elasticsearch7DynamicTableFactoryTest extends TestLogger {
 
     @Test
     public void validateWrongRetries() {
-        Elasticsearch7DynamicTableFactory factory = new Elasticsearch7DynamicTableFactory();
+        Elasticsearch7DynamicTableFactory sinkFactory = new Elasticsearch7DynamicTableFactory();
 
         thrown.expect(ValidationException.class);
         thrown.expectMessage("'sink.bulk-flush.backoff.max-retries' must be at least 1. Got: 0");
-        factory.createDynamicTableSink(
+        sinkFactory.createDynamicTableSink(
                 context()
                         .withOption(ElasticsearchConnectorOptions.INDEX_OPTION.key(), "MyIndex")
                         .withOption(
@@ -118,11 +203,11 @@ public class Elasticsearch7DynamicTableFactoryTest extends TestLogger {
 
     @Test
     public void validateWrongMaxActions() {
-        Elasticsearch7DynamicTableFactory factory = new Elasticsearch7DynamicTableFactory();
+        Elasticsearch7DynamicTableFactory sinkFactory = new Elasticsearch7DynamicTableFactory();
 
         thrown.expect(ValidationException.class);
         thrown.expectMessage("'sink.bulk-flush.max-actions' must be at least 1. Got: -2");
-        factory.createDynamicTableSink(
+        sinkFactory.createDynamicTableSink(
                 context()
                         .withOption(ElasticsearchConnectorOptions.INDEX_OPTION.key(), "MyIndex")
                         .withOption(
@@ -136,11 +221,11 @@ public class Elasticsearch7DynamicTableFactoryTest extends TestLogger {
 
     @Test
     public void validateWrongBackoffDelay() {
-        Elasticsearch7DynamicTableFactory factory = new Elasticsearch7DynamicTableFactory();
+        Elasticsearch7DynamicTableFactory sinkFactory = new Elasticsearch7DynamicTableFactory();
 
         thrown.expect(ValidationException.class);
         thrown.expectMessage("Invalid value for option 'sink.bulk-flush.backoff.delay'.");
-        factory.createDynamicTableSink(
+        sinkFactory.createDynamicTableSink(
                 context()
                         .withOption(ElasticsearchConnectorOptions.INDEX_OPTION.key(), "MyIndex")
                         .withOption(
@@ -154,7 +239,7 @@ public class Elasticsearch7DynamicTableFactoryTest extends TestLogger {
 
     @Test
     public void validatePrimaryKeyOnIllegalColumn() {
-        Elasticsearch7DynamicTableFactory factory = new Elasticsearch7DynamicTableFactory();
+        Elasticsearch7DynamicTableFactory sinkFactory = new Elasticsearch7DynamicTableFactory();
 
         thrown.expect(ValidationException.class);
         thrown.expectMessage(
@@ -162,7 +247,7 @@ public class Elasticsearch7DynamicTableFactoryTest extends TestLogger {
                         + "[ARRAY, MAP, MULTISET, ROW, RAW, VARBINARY].\n"
                         + " Elasticsearch sink does not support primary keys on columns of types: "
                         + "[ARRAY, MAP, MULTISET, STRUCTURED_TYPE, ROW, RAW, BINARY, VARBINARY].");
-        factory.createDynamicTableSink(
+        sinkFactory.createDynamicTableSink(
                 context()
                         .withSchema(
                                 new ResolvedSchema(
@@ -216,12 +301,12 @@ public class Elasticsearch7DynamicTableFactoryTest extends TestLogger {
 
     @Test
     public void validateWrongCredential() {
-        Elasticsearch7DynamicTableFactory factory = new Elasticsearch7DynamicTableFactory();
+        Elasticsearch7DynamicTableFactory sinkFactory = new Elasticsearch7DynamicTableFactory();
 
         thrown.expect(ValidationException.class);
         thrown.expectMessage(
                 "'username' and 'password' must be set at the same time. Got: username 'username' and password ''");
-        factory.createDynamicTableSink(
+        sinkFactory.createDynamicTableSink(
                 context()
                         .withOption(ElasticsearchConnectorOptions.INDEX_OPTION.key(), "MyIndex")
                         .withOption(

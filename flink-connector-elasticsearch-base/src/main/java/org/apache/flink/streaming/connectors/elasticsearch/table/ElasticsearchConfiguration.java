@@ -38,6 +38,8 @@ import static org.apache.flink.streaming.connectors.elasticsearch.table.Elastics
 import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.BULK_FLUSH_INTERVAL_OPTION;
 import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.FAILURE_HANDLER_OPTION;
 import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.PASSWORD_OPTION;
+import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.SCROLL_MAX_SIZE_OPTION;
+import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.SCROLL_TIMEOUT_OPTION;
 import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.USERNAME_OPTION;
 
 /** Accessor methods to elasticsearch options. */
@@ -148,6 +150,26 @@ class ElasticsearchConfiguration {
 
     public Optional<String> getPathPrefix() {
         return config.getOptional(ElasticsearchConnectorOptions.CONNECTION_PATH_PREFIX);
+    }
+
+    public Optional<Integer> getScrollMaxSize() {
+        return config.getOptional(SCROLL_MAX_SIZE_OPTION);
+    }
+
+    public Optional<Long> getScrollTimeout() {
+        return config.getOptional(SCROLL_TIMEOUT_OPTION).map(Duration::toMillis);
+    }
+
+    public long getCacheMaxSize() {
+        return config.get(ElasticsearchConnectorOptions.LOOKUP_CACHE_MAX_ROWS);
+    }
+
+    public Duration getCacheExpiredMs() {
+        return config.get(ElasticsearchConnectorOptions.LOOKUP_CACHE_TTL);
+    }
+
+    public int getMaxRetryTimes() {
+        return config.get(ElasticsearchConnectorOptions.LOOKUP_MAX_RETRIES);
     }
 
     @Override
