@@ -36,6 +36,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import java.util.Arrays;
 import java.util.Collections;
 
+import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions.RETRIES_ON_CONFLICT_OPTION;
 import static org.apache.flink.table.api.DataTypes.ARRAY;
 import static org.apache.flink.table.api.DataTypes.BIGINT;
 import static org.apache.flink.table.api.DataTypes.BYTES;
@@ -252,5 +253,30 @@ abstract class ElasticsearchDynamicSinkFactoryBaseTest {
         SinkV2Provider provider =
                 (SinkV2Provider) esSink.getSinkRuntimeProvider(new ElasticsearchUtil.MockContext());
         assertThat(provider.getParallelism()).hasValue(2);
+    }
+
+    @Test
+    public void testRetriesOnConflict() {
+        ElasticsearchDynamicSinkFactoryBase sinkFactory = createSinkFactory();
+        DynamicTableSink sink =
+                sinkFactory.createDynamicTableSink(
+                        createPrefilledTestContext()
+                                .withOption(RETRIES_ON_CONFLICT_OPTION.key(), "2")
+                                .build());
+        assertThat(sink).isInstanceOf(ElasticsearchDynamicSink.class);
+        ElasticsearchDynamicSink esSink = (ElasticsearchDynamicSink) sink;
+
+        assertThat(esSink.config.getRetriesOnConflict()).isEqualTo(2);
+    }
+
+    @Test
+    public void testRetriesOnConflictDefault() {
+        ElasticsearchDynamicSinkFactoryBase sinkFactory = createSinkFactory();
+        DynamicTableSink sink =
+                sinkFactory.createDynamicTableSink(createPrefilledTestContext().build());
+        assertThat(sink).isInstanceOf(ElasticsearchDynamicSink.class);
+        ElasticsearchDynamicSink esSink = (ElasticsearchDynamicSink) sink;
+
+        assertThat(esSink.config.getRetriesOnConflict()).isEqualTo(0);
     }
 }
