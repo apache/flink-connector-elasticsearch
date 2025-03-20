@@ -72,28 +72,6 @@ public abstract class ElasticsearchSinkE2ECaseBase<T extends Comparable<T>>
                     .bindWithFlinkContainer(flink.getFlinkContainers().getJobManager())
                     .build();
 
-    /** Could be removed together with dropping support of Flink 1.19. */
-    @Deprecated
-    protected void checkResultWithSemantic(
-            ExternalSystemDataReader<T> reader, List<T> testData, CheckpointingMode semantic)
-            throws Exception {
-        waitUntilCondition(
-                () -> {
-                    try {
-                        List<T> result = reader.poll(Duration.ofMillis(READER_TIMEOUT));
-                        assertThat(sort(result).iterator())
-                                .matchesRecordsFromSource(
-                                        Collections.singletonList(sort(testData)), semantic);
-                        return true;
-                    } catch (Throwable t) {
-                        LOG.warn("Polled results not as expected", t);
-                        return false;
-                    }
-                },
-                5000,
-                READER_RETRY_ATTEMPTS);
-    }
-
     protected void checkResultWithSemantic(
             ExternalSystemDataReader<T> reader,
             List<T> testData,
