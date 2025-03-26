@@ -21,6 +21,9 @@
 
 package org.apache.flink.connector.elasticsearch.sink;
 
+import org.apache.flink.api.connector.sink2.StatefulSinkWriter;
+import org.apache.flink.api.connector.sink2.WriterInitContext;
+import org.apache.flink.connector.base.sink.writer.ResultHandler;
 import org.apache.flink.connector.base.sink.writer.TestSinkInitContext;
 import org.apache.flink.metrics.Gauge;
 
@@ -37,7 +40,6 @@ import java.util.Optional;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -235,7 +237,7 @@ public class Elasticsearch8AsyncWriterITCase extends ElasticsearchSinkBaseITCase
                         1024 * 1024,
                         createNetworkConfig()) {
                     @Override
-                    public StatefulSinkWriter createWriter(InitContext context) {
+                    public StatefulSinkWriter createWriter(WriterInitContext context) {
                         return new Elasticsearch8AsyncWriter<DummyData>(
                                 getElementConverter(),
                                 context,
@@ -250,25 +252,43 @@ public class Elasticsearch8AsyncWriterITCase extends ElasticsearchSinkBaseITCase
                             @Override
                             protected void submitRequestEntries(
                                     List<Operation> requestEntries,
-                                    Consumer<List<Operation>> requestResult) {
-                                super.submitRequestEntries(
-                                        requestEntries,
-                                        (entries) -> {
-                                            requestResult.accept(entries);
-
-                                            lock.lock();
-                                            try {
-                                                completed.signal();
-                                            } finally {
-                                                lock.unlock();
+                                    ResultHandler<Operation> resultHandler) {
+                                ResultHandler<Operation> wrappedHandler =
+                                        new ResultHandler<Operation>() {
+                                            @Override
+                                            public void complete() {
+                                                resultHandler.complete();
+                                                signal();
                                             }
-                                        });
+
+                                            @Override
+                                            public void completeExceptionally(Exception e) {
+                                                resultHandler.completeExceptionally(e);
+                                                signal();
+                                            }
+
+                                            @Override
+                                            public void retryForEntries(List<Operation> list) {
+                                                resultHandler.retryForEntries(list);
+                                                signal();
+                                            }
+                                        };
+                                super.submitRequestEntries(requestEntries, wrappedHandler);
                             }
                         };
                     }
                 };
 
         return (Elasticsearch8AsyncWriter<DummyData>) sink.createWriter(context);
+    }
+
+    private void signal() {
+        lock.lock();
+        try {
+            completed.signal();
+        } finally {
+            lock.unlock();
+        }
     }
 
     private void await() throws InterruptedException {

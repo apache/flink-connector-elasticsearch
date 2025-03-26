@@ -21,6 +21,7 @@ import org.apache.flink.api.connector.sink2.SinkWriter;
 import org.apache.flink.api.connector.sink2.SinkWriter.Context;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.connector.elasticsearch.ElasticsearchUtil;
+import org.apache.flink.connector.elasticsearch.NetworkClientConfig;
 import org.apache.flink.connector.elasticsearch.sink.ElasticsearchWriter.DefaultBulkResponseInspector;
 import org.apache.flink.connector.elasticsearch.test.DockerImageVersions;
 import org.apache.flink.metrics.Counter;

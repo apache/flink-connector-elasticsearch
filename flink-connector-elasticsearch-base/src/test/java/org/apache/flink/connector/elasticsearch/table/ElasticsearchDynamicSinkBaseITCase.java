@@ -82,7 +82,7 @@ abstract class ElasticsearchDynamicSinkBaseITCase {
 
     abstract String getElasticsearchHttpHostAddress();
 
-    abstract ElasticsearchDynamicSinkFactoryBase getDynamicSinkFactory();
+    abstract ElasticsearchDynamicTableFactoryBase getDynamicSinkFactory();
 
     abstract Map<String, Object> makeGetRequest(RestHighLevelClient client, String index, String id)
             throws IOException;
@@ -127,7 +127,7 @@ abstract class ElasticsearchDynamicSinkBaseITCase {
                                 LocalDateTime.parse("2012-12-12T12:12:12")));
 
         String index = "writing-documents";
-        ElasticsearchDynamicSinkFactoryBase sinkFactory = getDynamicSinkFactory();
+        ElasticsearchDynamicTableFactoryBase sinkFactory = getDynamicSinkFactory();
 
         DynamicTableSink.SinkRuntimeProvider runtimeProvider =
                 sinkFactory
