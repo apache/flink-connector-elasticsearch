@@ -152,6 +152,12 @@ public class ElasticsearchConnectorOptions {
                             "The format must produce a valid JSON document. "
                                     + "Please refer to the documentation on formats for more details.");
 
+    public static final ConfigOption<String> PARTITION_ROUTING_FIELDS =
+            ConfigOptions.key("sink.partition-routing.fields")
+                    .stringType()
+                    .noDefaultValue()
+                    .withDescription("Route field names list, multiple separated by commas.");
+
     // --------------------------------------------------------------------------------------------
     // Enums
     // --------------------------------------------------------------------------------------------

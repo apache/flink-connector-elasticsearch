@@ -51,6 +51,7 @@ class RowElasticsearchSinkFunction implements ElasticsearchSinkFunction<RowData>
     private final XContentType contentType;
     private final RequestFactory requestFactory;
     private final Function<RowData, String> createKey;
+    private final Function<RowData, String> routingKey;
 
     public RowElasticsearchSinkFunction(
             IndexGenerator indexGenerator,
@@ -58,13 +59,15 @@ class RowElasticsearchSinkFunction implements ElasticsearchSinkFunction<RowData>
             SerializationSchema<RowData> serializationSchema,
             XContentType contentType,
             RequestFactory requestFactory,
-            Function<RowData, String> createKey) {
+            Function<RowData, String> createKey,
+            Function<RowData, String> routingKey) {
         this.indexGenerator = Preconditions.checkNotNull(indexGenerator);
         this.docType = docType;
         this.serializationSchema = Preconditions.checkNotNull(serializationSchema);
         this.contentType = Preconditions.checkNotNull(contentType);
         this.requestFactory = Preconditions.checkNotNull(requestFactory);
         this.createKey = Preconditions.checkNotNull(createKey);
+        this.routingKey = routingKey;
     }
 
     @Override
@@ -96,12 +99,12 @@ class RowElasticsearchSinkFunction implements ElasticsearchSinkFunction<RowData>
         if (key != null) {
             final UpdateRequest updateRequest =
                     requestFactory.createUpdateRequest(
-                            indexGenerator.generate(row), docType, key, contentType, document);
+                            indexGenerator.generate(row), docType, key, routingKey.apply(row), contentType, document);
             indexer.add(updateRequest);
         } else {
             final IndexRequest indexRequest =
                     requestFactory.createIndexRequest(
-                            indexGenerator.generate(row), docType, key, contentType, document);
+                            indexGenerator.generate(row), docType, key, routingKey.apply(row), contentType, document);
             indexer.add(indexRequest);
         }
     }
@@ -109,7 +112,7 @@ class RowElasticsearchSinkFunction implements ElasticsearchSinkFunction<RowData>
     private void processDelete(RowData row, RequestIndexer indexer) {
         final String key = createKey.apply(row);
         final DeleteRequest deleteRequest =
-                requestFactory.createDeleteRequest(indexGenerator.generate(row), docType, key);
+                requestFactory.createDeleteRequest(indexGenerator.generate(row), docType, key, routingKey.apply(row));
         indexer.add(deleteRequest);
     }
 
@@ -127,7 +130,8 @@ class RowElasticsearchSinkFunction implements ElasticsearchSinkFunction<RowData>
                 && Objects.equals(serializationSchema, that.serializationSchema)
                 && contentType == that.contentType
                 && Objects.equals(requestFactory, that.requestFactory)
-                && Objects.equals(createKey, that.createKey);
+                && Objects.equals(createKey, that.createKey)
+                && Objects.equals(routingKey, that.routingKey);
     }
 
     @Override
@@ -138,6 +142,7 @@ class RowElasticsearchSinkFunction implements ElasticsearchSinkFunction<RowData>
                 serializationSchema,
                 contentType,
                 requestFactory,
-                createKey);
+                createKey,
+                routingKey);
     }
 }

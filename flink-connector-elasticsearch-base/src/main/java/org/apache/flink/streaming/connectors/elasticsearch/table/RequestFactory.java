@@ -36,19 +36,17 @@ interface RequestFactory extends Serializable {
      * Creates an update request to be added to a {@link RequestIndexer}. Note: the type field has
      * been deprecated since Elasticsearch 7.x and it would not take any effort.
      */
-    UpdateRequest createUpdateRequest(
-            String index, String docType, String key, XContentType contentType, byte[] document);
+    UpdateRequest createUpdateRequest(String index, String docType, String key, String routing, XContentType contentType, byte[] document);
 
     /**
      * Creates an index request to be added to a {@link RequestIndexer}. Note: the type field has
      * been deprecated since Elasticsearch 7.x and it would not take any effort.
      */
-    IndexRequest createIndexRequest(
-            String index, String docType, String key, XContentType contentType, byte[] document);
+    IndexRequest createIndexRequest(String index, String docType, String key, String routing, XContentType contentType, byte[] document);
 
     /**
      * Creates a delete request to be added to a {@link RequestIndexer}. Note: the type field has
      * been deprecated since Elasticsearch 7.x and it would not take any effort.
      */
-    DeleteRequest createDeleteRequest(String index, String docType, String key);
+    DeleteRequest createDeleteRequest(String index, String docType, String key, String routing);
 }

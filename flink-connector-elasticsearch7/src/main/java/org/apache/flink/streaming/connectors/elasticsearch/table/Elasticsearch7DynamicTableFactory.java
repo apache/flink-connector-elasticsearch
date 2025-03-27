@@ -66,6 +66,7 @@ import static org.apache.flink.streaming.connectors.elasticsearch.table.Elastics
 import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.HOSTS_OPTION;
 import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.INDEX_OPTION;
 import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.KEY_DELIMITER_OPTION;
+import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.PARTITION_ROUTING_FIELDS;
 import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.PASSWORD_OPTION;
 import static org.apache.flink.streaming.connectors.elasticsearch.table.ElasticsearchConnectorOptions.USERNAME_OPTION;
 import static org.apache.flink.table.connector.source.lookup.LookupOptions.CACHE_TYPE;
@@ -104,7 +105,8 @@ public class Elasticsearch7DynamicTableFactory
                             PARTIAL_CACHE_EXPIRE_AFTER_WRITE,
                             PARTIAL_CACHE_MAX_ROWS,
                             PARTIAL_CACHE_CACHE_MISSING_KEY,
-                            MAX_RETRIES)
+                            MAX_RETRIES,
+                            PARTITION_ROUTING_FIELDS)
                     .collect(Collectors.toSet());
 
     @Override

@@ -24,15 +24,19 @@ import org.apache.flink.table.api.TableSchema;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.types.logical.DistinctType;
 import org.apache.flink.table.types.logical.LogicalType;
+import org.apache.flink.util.StringUtils;
 
 import java.io.Serializable;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.Period;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 
 /** An extractor for a Elasticsearch key from a {@link RowData}. */
@@ -107,6 +111,39 @@ class KeyExtractor implements Function<RowData, String>, Serializable {
                                     new KeyExtractor(fieldFormatters, keyDelimiter);
                         })
                 .orElseGet(() -> (Function<RowData, String> & Serializable) (row) -> null);
+    }
+
+    public static Function<RowData, String> createColumnExtractor(
+            TableSchema schema, String keyDelimiter, String columns) {
+        List<String> cols = null;
+        if (StringUtils.isNullOrWhitespaceOnly(columns)) {
+            cols = new ArrayList<>(0);
+        } else {
+            cols = Arrays.asList(columns.split(","));
+        }
+        return createColumnExtractor(schema, keyDelimiter, cols);
+    }
+
+    public static Function<RowData, String> createColumnExtractor(
+            TableSchema schema, String keyDelimiter, List<String> columns) {
+        Map<String, ColumnWithIndex> namesToColumns = new HashMap<>();
+        List<TableColumn> tableColumns = schema.getTableColumns();
+        for (int i = 0; i < schema.getFieldCount(); i++) {
+            TableColumn column = tableColumns.get(i);
+            namesToColumns.put(column.getName(), new ColumnWithIndex(column, i));
+        }
+
+        FieldFormatter[] fieldFormatters = columns == null || columns.isEmpty() ? new FieldFormatter[0] :
+                columns.stream()
+                        .map(namesToColumns::get)
+                        .map(
+                                column ->
+                                        toFormatter(
+                                                column.index, column.getType()))
+                        .toArray(FieldFormatter[]::new);
+
+        Function<RowData, String> extractor = new KeyExtractor(fieldFormatters, keyDelimiter);
+        return Optional.of(extractor).orElseGet(() -> (Function<RowData, String> & Serializable) (row) -> null);
     }
 
     private static FieldFormatter toFormatter(int index, LogicalType type) {
