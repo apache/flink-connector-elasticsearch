@@ -150,6 +150,10 @@ class ElasticsearchConfiguration {
         return config.getOptional(ElasticsearchConnectorOptions.CONNECTION_PATH_PREFIX);
     }
 
+    public String getPartitionRoutingFields() {
+        return config.get(ElasticsearchConnectorOptions.PARTITION_ROUTING_FIELDS);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {

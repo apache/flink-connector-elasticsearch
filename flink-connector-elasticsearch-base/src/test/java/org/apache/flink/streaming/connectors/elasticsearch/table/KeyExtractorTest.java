@@ -31,6 +31,8 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Arrays;
+import java.util.List;
 import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -128,5 +130,83 @@ public class KeyExtractorTest {
         assertThat(key)
                 .isEqualTo(
                         "1_2_3_4_true_1.0_2.0_ABCD_2012-12-12T12:12:12_2013-01-13T13:13:13_14:14:14_2015-05-15");
+    }
+
+    @Test
+    public void testStringColumnsExtractor() {
+        TableSchema schema =
+                TableSchema.builder()
+                        .field("a", DataTypes.BIGINT().notNull())
+                        .field("b", DataTypes.STRING())
+                        .primaryKey("a")
+                        .build();
+
+        Function<RowData, String> keyExtractor = KeyExtractor.createColumnExtractor(schema, "_", "a,b");
+
+        String key = keyExtractor.apply(GenericRowData.of(12L, StringData.fromString("ABCD")));
+        assertThat(key).isEqualTo("12_ABCD");
+    }
+
+    @Test
+    public void testListColumnsExtractor() {
+        TableSchema schema =
+                TableSchema.builder()
+                        .field("a", DataTypes.BIGINT().notNull())
+                        .field("b", DataTypes.STRING())
+                        .primaryKey("a")
+                        .build();
+
+        Function<RowData, String> keyExtractor = KeyExtractor.createColumnExtractor(schema, "_",
+                Arrays.asList("a", "b"));
+
+        String key = keyExtractor.apply(GenericRowData.of(12L, StringData.fromString("ABCD")));
+        assertThat(key).isEqualTo("12_ABCD");
+    }
+
+    @Test
+    public void testEmptyColumnsExtractor() {
+        TableSchema schema =
+                TableSchema.builder()
+                        .field("a", DataTypes.BIGINT().notNull())
+                        .field("b", DataTypes.STRING())
+                        .primaryKey("a")
+                        .build();
+
+        String columns = null;
+        Function<RowData, String> keyExtractor = KeyExtractor.createColumnExtractor(schema, "_", columns);
+
+        String key = keyExtractor.apply(GenericRowData.of(12L, StringData.fromString("ABCD")));
+        assertThat(key).isEqualTo("");
+    }
+
+    @Test
+    public void testBlankColumnsExtractor() {
+        TableSchema schema =
+                TableSchema.builder()
+                        .field("a", DataTypes.BIGINT().notNull())
+                        .field("b", DataTypes.STRING())
+                        .primaryKey("a")
+                        .build();
+
+        Function<RowData, String> keyExtractor = KeyExtractor.createColumnExtractor(schema, "_", "");
+
+        String key = keyExtractor.apply(GenericRowData.of(12L, StringData.fromString("ABCD")));
+        assertThat(key).isEqualTo("");
+    }
+
+    @Test
+    public void testNullColumnsExtractor() {
+        TableSchema schema =
+                TableSchema.builder()
+                        .field("a", DataTypes.BIGINT().notNull())
+                        .field("b", DataTypes.STRING())
+                        .primaryKey("a")
+                        .build();
+
+        List<String> columns = null;
+        Function<RowData, String> keyExtractor = KeyExtractor.createColumnExtractor(schema, "_", columns);
+
+        String key = keyExtractor.apply(GenericRowData.of(12L, StringData.fromString("ABCD")));
+        assertThat(key).isEqualTo("");
     }
 }

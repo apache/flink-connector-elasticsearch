@@ -148,7 +148,8 @@ final class Elasticsearch6DynamicSink implements DynamicTableSink {
                             format,
                             XContentType.JSON,
                             REQUEST_FACTORY,
-                            KeyExtractor.createKeyExtractor(schema, config.getKeyDelimiter()));
+                            KeyExtractor.createKeyExtractor(schema, config.getKeyDelimiter()),
+                            KeyExtractor.createColumnExtractor(schema, config.getKeyDelimiter(), config.getPartitionRoutingFields()));
 
             final ElasticsearchSink.Builder<RowData> builder =
                     builderProvider.createBuilder(config.getHosts(), upsertFunction);
@@ -295,11 +296,15 @@ final class Elasticsearch6DynamicSink implements DynamicTableSink {
                 String index,
                 String docType,
                 String key,
+                String routing,
                 XContentType contentType,
                 byte[] document) {
-            return new UpdateRequest(index, docType, key)
-                    .doc(document, contentType)
-                    .upsert(document, contentType);
+            UpdateRequest req = new UpdateRequest(index, docType, key)
+                    .doc(document, contentType);
+            if (!StringUtils.isNullOrWhitespaceOnly(routing)) {
+                req = req.routing(routing);
+            }
+            return req.upsert(document, contentType);
         }
 
         @Override
@@ -307,14 +312,23 @@ final class Elasticsearch6DynamicSink implements DynamicTableSink {
                 String index,
                 String docType,
                 String key,
+                String routing,
                 XContentType contentType,
                 byte[] document) {
-            return new IndexRequest(index, docType, key).source(document, contentType);
+            IndexRequest req = new IndexRequest(index, docType, key);
+            if (!StringUtils.isNullOrWhitespaceOnly(routing)) {
+                req = req.routing(routing);
+            }
+            return req.source(document, contentType);
         }
 
         @Override
-        public DeleteRequest createDeleteRequest(String index, String docType, String key) {
-            return new DeleteRequest(index, docType, key);
+        public DeleteRequest createDeleteRequest(String index, String docType, String key, String routing) {
+            DeleteRequest req = new DeleteRequest(index, docType, key);
+            if (!StringUtils.isNullOrWhitespaceOnly(routing)) {
+                req = req.routing(routing);
+            }
+            return req;
         }
     }
 
