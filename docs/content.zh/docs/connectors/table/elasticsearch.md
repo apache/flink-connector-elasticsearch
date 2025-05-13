@@ -222,6 +222,51 @@ CREATE TABLE myUserTable (
        默认使用内置的 <code>'json'</code> 格式。更多详细信息，请参阅 <a href="{{< ref "docs/connectors/table/formats/overview" >}}">JSON Format</a> 页面。
       </td>
     </tr>
+    <tr>
+      <td><h5>lookup.cache</h5></td>
+      <td>可选</td>
+      <td style="word-wrap: break-word;">NONE</td>
+      <td><p>枚举类型</p>可选值: NONE, PARTIAL</td>
+      <td>维表的缓存策略。 目前支持 NONE（不缓存）和 PARTIAL（只在外部数据库中查找数据时缓存）。</td>
+    </tr>
+    <tr>
+      <td><h5>lookup.partial-cache.max-rows</h5></td>
+      <td>可选</td>
+      <td style="word-wrap: break-word;">(none)</td>
+      <td>Long</td>
+      <td>查找缓存的最大行数，超过这个值，最旧的行将过期。使用该配置时 "lookup.cache" 必须设置为 "PARTIAL”。</td>
+    </tr>
+    <tr>
+      <td><h5>lookup.partial-cache.expire-after-write</h5></td>
+      <td>可选</td>
+      <td style="word-wrap: break-word;">(none)</td>
+      <td>Duration</td>
+      <td>在记录写入缓存后该记录的最大保留时间。
+      使用该配置时 "lookup.cache" 必须设置为 "PARTIAL”。</td>
+    </tr>
+    <tr>
+      <td><h5>lookup.partial-cache.expire-after-access</h5></td>
+      <td>可选</td>
+      <td style="word-wrap: break-word;">(none)</td>
+      <td>Duration</td>
+      <td>在缓存中的记录被访问后该记录的最大保留时间。
+      使用该配置时 "lookup.cache" 必须设置为 "PARTIAL”。</td>
+    </tr>
+    <tr>
+      <td><h5>lookup.partial-cache.caching-missing-key</h5></td>
+      <td>可选</td>
+      <td style="word-wrap: break-word;">true</td>
+      <td>Boolean</td>
+      <td>是否缓存维表中不存在的键，默认为true。
+        使用该配置时 "lookup.cache" 必须设置为 "PARTIAL”。</td>
+    </tr>
+    <tr>
+      <td><h5>lookup.max-retries</h5></td>
+      <td>可选</td>
+      <td style="word-wrap: break-word;">3</td>
+      <td>Integer</td>
+      <td>查找数据库失败时的最大重试次数。</td>
+    </tr>
     </tbody>
 </table>
 
@@ -256,6 +301,21 @@ Elasticsearch sink 同时支持静态索引和动态索引。
 在将系统时间格式化为字符串时会使用 session 中通过 `table.local-time-zone` 中配置的时区。 使用 `NOW()`, `now()`, `CURRENT_TIMESTAMP`, `current_timestamp` 均可以。
 
 **注意:** 使用当前系统时间生成的动态索引时， 对于 changelog 的流，无法保证同一主键对应的记录能产生相同的索引名, 因此使用基于系统时间的动态索引，只能支持 append only 的流。
+
+### Lookup Cache
+
+Elasticsearch 连接器可以用在时态表关联中作为一个可 lookup 的 source (又称为维表)，当前只支持同步的查找模式。
+
+默认情况下，lookup cache 是未启用的，你可以将 `lookup.cache` 设置为 `PARTIAL` 参数来启用。
+
+lookup cache 的主要目的是用于提高时态表关联 Elasticsearch 连接器的性能。默认情况下，lookup cache 不开启，所以所有请求都会发送到外部数据库。
+当 lookup cache 被启用时，每个进程（即 TaskManager）将维护一个缓存。Flink 将优先查找缓存，只有当缓存未查找到时才向外部数据库发送请求，并使用返回的数据更新缓存。
+当缓存命中最大缓存行 `lookup.partial-cache.max-rows` 或当行超过 `lookup.partial-cache.expire-after-write` 或 `lookup.partial-cache.expire-after-access` 指定的最大存活时间时，缓存中的行将被设置为已过期。
+缓存中的记录可能不是最新的，用户可以将缓存记录超时设置为一个更小的值以获得更好的刷新数据，但这可能会增加发送到数据库的请求数。所以要做好吞吐量和正确性之间的平衡。
+
+默认情况下，flink 会缓存主键的空查询结果，你可以通过将 `lookup.partial-cache.cache-missing-key` 设置为 false 来切换行为。
+
+<a name="idempotent-writes"></a>
 
 数据类型映射
 ----------------
