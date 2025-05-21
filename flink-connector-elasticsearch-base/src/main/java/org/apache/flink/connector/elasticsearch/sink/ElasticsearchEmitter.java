@@ -25,7 +25,7 @@ import org.apache.flink.api.connector.sink2.SinkWriter;
 import org.elasticsearch.action.ActionRequest;
 
 /**
- * Creates none or multiple {@link ActionRequest ActionRequests} from the incoming elements.
+ * Creates one or multiple {@link ActionRequest ActionRequests} from the incoming elements.
  *
  * <p>This is used by sinks to prepare elements for sending them to Elasticsearch.
  *
