@@ -36,7 +36,7 @@ public class OperationSerializer {
 
     public OperationSerializer() {
         kryo.setRegistrationRequired(false);
-        kryo.setInstantiatorStrategy(new StdInstantiatorStrategy());
+        ((Kryo.DefaultInstantiatorStrategy) kryo.getInstantiatorStrategy()).setFallbackInstantiatorStrategy(new StdInstantiatorStrategy());
     }
 
     public void serialize(Operation request, DataOutputStream out) {
