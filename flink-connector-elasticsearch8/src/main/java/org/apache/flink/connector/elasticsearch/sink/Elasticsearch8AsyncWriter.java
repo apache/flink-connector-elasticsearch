@@ -123,7 +123,12 @@ public class Elasticsearch8AsyncWriter<InputT> extends AsyncSinkWriter<InputT, O
 
         BulkRequest.Builder br = new BulkRequest.Builder();
         for (Operation operation : requestEntries) {
-            br.operations(new BulkOperation(operation.getBulkOperationVariant()));
+            operation
+                    .getBulkOperationVariant()
+                    .forEach(
+                            bulkOperationVariant -> {
+                                br.operations(new BulkOperation(bulkOperationVariant));
+                            });
         }
 
         esClient.bulk(br.build())

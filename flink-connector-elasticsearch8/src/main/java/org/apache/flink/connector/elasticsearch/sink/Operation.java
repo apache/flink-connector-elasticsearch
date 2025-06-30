@@ -24,29 +24,30 @@ package org.apache.flink.connector.elasticsearch.sink;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperationVariant;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.Objects;
 
 /** A single stream element which contains a BulkOperationVariant. */
 public class Operation implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private final BulkOperationVariant bulkOperationVariant;
+    private final List<BulkOperationVariant> bulkOperationVariants;
 
-    public Operation(BulkOperationVariant bulkOperation) {
-        this.bulkOperationVariant = bulkOperation;
+    public Operation(List<BulkOperationVariant> bulkOperations) {
+        this.bulkOperationVariants = bulkOperations;
     }
 
-    public BulkOperationVariant getBulkOperationVariant() {
-        return bulkOperationVariant;
+    public List<BulkOperationVariant> getBulkOperationVariant() {
+        return bulkOperationVariants;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(bulkOperationVariant);
+        return Objects.hash(bulkOperationVariants);
     }
 
     @Override
     public String toString() {
-        return "Operation{" + "bulkOperationVariant=" + bulkOperationVariant + '}';
+        return "Operation{" + "bulkOperationVariant=" + bulkOperationVariants + '}';
     }
 }

@@ -78,7 +78,7 @@ public class Elasticsearch8AsyncSinkBuilder<InputT>
      * The element converter that will be called on every stream element to be processed and
      * buffered.
      */
-    private ElementConverter<InputT, BulkOperationVariant> elementConverter;
+    private ElementConverter<InputT, List<BulkOperationVariant>> elementConverter;
 
     private SerializableSupplier<SSLContext> sslContextSupplier;
 
@@ -202,7 +202,7 @@ public class Elasticsearch8AsyncSinkBuilder<InputT>
      * @return {@code Elasticsearch8AsyncSinkBuilder}
      */
     public Elasticsearch8AsyncSinkBuilder<InputT> setElementConverter(
-            ElementConverter<InputT, BulkOperationVariant> elementConverter) {
+            ElementConverter<InputT, List<BulkOperationVariant>> elementConverter) {
         checkNotNull(elementConverter);
         this.elementConverter = elementConverter;
         return this;
@@ -232,7 +232,7 @@ public class Elasticsearch8AsyncSinkBuilder<InputT>
     }
 
     private OperationConverter<InputT> buildOperationConverter(
-            ElementConverter<InputT, BulkOperationVariant> converter) {
+            ElementConverter<InputT, List<BulkOperationVariant>> converter) {
         return converter != null ? new OperationConverter<>(converter) : null;
     }
 
@@ -244,9 +244,9 @@ public class Elasticsearch8AsyncSinkBuilder<InputT>
 
     /** A wrapper that evolves the Operation, since a BulkOperationVariant is not Serializable. */
     public static class OperationConverter<T> implements ElementConverter<T, Operation> {
-        private final ElementConverter<T, BulkOperationVariant> converter;
+        private final ElementConverter<T, List<BulkOperationVariant>> converter;
 
-        public OperationConverter(ElementConverter<T, BulkOperationVariant> converter) {
+        public OperationConverter(ElementConverter<T, List<BulkOperationVariant>> converter) {
             this.converter = converter;
         }
 

@@ -44,6 +44,8 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
 
 import static org.apache.flink.connector.elasticsearch.sink.ElasticsearchSinkBaseITCase.DummyData;
 import static org.apache.flink.connector.elasticsearch.sink.ElasticsearchSinkBaseITCase.ELASTICSEARCH_IMAGE;
@@ -93,11 +95,12 @@ class Elasticsearch8AsyncSinkSecureITCase {
                                             "https"))
                             .setElementConverter(
                                     (element, ctx) ->
-                                            new IndexOperation.Builder<>()
-                                                    .index(index)
-                                                    .id(element.getId())
-                                                    .document(element)
-                                                    .build())
+                                            Collections.singletonList(
+                                                    new IndexOperation.Builder<>()
+                                                            .index(index)
+                                                            .id(element.getId())
+                                                            .document(element)
+                                                            .build()))
                             .setUsername(ES_CLUSTER_USERNAME)
                             .setPassword(ES_CLUSTER_PASSWORD)
                             .setSslContextSupplier(() -> ES_CONTAINER.createSslContextFromCa())
