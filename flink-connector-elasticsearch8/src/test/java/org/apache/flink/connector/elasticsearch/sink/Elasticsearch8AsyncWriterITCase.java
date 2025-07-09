@@ -27,6 +27,7 @@ import org.apache.flink.connector.base.sink.writer.ResultHandler;
 import org.apache.flink.connector.base.sink.writer.TestSinkInitContext;
 import org.apache.flink.metrics.Gauge;
 
+import co.elastic.clients.elasticsearch.core.bulk.IndexOperation;
 import co.elastic.clients.elasticsearch.core.bulk.UpdateOperation;
 import org.apache.http.HttpHost;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,6 +38,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -50,6 +52,7 @@ public class Elasticsearch8AsyncWriterITCase extends ElasticsearchSinkBaseITCase
     private final Lock lock = new ReentrantLock();
 
     private final Condition completed = lock.newCondition();
+    private final AtomicBoolean completedExceptionally = new AtomicBoolean(false);
 
     @BeforeEach
     void setUp() {
@@ -171,8 +174,59 @@ public class Elasticsearch8AsyncWriterITCase extends ElasticsearchSinkBaseITCase
     @Timeout(5)
     public void testHandlePartiallyFailedBulk() throws Exception {
         String index = "test-partially-failed-bulk";
+        int maxBatchSize = 3;
+
+        // First create a document to enable version conflict
+        try (final Elasticsearch8AsyncWriter<DummyData> setupWriter = createWriter(index, 1)) {
+            setupWriter.write(new DummyData("test-3", "test-3"), null);
+            await();
+        }
+
+        // Create converter that triggers 409 version conflict for test-3
+        Elasticsearch8AsyncSinkBuilder.OperationConverter<DummyData> conflictConverter =
+                new Elasticsearch8AsyncSinkBuilder.OperationConverter<>(
+                        (element, ctx) -> {
+                            if (element.getId().equals("test-3")) {
+                                // Use wrong version to trigger 409 conflict (retryable)
+                                return new IndexOperation.Builder<>()
+                                        .id(element.getId())
+                                        .index(index)
+                                        .document(element)
+                                        .ifSeqNo(999L) // Wrong sequence number
+                                        .ifPrimaryTerm(1L)
+                                        .build();
+                            } else {
+                                return new IndexOperation.Builder<>()
+                                        .id(element.getId())
+                                        .index(index)
+                                        .document(element)
+                                        .build();
+                            }
+                        });
+
+        try (final Elasticsearch8AsyncWriter<DummyData> writer =
+                createWriter(maxBatchSize, conflictConverter)) {
+            writer.write(new DummyData("test-1", "test-1"), null);
+            writer.write(new DummyData("test-2", "test-2"), null);
+            writer.write(new DummyData("test-3", "version-conflict"), null);
+        }
+
+        await();
+
+        // 409 is retryable, so test-3 should have not completed the rest handler exceptionally
+        assertThat(context.metricGroup().getNumRecordsOutErrorsCounter().getCount()).isEqualTo(1);
+        assertThat(completedExceptionally.get()).isFalse();
+        assertIdsAreWritten(index, new String[] {"test-1", "test-2"});
+    }
+
+    @TestTemplate
+    @Timeout(5)
+    public void testFailFastUponPartiallyFailedBulk() throws Exception {
+        String index = "test-fail-fast-partially-failed-bulk";
         int maxBatchSize = 2;
 
+        // This simulates a scenario where some operations fail with non-retryable errors.
+        // test-1 gets docAsUpsert=false on non-existing doc (404 error).
         Elasticsearch8AsyncSinkBuilder.OperationConverter<DummyData> elementConverter =
                 new Elasticsearch8AsyncSinkBuilder.OperationConverter<>(
                         (element, ctx) ->
@@ -195,7 +249,9 @@ public class Elasticsearch8AsyncWriterITCase extends ElasticsearchSinkBaseITCase
 
         await();
 
+        // Verify that non-retryable error (404) increments error counter and fails fast
         assertThat(context.metricGroup().getNumRecordsOutErrorsCounter().getCount()).isEqualTo(1);
+        assertThat(completedExceptionally.get()).isTrue();
         assertIdsAreWritten(index, new String[] {"test-2"});
         assertIdsAreNotWritten(index, new String[] {"test-1"});
     }
@@ -264,6 +320,7 @@ public class Elasticsearch8AsyncWriterITCase extends ElasticsearchSinkBaseITCase
                                             @Override
                                             public void completeExceptionally(Exception e) {
                                                 resultHandler.completeExceptionally(e);
+                                                completedExceptionally.set(true);
                                                 signal();
                                             }
 

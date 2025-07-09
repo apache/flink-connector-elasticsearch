@@ -36,14 +36,18 @@ import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
 import co.elastic.clients.elasticsearch.core.BulkRequest;
 import co.elastic.clients.elasticsearch.core.BulkResponse;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
+import co.elastic.clients.elasticsearch.core.bulk.BulkResponseItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.ConnectException;
 import java.net.NoRouteToHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.apache.flink.util.Preconditions.checkNotNull;
 
@@ -79,6 +83,9 @@ public class Elasticsearch8AsyncWriter<InputT> extends AsyncSinkWriter<InputT, O
                                     new FlinkRuntimeException(
                                             "Could not connect to Elasticsearch cluster using the provided hosts",
                                             err)));
+
+    private static final Set<Integer> ELASTICSEARCH_NON_RETRYABLE_STATUS =
+            new HashSet<>(Arrays.asList(400, 404));
 
     public Elasticsearch8AsyncWriter(
             ElementConverter<InputT, Operation> elementConverter,
@@ -160,21 +167,45 @@ public class Elasticsearch8AsyncWriter<InputT> extends AsyncSinkWriter<InputT, O
             ResultHandler<Operation> resultHandler,
             BulkResponse response) {
         LOG.debug("The BulkRequest has failed partially. Response: {}", response);
-        ArrayList<Operation> failedItems = new ArrayList<>();
+
+        ArrayList<Operation> failedItemsToRetry = new ArrayList<>();
+        int totalFailedItems = 0;
+        FlinkRuntimeException nonRetryableException = null;
+
         for (int i = 0; i < response.items().size(); i++) {
-            if (response.items().get(i).error() != null) {
-                failedItems.add(requestEntries.get(i));
+            BulkResponseItem responseItem = response.items().get(i);
+            if (responseItem.error() != null) {
+                totalFailedItems++;
+                if (isOperationRetryable(responseItem.status())) {
+                    failedItemsToRetry.add(requestEntries.get(i));
+                } else {
+                    LOG.error(
+                            "Failed to process non-retryable operation: {}, response: {}",
+                            requestEntries.get(i),
+                            responseItem);
+                    nonRetryableException =
+                            new FlinkRuntimeException(
+                                    "Failed to process non-retryable operation, reason=%s"
+                                            + responseItem.error().reason());
+                    break;
+                }
             }
         }
 
-        numRecordsOutErrorsCounter.inc(failedItems.size());
-        numRecordsSendPartialFailureCounter.inc(failedItems.size());
+        numRecordsOutErrorsCounter.inc(totalFailedItems);
         LOG.info(
-                "The BulkRequest with {} operation(s) has {} failure(s). It took {}ms",
+                "The BulkRequest with {} operation(s) has {} failure(s), {} retryable. It took {}ms",
                 requestEntries.size(),
-                failedItems.size(),
+                totalFailedItems,
+                failedItemsToRetry.size(),
                 response.took());
-        resultHandler.retryForEntries(failedItems);
+
+        if (nonRetryableException != null) {
+            resultHandler.completeExceptionally(nonRetryableException);
+        } else {
+            numRecordsSendPartialFailureCounter.inc(failedItemsToRetry.size());
+            resultHandler.retryForEntries(failedItemsToRetry);
+        }
     }
 
     private void handleSuccessfulRequest(
@@ -188,6 +219,11 @@ public class Elasticsearch8AsyncWriter<InputT> extends AsyncSinkWriter<InputT, O
 
     private boolean isRetryable(Throwable error) {
         return !ELASTICSEARCH_FATAL_EXCEPTION_CLASSIFIER.isFatal(error, getFatalExceptionCons());
+    }
+
+    /** Given the response status, check if an operation is retryable. */
+    private static boolean isOperationRetryable(int status) {
+        return !ELASTICSEARCH_NON_RETRYABLE_STATUS.contains(status);
     }
 
     @Override
