@@ -86,6 +86,56 @@ final class IndexGeneratorFactory {
         return createIndexGenerator(index, fieldNames, dataTypes, ZoneId.systemDefault());
     }
 
+    public static IndexGenerator createIndexGenerator(
+            ElasticsearchConfiguration config,
+            List<String> fieldNames,
+            List<DataType> dataTypes,
+            ZoneId localTimeZoneId) {
+        if (config.getIndexSuffixFieldName() != null) {
+            return createSuffixIndexGenerator(
+                    config.getIndex(),
+                    config.getIndexSuffixFieldName(),
+                    config.getIndexSuffixFieldLength(),
+                    fieldNames,
+                    dataTypes);
+        } else {
+            return createIndexGenerator(config.getIndex(), fieldNames, dataTypes, localTimeZoneId);
+        }
+    }
+
+    private static IndexGenerator createSuffixIndexGenerator(
+            String indexPrefix,
+            String indexSuffixFieldName,
+            int indexSuffixFieldLength,
+            List<String> fieldNames,
+            List<DataType> fieldTypes) {
+        int indexFieldPos = fieldNames.indexOf(indexSuffixFieldName);
+        if (indexFieldPos < 0) {
+            throw new TableException(
+                    String.format(
+                            "Unknown index field '%s' of '%s', please check the field name.",
+                            indexSuffixFieldName, String.join(",", fieldNames)));
+        }
+        final LogicalType indexFieldType = fieldTypes.get(indexFieldPos).getLogicalType();
+        final RowData.FieldGetter fieldGetter =
+                RowData.createFieldGetter(indexFieldType, indexFieldPos);
+        return row -> {
+            Object fieldOrNull = fieldGetter.getFieldOrNull(row);
+            final String indexSuffix;
+            if (fieldOrNull != null) {
+                if (indexSuffixFieldLength > 0) {
+                    indexSuffix = String.valueOf(fieldOrNull).substring(0, indexSuffixFieldLength);
+                } else {
+                    indexSuffix = String.valueOf(fieldOrNull);
+                }
+            } else {
+                throw new RuntimeException(
+                        "Index suffix field " + indexSuffixFieldName + " is null");
+            }
+            return String.format("%s%s", indexPrefix, indexSuffix);
+        };
+    }
+
     interface DynamicFormatter extends Serializable {
         String format(@Nonnull Object fieldValue, DateTimeFormatter formatter);
     }
