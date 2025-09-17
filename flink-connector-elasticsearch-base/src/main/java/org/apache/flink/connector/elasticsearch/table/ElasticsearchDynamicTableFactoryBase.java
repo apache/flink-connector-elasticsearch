@@ -70,6 +70,8 @@ import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnec
 import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions.FORMAT_OPTION;
 import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions.HOSTS_OPTION;
 import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions.INDEX_OPTION;
+import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions.INDEX_SUFFIX_FIELD_LENGTH_OPTION;
+import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions.INDEX_SUFFIX_FIELD_NAME_OPTION;
 import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions.KEY_DELIMITER_OPTION;
 import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions.PASSWORD_OPTION;
 import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions.SOCKET_TIMEOUT;
@@ -287,7 +289,9 @@ abstract class ElasticsearchDynamicTableFactoryBase
                         PARTIAL_CACHE_EXPIRE_AFTER_WRITE,
                         PARTIAL_CACHE_MAX_ROWS,
                         PARTIAL_CACHE_CACHE_MISSING_KEY,
-                        MAX_RETRIES)
+                        MAX_RETRIES,
+                        INDEX_SUFFIX_FIELD_LENGTH_OPTION,
+                        INDEX_SUFFIX_FIELD_NAME_OPTION)
                 .collect(Collectors.toSet());
     }
 
