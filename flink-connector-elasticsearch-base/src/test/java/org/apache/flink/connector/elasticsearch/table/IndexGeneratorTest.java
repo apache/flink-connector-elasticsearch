@@ -18,6 +18,7 @@
 
 package org.apache.flink.connector.elasticsearch.table;
 
+import org.apache.flink.configuration.Configuration;
 import org.apache.flink.table.api.DataTypes;
 import org.apache.flink.table.api.TableException;
 import org.apache.flink.table.data.GenericRowData;
@@ -39,6 +40,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions.INDEX_OPTION;
+import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions.INDEX_SUFFIX_FIELD_LENGTH_OPTION;
+import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions.INDEX_SUFFIX_FIELD_NAME_OPTION;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.junit.jupiter.api.Assumptions.assumingThat;
@@ -81,7 +85,10 @@ public class IndexGeneratorTest {
                     GenericRowData.of(
                             1,
                             StringData.fromString("apple"),
-                            Timestamp.valueOf("2020-03-18 12:12:14").getTime(),
+                            LocalDateTime.of(2020, 3, 18, 12, 12, 14)
+                                    .atZone(ZoneId.of("Asia/Shanghai"))
+                                    .toInstant()
+                                    .toEpochMilli(),
                             (int) Date.valueOf("2020-03-18").toLocalDate().toEpochDay(),
                             TimestampData.fromTimestamp(Timestamp.valueOf("2020-03-18 12:12:14")),
                             (int)
@@ -100,7 +107,10 @@ public class IndexGeneratorTest {
                     GenericRowData.of(
                             2,
                             StringData.fromString("peanut"),
-                            Timestamp.valueOf("2020-03-19 12:22:14").getTime(),
+                            LocalDateTime.of(2020, 3, 19, 12, 22, 14)
+                                    .atZone(ZoneId.of("Asia/Shanghai"))
+                                    .toInstant()
+                                    .toEpochMilli(),
                             (int) Date.valueOf("2020-03-19").toLocalDate().toEpochDay(),
                             TimestampData.fromTimestamp(Timestamp.valueOf("2020-03-19 12:22:21")),
                             (int)
@@ -366,5 +376,70 @@ public class IndexGeneratorTest {
                                         "index_{status}", fieldNames, dataTypes))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage(expectedExceptionMsg);
+    }
+
+    @Test
+    public void testSuffixIndexGenerator() {
+        Configuration config = new Configuration();
+        config.set(INDEX_OPTION, "index_");
+        config.set(INDEX_SUFFIX_FIELD_NAME_OPTION, "log_ts");
+        config.set(INDEX_SUFFIX_FIELD_LENGTH_OPTION, 10);
+        IndexGenerator indexGenerator =
+                IndexGeneratorFactory.createIndexGenerator(
+                        new ElasticsearchConfiguration(config),
+                        fieldNames,
+                        dataTypes,
+                        ZoneId.systemDefault());
+        // 1584504734000
+        assertThat(indexGenerator.generate(rows.get(0))).isEqualTo("index_1584504734");
+        // 1584591734000
+        assertThat(indexGenerator.generate(rows.get(1))).isEqualTo("index_1584591734");
+    }
+
+    @Test
+    public void testSuffixIndexGeneratorWithoutLengthLimitation() {
+        Configuration config = new Configuration();
+        config.set(INDEX_OPTION, "index_");
+        config.set(INDEX_SUFFIX_FIELD_NAME_OPTION, "log_ts");
+        IndexGenerator indexGenerator =
+                IndexGeneratorFactory.createIndexGenerator(
+                        new ElasticsearchConfiguration(config),
+                        fieldNames,
+                        dataTypes,
+                        ZoneId.systemDefault());
+        // 1584504734000
+        assertThat(indexGenerator.generate(rows.get(0))).isEqualTo("index_1584504734000");
+        // 1584591734000
+        assertThat(indexGenerator.generate(rows.get(1))).isEqualTo("index_1584591734000");
+    }
+
+    @Test
+    public void testStaticIndexCompatibility() {
+        Configuration config = new Configuration();
+        config.set(INDEX_OPTION, "my-index");
+        IndexGenerator indexGenerator =
+                IndexGeneratorFactory.createIndexGenerator(
+                        new ElasticsearchConfiguration(config),
+                        fieldNames,
+                        dataTypes,
+                        ZoneId.systemDefault());
+        indexGenerator.open();
+        assertThat(indexGenerator.generate(rows.get(0))).isEqualTo("my-index");
+        assertThat(indexGenerator.generate(rows.get(1))).isEqualTo("my-index");
+    }
+
+    @Test
+    public void testDynamicIndexFromDateCompatibility() {
+        Configuration config = new Configuration();
+        config.set(INDEX_OPTION, "my-index-{log_date|yyyy/MM/dd}");
+        IndexGenerator indexGenerator =
+                IndexGeneratorFactory.createIndexGenerator(
+                        new ElasticsearchConfiguration(config),
+                        fieldNames,
+                        dataTypes,
+                        ZoneId.systemDefault());
+        indexGenerator.open();
+        assertThat(indexGenerator.generate(rows.get(0))).isEqualTo("my-index-2020/03/18");
+        assertThat(indexGenerator.generate(rows.get(1))).isEqualTo("my-index-2020/03/19");
     }
 }

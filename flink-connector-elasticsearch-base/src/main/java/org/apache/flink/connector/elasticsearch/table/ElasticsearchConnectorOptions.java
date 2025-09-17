@@ -152,4 +152,16 @@ public class ElasticsearchConnectorOptions {
                     .defaultValue(-1)
                     .withDescription(
                             "The number of retry when conflicts with concurrent requests.");
+
+    public static final ConfigOption<String> INDEX_SUFFIX_FIELD_NAME_OPTION =
+            ConfigOptions.key("index.suffix.field.name")
+                    .stringType()
+                    .noDefaultValue()
+                    .withDescription("The index suffix field name");
+
+    public static final ConfigOption<Integer> INDEX_SUFFIX_FIELD_LENGTH_OPTION =
+            ConfigOptions.key("index.suffix.field.length")
+                    .intType()
+                    .defaultValue(-1)
+                    .withDescription("The length(exclusive) of index suffix field value");
 }

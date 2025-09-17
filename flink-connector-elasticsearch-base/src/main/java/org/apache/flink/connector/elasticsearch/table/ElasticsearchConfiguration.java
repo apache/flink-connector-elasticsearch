@@ -135,6 +135,14 @@ public class ElasticsearchConfiguration {
         return config.get(RETRY_ON_CONFLICTS);
     }
 
+    public String getIndexSuffixFieldName() {
+        return config.get(ElasticsearchConnectorOptions.INDEX_SUFFIX_FIELD_NAME_OPTION);
+    }
+
+    public int getIndexSuffixFieldLength() {
+        return config.get(ElasticsearchConnectorOptions.INDEX_SUFFIX_FIELD_LENGTH_OPTION);
+    }
+
     /**
      * Parse Hosts String to list.
      *
