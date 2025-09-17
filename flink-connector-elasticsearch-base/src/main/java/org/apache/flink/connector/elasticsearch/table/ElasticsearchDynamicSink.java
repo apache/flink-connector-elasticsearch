@@ -98,7 +98,7 @@ class ElasticsearchDynamicSink implements DynamicTableSink {
 
     IndexGenerator createIndexGenerator() {
         return IndexGeneratorFactory.createIndexGenerator(
-                config.getIndex(),
+                config,
                 DataType.getFieldNames(physicalRowDataType),
                 DataType.getFieldDataTypes(physicalRowDataType),
                 localTimeZoneId);
