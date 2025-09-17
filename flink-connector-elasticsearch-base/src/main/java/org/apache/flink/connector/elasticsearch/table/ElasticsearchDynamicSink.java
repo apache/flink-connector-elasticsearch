@@ -62,6 +62,7 @@ class ElasticsearchDynamicSink implements DynamicTableSink {
     final ElasticsearchSinkBuilderSupplier<RowData> builderSupplier;
     @Nullable final String documentType;
     final boolean isDynamicIndexWithSystemTime;
+    final int retryOnConflict;
 
     ElasticsearchDynamicSink(
             EncodingFormat<SerializationSchema<RowData>> format,
@@ -71,6 +72,7 @@ class ElasticsearchDynamicSink implements DynamicTableSink {
             String summaryString,
             ElasticsearchSinkBuilderSupplier<RowData> builderSupplier,
             @Nullable String documentType,
+            int retryOnConflict,
             ZoneId localTimeZoneId) {
         this.format = checkNotNull(format);
         this.physicalRowDataType = checkNotNull(physicalRowDataType);
@@ -79,6 +81,7 @@ class ElasticsearchDynamicSink implements DynamicTableSink {
         this.summaryString = checkNotNull(summaryString);
         this.builderSupplier = checkNotNull(builderSupplier);
         this.documentType = documentType;
+        this.retryOnConflict = retryOnConflict;
         this.localTimeZoneId = localTimeZoneId;
         this.isDynamicIndexWithSystemTime = isDynamicIndexWithSystemTime();
     }
@@ -127,6 +130,7 @@ class ElasticsearchDynamicSink implements DynamicTableSink {
                         format,
                         XContentType.JSON,
                         documentType,
+                        retryOnConflict,
                         createKeyExtractor());
 
         ElasticsearchSinkBuilderBase<RowData, ? extends ElasticsearchSinkBuilderBase> builder =
@@ -187,6 +191,7 @@ class ElasticsearchDynamicSink implements DynamicTableSink {
                 summaryString,
                 builderSupplier,
                 documentType,
+                retryOnConflict,
                 localTimeZoneId);
     }
 
