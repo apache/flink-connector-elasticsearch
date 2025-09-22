@@ -50,6 +50,10 @@ of the Elasticsearch installation:
         <td>7.x</td>
         <td>{{< connector_artifact flink-connector-elasticsearch7 elastic >}}</td>
     </tr>
+    <tr>
+        <td>8.x</td>
+        <td>{{< connector_artifact flink-connector-elasticsearch8 elastic >}}</td>
+    </tr>
   </tbody>
 </table>
 
@@ -140,6 +144,36 @@ private static IndexRequest createIndexRequest(String element) {
         .source(json);
 }
 ```
+
+Elasticsearch 8:
+```java
+import co.elastic.clients.elasticsearch.core.bulk.IndexOperation;
+import org.apache.flink.connector.elasticsearch.sink.Elasticsearch8AsyncSinkBuilder;
+import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.http.HttpHost;
+
+import java.util.HashMap;
+import java.util.Map;
+
+DataStream<String> input = ...;
+
+input.sinkTo(Elasticsearch8AsyncSinkBuilder.<String>builder()
+.setHosts(new HttpHost("127.0.0.1", 9200, "http"))
+.setMaxBatchSize(1) // Instructs the sink to emit after every element, otherwise they would be buffered
+.setElementConverter(
+    (element, ctx) -> {
+        Map<String, Object> json = new HashMap<>();
+        json.put("data", element);
+        
+        return new IndexOperation.Builder<>()
+                .id(element)
+                .document(json)
+                .index("my-index")
+                .build();
+    })
+.build());
+```
+
 {{< /tab >}}
 {{< tab "Scala" >}}
 Elasticsearch 6:
@@ -198,6 +232,35 @@ def createIndexRequest(element: (String)): IndexRequest = {
 
   Requests.indexRequest.index("my-index").source(mapAsJavaMap(json))
 }
+```
+
+Elasticsearch 8:
+```scala
+import co.elastic.clients.elasticsearch.core.bulk.IndexOperation
+import org.apache.flink.connector.elasticsearch.sink.Elasticsearch8AsyncSinkBuilder
+import org.apache.flink.streaming.api.datastream.DataStream
+import org.apache.http.HttpHost
+
+import scala.collection.JavaConverters.mapAsJavaMap
+
+val input: DataStream[String] = ...
+
+input.sinkTo(
+  Elasticsearch8AsyncSinkBuilder
+    .builder[String]()
+    .setHosts(new HttpHost("127.0.0.1", 9200, "http"))
+    .setMaxBatchSize(1) // Instructs the sink to emit after every element, otherwise they would be buffered
+    .setElementConverter { (element, ctx) =>
+      val json = Map("data" -> element.asInstanceOf[AnyRef])
+
+      new IndexOperation.Builder[Object]()
+        .id(element)
+        .document(mapAsJavaMap(json))
+        .index("my-index")
+        .build()
+    }
+    .build()
+)
 ```
 
 {{< /tab >}}
@@ -297,6 +360,7 @@ so by waiting for all pending action requests in the `BulkProcessor` at the
 time of checkpoints. This effectively assures that all requests before the
 checkpoint was triggered have been successfully acknowledged by Elasticsearch, before
 proceeding to process more records sent to the sink.
+Note that the Elasticsearch 8 sink provides at-least-once semantics using Async Sink. See [FLIP-171](https://cwiki.apache.org/confluence/display/FLINK/FLIP-171%3A+Async+Sink) for more details.
 
 More details on checkpoints and fault tolerance are in the [fault tolerance docs]({{< ref "docs/learn-flink/fault_tolerance" >}}).
 
@@ -342,7 +406,7 @@ Using UpdateRequests with deterministic ids and the upsert method it is possible
 
 Elasticsearch action requests may fail due to a variety of reasons, including
 temporarily saturated node queue capacity or malformed documents to be indexed.
-The Flink Elasticsearch Sink allows the user to retry requests by specifying a backoff-policy.
+The Flink Elasticsearch Sink allows the user to retry requests by specifying a backoff-policy (currently not supported in the Elasticsearch 8 sink). 
 
 Below is an example:
 
@@ -468,6 +532,15 @@ Configuring how temporary request errors are retried is also supported:
    is simply the delay between each retry. For exponential backoff, this is the initial base delay.
 
 More information about Elasticsearch can be found [here](https://elastic.co).
+
+### Configuring the Internal Writer
+Note that the Elasticsearch 8 sink uses `AsyncSinkWriter` instead of the legacy `BulkProcessor`. It can be configured via the following methods of the `Elasticsearch8AsyncSinkBuilder`:
+* **setMaxBatchSize(int maxBatchSize)**: The maximum number of records in a batch.
+* **setMaxInFlightRequests(int maxInFlightRequests)**: The maximum number of in flight requests allowed.
+* **setMaxBufferedRequests(int maxBufferedRequests)**: The maximum number of records that may be buffered in the sink.
+* **setMaxBatchSizeInBytes(int maxBatchSizeInBytes)**: The maximum size (in bytes) a batch may become.
+* **setMaxTimeInBufferMS(int maxTimeInBufferMS)**: The maximum time (in milliseconds) a record may stay in the sink before being flushed.
+* **setMaxRecordSizeInBytes(int maxRecordSizeInBytes)**: The maximum record size that the sink will accept, records larger than this will be automatically rejected.
 
 ## Packaging the Elasticsearch Connector into an Uber-Jar
 

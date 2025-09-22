@@ -22,6 +22,7 @@
 package org.apache.flink.connector.elasticsearch.sink;
 
 import org.apache.flink.api.connector.sink2.SinkWriter;
+import org.apache.flink.api.connector.sink2.WriterInitContext;
 import org.apache.flink.connector.base.sink.AsyncSinkBaseBuilder;
 import org.apache.flink.connector.base.sink.writer.ElementConverter;
 import org.apache.flink.util.function.SerializableSupplier;
@@ -80,6 +81,15 @@ public class Elasticsearch8AsyncSinkBuilder<InputT>
      */
     private ElementConverter<InputT, BulkOperationVariant> elementConverter;
 
+    /** the path's prefix for every request. */
+    private String connectionPathPrefix;
+
+    private Integer connectionTimeout;
+
+    private Integer connectionRequestTimeout;
+
+    private Integer socketTimeout;
+
     private SerializableSupplier<SSLContext> sslContextSupplier;
 
     private SerializableSupplier<HostnameVerifier> sslHostnameVerifier;
@@ -94,6 +104,28 @@ public class Elasticsearch8AsyncSinkBuilder<InputT>
         checkNotNull(hosts);
         checkArgument(hosts.length > 0, "Hosts cannot be empty");
         this.hosts = Arrays.asList(hosts);
+        return this;
+    }
+
+    public Elasticsearch8AsyncSinkBuilder<InputT> setConnectionPathPrefix(
+            String connectionPathPrefix) {
+        this.connectionPathPrefix = connectionPathPrefix;
+        return this;
+    }
+
+    public Elasticsearch8AsyncSinkBuilder<InputT> setConnectionTimeout(Integer connectionTimeout) {
+        this.connectionTimeout = connectionTimeout;
+        return this;
+    }
+
+    public Elasticsearch8AsyncSinkBuilder<InputT> setConnectionRequestTimeout(
+            Integer connectionRequestTimeout) {
+        this.connectionRequestTimeout = connectionRequestTimeout;
+        return this;
+    }
+
+    public Elasticsearch8AsyncSinkBuilder<InputT> setSocketTimeout(Integer socketTimeout) {
+        this.socketTimeout = socketTimeout;
         return this;
     }
 
@@ -239,7 +271,16 @@ public class Elasticsearch8AsyncSinkBuilder<InputT>
     private NetworkConfig buildNetworkConfig() {
         checkArgument(!hosts.isEmpty(), "Hosts cannot be empty.");
         return new NetworkConfig(
-                hosts, username, password, headers, sslContextSupplier, sslHostnameVerifier);
+                hosts,
+                username,
+                password,
+                headers,
+                connectionPathPrefix,
+                connectionRequestTimeout,
+                connectionTimeout,
+                socketTimeout,
+                sslContextSupplier,
+                sslHostnameVerifier);
     }
 
     /** A wrapper that evolves the Operation, since a BulkOperationVariant is not Serializable. */
@@ -248,6 +289,12 @@ public class Elasticsearch8AsyncSinkBuilder<InputT>
 
         public OperationConverter(ElementConverter<T, BulkOperationVariant> converter) {
             this.converter = converter;
+        }
+
+        @Override
+        public void open(WriterInitContext context) {
+            // call converter.open() before calling converter.apply()
+            converter.open(context);
         }
 
         @Override
