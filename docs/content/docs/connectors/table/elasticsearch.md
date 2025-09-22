@@ -87,6 +87,7 @@ Connector Options
       <ul>
       <li><code>elasticsearch-6</code>: connect to Elasticsearch 6.x cluster.</li>
       <li><code>elasticsearch-7</code>: connect to Elasticsearch 7.x cluster.</li>
+      <li><code>elasticsearch-8</code>: connect to Elasticsearch 8.x cluster.</li>
       </ul></td>
     </tr>
     <tr>
@@ -113,7 +114,7 @@ Connector Options
       <td>yes in 6.x</td>
       <td style="word-wrap: break-word;">(none)</td>
       <td>String</td>
-      <td>Elasticsearch document type. Not necessary anymore in <code>elasticsearch-7</code>.</td>
+      <td>Elasticsearch document type. Not necessary anymore in <code>elasticsearch-7</code> and <code>elasticsearch-8</code>.</td>
     </tr>
     <tr>
       <td><h5>document-id.key-delimiter</h5></td>
@@ -172,7 +173,7 @@ Connector Options
       <td style="word-wrap: break-word;">1000</td>
       <td>Integer</td>
       <td>Maximum number of buffered actions per bulk request.
-      Can be set to <code>'0'</code> to disable it.
+      Can be set to <code>'0'</code> to disable it (must be greater than 0 in <code>elasticsearch 8</code>).
       </td>
     </tr>
     <tr>
@@ -182,7 +183,7 @@ Connector Options
       <td style="word-wrap: break-word;">2mb</td>
       <td>MemorySize</td>
       <td>Maximum size in memory of buffered actions per bulk request. Must be in MB granularity.
-      Can be set to <code>'0'</code> to disable it.
+      Can be set to <code>'0'</code> to disable it (must be greater than 0 in <code>elasticsearch 8</code>).
       </td>
     </tr>
     <tr>
@@ -192,9 +193,25 @@ Connector Options
       <td style="word-wrap: break-word;">1s</td>
       <td>Duration</td>
       <td>The interval to flush buffered actions.
-        Can be set to <code>'0'</code> to disable it. Note, both <code>'sink.bulk-flush.max-size'</code> and <code>'sink.bulk-flush.max-actions'</code>
-        can be set to <code>'0'</code> with the flush interval set allowing for complete async processing of buffered actions.
+        Can be set to <code>'0'</code> to disable it (must be greater than 0 in <code>elasticsearch 8</code>). Note, both <code>'sink.bulk-flush.max-size'</code> and <code>'sink.bulk-flush.max-actions'</code>
+        can be set to <code>'0'</code> with the flush interval set allowing for complete async processing of buffered actions (not supported in <code>elasticsearch 8</code>, as its underlying async sink requires all flush parameters to be positive).
       </td>
+    </tr>
+    <tr>
+      <td><h5>sink.bulk-flush.max-buffered-actions</h5></td>
+      <td>optional</td>
+      <td>yes</td>
+      <td style="word-wrap: break-word;">10000</td>
+      <td>Integer</td>
+      <td>The maximum number of records that may be buffered in the sink and must be greater than <code>sink.bulk-flush.max-actions</code>. Note that this option is ONLY supported in <code>elasticsearch-8</code>.</td>
+    </tr>
+    <tr>
+      <td><h5>sink.bulk-flush.max-in-flight-actions</h5></td>
+      <td>optional</td>
+      <td>yes</td>
+      <td style="word-wrap: break-word;">50</td>
+      <td>Integer</td>
+      <td>The maximum number of in flight requests allowed. Note that this option is ONLY supported in <code>elasticsearch-8</code>.</td>
     </tr>
     <tr>
       <td><h5>sink.bulk-flush.backoff.strategy</h5></td>
@@ -208,6 +225,7 @@ Connector Options
         <li><code>CONSTANT</code>: wait for backoff delay between retries.</li>
         <li><code>EXPONENTIAL</code>: initially wait for backoff delay and increase exponentially between retries.</li>
       </ul>
+        Note that this option is NOT supported in <code>elasticsearch-8</code>.
       </td>
     </tr>
     <tr>
@@ -216,7 +234,7 @@ Connector Options
       <td>yes</td>
       <td style="word-wrap: break-word;">(none)</td>
       <td>Integer</td>
-      <td>Maximum number of backoff retries.</td>
+      <td>Maximum number of backoff retries. Note that this option is NOT supported in <code>elasticsearch-8</code>.</td>
     </tr>
     <tr>
       <td><h5>sink.bulk-flush.backoff.delay</h5></td>
@@ -224,7 +242,15 @@ Connector Options
       <td>yes</td>
       <td style="word-wrap: break-word;">(none)</td>
       <td>Duration</td>
-      <td>Delay between each backoff attempt. For <code>CONSTANT</code> backoff, this is simply the delay between each retry. For <code>EXPONENTIAL</code> backoff, this is the initial base delay.</td>
+      <td>Delay between each backoff attempt. For <code>CONSTANT</code> backoff, this is simply the delay between each retry. For <code>EXPONENTIAL</code> backoff, this is the initial base delay. Note that this option is NOT supported in <code>elasticsearch-8</code>.</td>
+    </tr>
+    <tr>
+      <td><h5>ssl.certificate-fingerprint</h5></td>
+      <td>optional</td>
+      <td>yes</td>
+      <td style="word-wrap: break-word;">(none)</td>
+      <td>String</td>
+      <td>The HTTP CA certificate SHA-256 fingerprint used to verify the HTTPS connection. Note that this option is ONLY supported in <code>elasticsearch-8</code>.</td>
     </tr>
     <tr>
       <td><h5>connection.path-prefix</h5></td>

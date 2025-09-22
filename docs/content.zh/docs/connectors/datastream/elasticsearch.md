@@ -48,6 +48,10 @@ under the License.
         <td>7.x</td>
         <td>{{< connector_artifact flink-connector-elasticsearch7 elastic >}}</td>
     </tr>
+    <tr>
+        <td>8.x</td>
+        <td>{{< connector_artifact flink-connector-elasticsearch8 elastic >}}</td>
+    </tr>
   </tbody>
 </table>
 
@@ -138,6 +142,37 @@ private static IndexRequest createIndexRequest(String element) {
         .source(json);
 }
 ```
+
+Elasticsearch 8:
+```java
+import co.elastic.clients.elasticsearch.core.bulk.IndexOperation;
+import org.apache.flink.connector.elasticsearch.sink.Elasticsearch8AsyncSinkBuilder;
+import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.http.HttpHost;
+
+import java.util.HashMap;
+import java.util.Map;
+
+DataStream<String> input = ...;
+
+input.sinkTo(Elasticsearch8AsyncSinkBuilder.<String>builder()
+    .setHosts(new HttpHost("127.0.0.1", 9200, "http"))
+    // 下面的设置使 sink 在接收每个元素之后立即提交，否则这些元素将被缓存起来
+    .setMaxBatchSize(1)
+    .setElementConverter(
+        (element, ctx) -> {
+            Map<String, Object> json = new HashMap<>();
+            json.put("data", element);
+            
+            return new IndexOperation.Builder<>()
+                    .id(element)
+                    .document(json)
+                    .index("my-index")
+                    .build();
+        })
+    .build());
+```
+
 {{< /tab >}}
 {{< tab "Scala" >}}
 Elasticsearch 6:
@@ -198,6 +233,36 @@ def createIndexRequest(element: (String)): IndexRequest = {
 
   Requests.indexRequest.index("my-index").`type`("my-type").source(mapAsJavaMap(json))
 }
+```
+
+Elasticsearch 8:
+```scala
+import co.elastic.clients.elasticsearch.core.bulk.IndexOperation
+import org.apache.flink.connector.elasticsearch.sink.Elasticsearch8AsyncSinkBuilder
+import org.apache.flink.streaming.api.datastream.DataStream
+import org.apache.http.HttpHost
+
+import scala.collection.JavaConverters.mapAsJavaMap
+
+val input: DataStream[String] = ...
+
+input.sinkTo(
+  Elasticsearch8AsyncSinkBuilder
+    .builder[String]()
+    .setHosts(new HttpHost("127.0.0.1", 9200, "http"))
+    // 下面的设置使 sink 在接收每个元素之后立即提交，否则这些元素将被缓存起来
+    .setMaxBatchSize(1)
+    .setElementConverter { (element, ctx) =>
+      val json = Map("data" -> element.asInstanceOf[AnyRef])
+
+      new IndexOperation.Builder[Object]()
+        .id(element)
+        .document(mapAsJavaMap(json))
+        .index("my-index")
+        .build()
+    }
+    .build()
+)
 ```
 
 {{< /tab >}}
@@ -290,6 +355,7 @@ input.sink_to(es7_sink).name('es7 dynamic index sink')
 通过启用 Flink checkpoint，Flink Elasticsearch Sink 保证至少一次将操作请求发送到 Elasticsearch 集群。
 这是通过在进行 checkpoint 时等待 `BulkProcessor` 中所有挂起的操作请求来实现。
 这有效地保证了在触发 checkpoint 之前所有的请求被 Elasticsearch 成功确认，然后继续处理发送到 sink 的记录。
+注意，Elasticsearch 8 sink 是基于 Async Sink 实现至少一次语义的，更多详情请参见[FLIP-171](https://cwiki.apache.org/confluence/display/FLINK/FLIP-171%3A+Async+Sink) 。
 
 关于 checkpoint 和容错的更多详细信息，请参见[容错文档]({{< ref "docs/learn-flink/fault_tolerance" >}})。
 
@@ -385,7 +451,7 @@ Using UpdateRequests with deterministic ids and the upsert method it is possible
 ### 处理失败的 Elasticsearch 请求
 
 Elasticsearch 操作请求可能由于多种原因而失败，包括节点队列容量暂时已满或者要被索引的文档格式错误。
-Flink Elasticsearch Sink 允许用户通过通过指定一个退避策略来重试请求。
+Flink Elasticsearch Sink 允许用户通过通过指定一个退避策略来重试请求（Elasticsearch 8 sink 暂不支持）。
 
 下面是一个例子：
 
@@ -507,6 +573,15 @@ checkpoint 会进行等待，直到 Elasticsearch 节点队列有足够的容量
    对于常量延迟来说，此值是每次重试间的间隔。对于指数延迟来说，此值是延迟的初始值。
 
 可以在[此文档](https://elastic.co)找到 Elasticsearch 的更多信息。
+
+### 配置内部Writer
+注意 Elasticsearch 8 sink 不再使用`BulkProcessor`，而是使用了`AsyncSinkWriter`，可通过`Elasticsearch8AsyncSinkBuilder`的下列方法进行配置:
+* **setMaxBatchSize(int maxBatchSize)**：一个批次的最大记录数。
+* **setMaxInFlightRequests(int maxInFlightRequests)**：允许的最大 in flight 请求数。
+* **setMaxBufferedRequests(int maxBufferedRequests)**：sink 可缓存的最大记录数。
+* **setMaxBatchSizeInBytes(int maxBatchSizeInBytes)**：一个批次的最大数据量（以字节为单位）。
+* **setMaxTimeInBufferMS(int maxTimeInBufferMS)**：记录在被刷新前可在 sink 中停留的最长时间（以毫秒为单位）。
+* **setMaxRecordSizeInBytes(int maxRecordSizeInBytes)**：sink 接受的最大记录大小，超过此大小的记录将被自动拒绝。
 
 ## 将 Elasticsearch 连接器打包到 Uber-Jar 中
 

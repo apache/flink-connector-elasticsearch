@@ -83,7 +83,8 @@ CREATE TABLE myUserTable (
       <td>指定要使用的连接器，有效值为：
       <ul>
       <li><code>elasticsearch-6</code>：连接到 Elasticsearch 6.x 的集群。</li>
-      <li><code>elasticsearch-7</code>：连接到 Elasticsearch 7.x 及更高版本的集群。</li>
+      <li><code>elasticsearch-7</code>：连接到 Elasticsearch 7.x 的集群。</li>
+      <li><code>elasticsearch-8</code>：连接到 Elasticsearch 8.x 的集群。</li>
       </ul></td>
     </tr>
     <tr>
@@ -106,7 +107,7 @@ CREATE TABLE myUserTable (
       <td>6.x 版本中必选</td>
       <td style="word-wrap: break-word;">(none)</td>
       <td>String</td>
-      <td>Elasticsearch 文档类型。在 <code>elasticsearch-7</code> 中不再需要。</td>
+      <td>Elasticsearch 文档类型。在 <code>elasticsearch-7</code> 和 <code>elasticsearch-8</code> 中不再需要。</td>
     </tr>
     <tr>
       <td><h5>document-id.key-delimiter</h5></td>
@@ -158,7 +159,7 @@ CREATE TABLE myUserTable (
       <td style="word-wrap: break-word;">1000</td>
       <td>Integer</td>
       <td>每个批量请求的最大缓冲操作数。
-      可以设置为<code>'0'</code>来禁用它。
+      可以设置为<code>'0'</code>来禁用它（<code>elasticsearch-8</code>中必须大于0）。
       </td>
     </tr>
     <tr>
@@ -167,7 +168,7 @@ CREATE TABLE myUserTable (
       <td style="word-wrap: break-word;">2mb</td>
       <td>MemorySize</td>
       <td>每个批量请求的缓冲操作在内存中的最大值。单位必须为 MB。
-      可以设置为<code>'0'</code>来禁用它。
+      可以设置为<code>'0'</code>来禁用它（<code>elasticsearch-8</code>中必须大于0）。
       </td>
     </tr>
     <tr>
@@ -176,8 +177,22 @@ CREATE TABLE myUserTable (
       <td style="word-wrap: break-word;">1s</td>
       <td>Duration</td>
       <td>flush 缓冲操作的间隔。
-        可以设置为<code>'0'</code>来禁用它。注意，<code>'sink.bulk-flush.max-size'</code>和<code>'sink.bulk-flush.max-actions'</code>都设置为<code>'0'</code>的这种 flush 间隔设置允许对缓冲操作进行完全异步处理。
+        可以设置为<code>'0'</code>来禁用它（<code>elasticsearch-8</code>中必须大于0）。注意，<code>'sink.bulk-flush.max-size'</code>和<code>'sink.bulk-flush.max-actions'</code>都设置为<code>'0'</code>的这种 flush 间隔设置允许对缓冲操作进行完全异步处理（<code>elasticsearch-8</code>不支持如此配置，因其底层的异步 sink 要求所有 flush 参数必须为正数）。
       </td>
+    </tr>
+    <tr>
+      <td><h5>sink.bulk-flush.max-buffered-actions</h5></td>
+      <td>可选</td>
+      <td style="word-wrap: break-word;">10000</td>
+      <td>Integer</td>
+      <td> sink 可缓存的最大记录数，这个数必须大于 <code>sink.bulk-flush.max-actions</code>。注意此配置项仅<code>elasticsearch-8</code>支持。</td>
+    </tr>
+    <tr>
+      <td><h5>sink.bulk-flush.max-in-flight-actions</h5></td>
+      <td>可选</td>
+      <td style="word-wrap: break-word;">50</td>
+      <td>Integer</td>
+      <td>允许的最大 in flight 请求数。注意此配置项仅<code>elasticsearch-8</code>支持。</td>
     </tr>
     <tr>
       <td><h5>sink.bulk-flush.backoff.strategy</h5></td>
@@ -190,6 +205,7 @@ CREATE TABLE myUserTable (
         <li><code>CONSTANT</code>：等待重试之间的回退延迟。</li>
         <li><code>EXPONENTIAL</code>：先等待回退延迟，然后在重试之间指数递增。</li>
       </ul>
+        注意<code>elasticsearch-8</code>不支持此配置项。
       </td>
     </tr>
     <tr>
@@ -197,14 +213,21 @@ CREATE TABLE myUserTable (
       <td>可选</td>
       <td style="word-wrap: break-word;">(none)</td>
       <td>Integer</td>
-      <td>最大回退重试次数。</td>
+      <td>最大回退重试次数。注意<code>elasticsearch-8</code>不支持此配置项。</td>
     </tr>
     <tr>
       <td><h5>sink.bulk-flush.backoff.delay</h5></td>
       <td>可选</td>
       <td style="word-wrap: break-word;">(none)</td>
       <td>Duration</td>
-      <td>每次退避尝试之间的延迟。对于 <code>CONSTANT</code> 退避策略，该值是每次重试之间的延迟。对于 <code>EXPONENTIAL</code> 退避策略，该值是初始的延迟。</td>
+      <td>每次退避尝试之间的延迟。对于 <code>CONSTANT</code> 退避策略，该值是每次重试之间的延迟。对于 <code>EXPONENTIAL</code> 退避策略，该值是初始的延迟。注意<code>elasticsearch-8</code>不支持此配置项。</td>
+    </tr>
+    <tr>
+      <td><h5>ssl.certificate-fingerprint</h5></td>
+      <td>可选</td>
+      <td style="word-wrap: break-word;">(none)</td>
+      <td>String</td>
+      <td>用于验证 HTTPS 连接的 HTTP CA 证书 SHA-256 指纹。注意此配置项仅<code>elasticsearch-8</code>支持。</td>
     </tr>
     <tr>
       <td><h5>connection.path-prefix</h5></td>
