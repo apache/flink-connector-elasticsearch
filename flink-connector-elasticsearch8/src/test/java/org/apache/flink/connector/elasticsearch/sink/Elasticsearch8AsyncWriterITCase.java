@@ -216,9 +216,13 @@ public class Elasticsearch8AsyncWriterITCase extends ElasticsearchSinkBaseITCase
                         ES_CLUSTER_USERNAME,
                         ES_CLUSTER_PASSWORD,
                         null,
+                        null,
+                        null,
+                        null,
+                        null,
                         () -> ES_CONTAINER_SECURE.createSslContextFromCa(),
                         null)
-                : new NetworkConfig(esHost, null, null, null, null, null);
+                : new NetworkConfig(esHost, null, null, null, null, null, null, null, null, null);
     }
 
     private Elasticsearch8AsyncWriter<DummyData> createWriter(
