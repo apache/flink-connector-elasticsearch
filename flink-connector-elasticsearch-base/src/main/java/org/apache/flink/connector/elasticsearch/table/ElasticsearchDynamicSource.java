@@ -24,14 +24,14 @@ import javax.annotation.Nullable;
  * from a logical description.
  */
 public class ElasticsearchDynamicSource implements LookupTableSource, SupportsProjectionPushDown {
-    private final DecodingFormat<DeserializationSchema<RowData>> format;
-    private final ElasticsearchConfiguration config;
+    protected final DecodingFormat<DeserializationSchema<RowData>> format;
+    protected final ElasticsearchConfiguration config;
     private final int lookupMaxRetryTimes;
     private final LookupCache lookupCache;
     private final String docType;
     private final String summaryString;
-    private final ElasticsearchApiCallBridge<?> apiCallBridge;
-    private DataType physicalRowDataType;
+    protected final ElasticsearchApiCallBridge<?> apiCallBridge;
+    protected DataType physicalRowDataType;
 
     public ElasticsearchDynamicSource(
             DecodingFormat<DeserializationSchema<RowData>> format,
@@ -84,7 +84,7 @@ public class ElasticsearchDynamicSource implements LookupTableSource, SupportsPr
         }
     }
 
-    private NetworkClientConfig buildNetworkClientConfig() {
+    protected NetworkClientConfig buildNetworkClientConfig() {
         NetworkClientConfig.Builder builder = new NetworkClientConfig.Builder();
         if (config.getUsername().isPresent()
                 && !StringUtils.isNullOrWhitespaceOnly(config.getUsername().get())) {
