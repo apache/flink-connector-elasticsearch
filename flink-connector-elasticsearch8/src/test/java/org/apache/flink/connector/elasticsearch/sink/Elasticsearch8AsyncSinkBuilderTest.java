@@ -25,6 +25,7 @@ import co.elastic.clients.elasticsearch.core.bulk.DeleteOperation;
 import org.apache.http.HttpHost;
 import org.junit.jupiter.api.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 /** Tests for {@link Elasticsearch8AsyncSinkBuilder}. */
@@ -108,5 +109,25 @@ public class Elasticsearch8AsyncSinkBuilderTest {
                                         .setCertificateFingerprint(null)
                                         .build())
                 .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void testSetAndGetEmergencyMode() {
+        Elasticsearch8AsyncSinkBuilder<String> builder = Elasticsearch8AsyncSinkBuilder.builder();
+        assertThat(builder.getEmergencyMode()).isFalse();
+        builder.setEmergencyMode(true);
+        assertThat(builder.getEmergencyMode()).isTrue();
+        builder.setEmergencyMode(false);
+        assertThat(builder.getEmergencyMode()).isFalse();
+    }
+
+    @Test
+    void testSetAndGetMaxRetries() {
+        Elasticsearch8AsyncSinkBuilder<String> builder = Elasticsearch8AsyncSinkBuilder.builder();
+        assertThat(builder.getMaxRetries()).isEqualTo(3);
+        builder.setMaxRetries(5);
+        assertThat(builder.getMaxRetries()).isEqualTo(5);
+        builder.setMaxRetries(0);
+        assertThat(builder.getMaxRetries()).isEqualTo(0);
     }
 }

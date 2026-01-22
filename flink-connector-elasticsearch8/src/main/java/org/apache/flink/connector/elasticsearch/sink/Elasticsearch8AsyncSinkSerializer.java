@@ -25,18 +25,28 @@ import org.apache.flink.connector.base.sink.writer.AsyncSinkWriterStateSerialize
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.IOException;
 
-/** Elasticsearch8AsyncSinkSerializer is used to serialize and deserialize an Operation. */
-public class Elasticsearch8AsyncSinkSerializer extends AsyncSinkWriterStateSerializer<Operation> {
+/** * Serializer for RetryableOperation.
+ * Persists both the Operation data AND the retry counter.
+ */
+public class Elasticsearch8AsyncSinkSerializer extends AsyncSinkWriterStateSerializer<RetryableOperation> {
 
     @Override
-    protected void serializeRequestToStream(Operation request, DataOutputStream out) {
-        new OperationSerializer().serialize(request, out);
+    protected void serializeRequestToStream(RetryableOperation request, DataOutputStream out) throws IOException {
+        out.writeInt(request.getAttemptCount());
+        new OperationSerializer().serialize(request.getOperation(), out);
     }
 
     @Override
-    protected Operation deserializeRequestFromStream(long requestSize, DataInputStream in) {
-        return new OperationSerializer().deserialize(requestSize, in);
+    protected RetryableOperation deserializeRequestFromStream(long requestSize, DataInputStream in) throws IOException {
+        int attempts = in.readInt();
+        Operation op = new OperationSerializer().deserialize(requestSize - 4, in);  // Read the Operation (Size is roughly requestSize - 4 bytes for the int)
+        RetryableOperation retryableOp = new RetryableOperation(op);
+        for (int i = 0; i < attempts; i++) {
+            retryableOp.incrementAttempt();  // Fast-forward the counter to restored state
+        }
+        return retryableOp;
     }
 
     @Override

@@ -53,7 +53,7 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  * @param <InputT> the type of records to be sunk into an Elasticsearch cluster
  */
 public class Elasticsearch8AsyncSinkBuilder<InputT>
-        extends AsyncSinkBaseBuilder<InputT, Operation, Elasticsearch8AsyncSinkBuilder<InputT>> {
+        extends AsyncSinkBaseBuilder<InputT, RetryableOperation, Elasticsearch8AsyncSinkBuilder<InputT>> {
 
     private static final int DEFAULT_MAX_BATCH_SIZE = 500;
     private static final int DEFAULT_MAX_IN_FLIGHT_REQUESTS = 50;
@@ -61,7 +61,8 @@ public class Elasticsearch8AsyncSinkBuilder<InputT>
     private static final long DEFAULT_MAX_BATCH_SIZE_IN_B = 5 * 1024 * 1024;
     private static final long DEFAULT_MAX_TIME_IN_BUFFER_MS = 5000;
     private static final long DEFAULT_MAX_RECORD_SIZE_IN_B = 1024 * 1024;
-
+    private boolean emergencyMode = false;
+    private int maxRetries = 3;
     /** The hosts where the Elasticsearch cluster is reachable. */
     private List<HttpHost> hosts;
 
@@ -83,6 +84,30 @@ public class Elasticsearch8AsyncSinkBuilder<InputT>
     private SerializableSupplier<SSLContext> sslContextSupplier;
 
     private SerializableSupplier<HostnameVerifier> sslHostnameVerifier;
+
+    /**
+     * Enable Emergency Mode. When enabled, records are dropped after maxRetries.
+     */
+    public Elasticsearch8AsyncSinkBuilder<InputT> setEmergencyMode(boolean emergencyMode) {
+        this.emergencyMode = emergencyMode;
+        return this;
+    }
+
+    /**
+     * Set max retries before dropping a record (if Emergency Mode is on) or failing the application .
+     */
+    public Elasticsearch8AsyncSinkBuilder<InputT> setMaxRetries(int maxRetries) {
+        this.maxRetries = maxRetries;
+        return this;
+    }
+
+    public boolean getEmergencyMode() {
+        return this.emergencyMode;
+    }
+
+    public int getMaxRetries() {
+        return this.maxRetries;
+    }
 
     /**
      * setHosts set the hosts where the Elasticsearch cluster is reachable.
@@ -222,13 +247,14 @@ public class Elasticsearch8AsyncSinkBuilder<InputT>
         return new Elasticsearch8AsyncSink<>(
                 buildOperationConverter(elementConverter),
                 Optional.ofNullable(getMaxBatchSize()).orElse(DEFAULT_MAX_BATCH_SIZE),
-                Optional.ofNullable(getMaxInFlightRequests())
-                        .orElse(DEFAULT_MAX_IN_FLIGHT_REQUESTS),
+                Optional.ofNullable(getMaxInFlightRequests()).orElse(DEFAULT_MAX_IN_FLIGHT_REQUESTS),
                 Optional.ofNullable(getMaxBufferedRequests()).orElse(DEFAULT_MAX_BUFFERED_REQUESTS),
                 Optional.ofNullable(getMaxBatchSizeInBytes()).orElse(DEFAULT_MAX_BATCH_SIZE_IN_B),
                 Optional.ofNullable(getMaxTimeInBufferMS()).orElse(DEFAULT_MAX_TIME_IN_BUFFER_MS),
                 Optional.ofNullable(getMaxRecordSizeInBytes()).orElse(DEFAULT_MAX_RECORD_SIZE_IN_B),
-                buildNetworkConfig());
+                buildNetworkConfig(),
+                emergencyMode,
+                maxRetries);
     }
 
     private OperationConverter<InputT> buildOperationConverter(
@@ -243,7 +269,7 @@ public class Elasticsearch8AsyncSinkBuilder<InputT>
     }
 
     /** A wrapper that evolves the Operation, since a BulkOperationVariant is not Serializable. */
-    public static class OperationConverter<T> implements ElementConverter<T, Operation> {
+    public static class OperationConverter<T> implements ElementConverter<T, RetryableOperation> {
         private final ElementConverter<T, BulkOperationVariant> converter;
 
         public OperationConverter(ElementConverter<T, BulkOperationVariant> converter) {
@@ -251,8 +277,8 @@ public class Elasticsearch8AsyncSinkBuilder<InputT>
         }
 
         @Override
-        public Operation apply(T element, SinkWriter.Context context) {
-            return new Operation(converter.apply(element, context));
+        public RetryableOperation apply(T element, SinkWriter.Context context) {
+            return new RetryableOperation(new Operation(converter.apply(element, context)));
         }
     }
 }

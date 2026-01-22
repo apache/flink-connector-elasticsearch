@@ -25,7 +25,7 @@ under the License.
 	<parent>
 		<groupId>com.drobisch</groupId>
 		<artifactId>flink-connector-elasticsearch-parent</artifactId>
-		<version>4.0.3-serde-fixes</version>
+		<version>4.0.0-errhandling</version>
 	</parent>
 
 	<packaging>pom</packaging>

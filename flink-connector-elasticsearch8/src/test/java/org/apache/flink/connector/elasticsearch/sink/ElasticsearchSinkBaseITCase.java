@@ -45,7 +45,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.LogMessageWaitStrategy;
-import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 import org.testcontainers.utility.DockerImageName;
 
@@ -101,14 +100,17 @@ public abstract class ElasticsearchSinkBaseITCase {
     }
 
     @BeforeEach
-    public void setUpBase() {
+    public void setUpBase() throws InterruptedException{
         LOG.info("Setting up elasticsearch client, host: {}, secure: {}", getHost(), secure);
         client = secure ? createSecureElasticsearchClient() : createElasticsearchClient();
+        waitForElasticsearch();
     }
 
     @AfterEach
     public void shutdownBase() throws IOException {
-        client.close();
+        if (client != null) {
+            client.close();
+        }
     }
 
     /** Get the element converter for testing data type {@link DummyData}. */
@@ -188,24 +190,48 @@ public abstract class ElasticsearchSinkBaseITCase {
         final ElasticsearchContainer container =
                 new ElasticsearchContainer(ELASTICSEARCH_IMAGE)
                         .withEnv("xpack.security.enabled", "false")
-                        .withEnv("ES_JAVA_OPTS", "-Xms2g -Xmx2g")
+                        .withEnv("ES_JAVA_OPTS", "-Xms1g -Xmx1g")
                         .withEnv("logger.org.elasticsearch", "ERROR")
                         .withLogConsumer(new Slf4jLogConsumer(LOG));
-
         container.setWaitStrategy(
-                Wait.defaultWaitStrategy().withStartupTimeout(Duration.ofMinutes(5)));
+                new org.testcontainers.containers.wait.strategy.HttpWaitStrategy()
+                        .forPort(9200)
+                        .forStatusCode(200)
+                        .withStartupTimeout(Duration.ofMinutes(2)));
 
         return container;
+    }
+
+    /**
+     * Blocks until Elasticsearch is reachable and healthy.
+     * This prevents tests from failing due to startup race conditions.
+     */
+    protected void waitForElasticsearch() throws InterruptedException {
+        LOG.info("Waiting for Elasticsearch to become ready...");
+        int maxAttempts = 60;
+        for (int i = 0; i < maxAttempts; i++) {
+            try {
+                Response response = client.performRequest(new Request("GET", "/"));
+                if (response.getStatusLine().getStatusCode() == 200) {
+                    LOG.info("Elasticsearch is ready!");
+                    return;
+                }
+            } catch (IOException e) {
+                if (i > 55) {
+                    LOG.info("Still waiting for Elasticsearch (Attempt {}/{}): {}", i + 1, maxAttempts, e.getMessage());
+                }
+            }
+            Thread.sleep(1000);
+        }
+        throw new RuntimeException("Elasticsearch did not become ready in time.");
     }
 
     private static ElasticsearchContainer createSecureElasticsearchContainer() {
         ElasticsearchContainer container =
                 new ElasticsearchContainer(ELASTICSEARCH_IMAGE)
                         .withPassword(ES_CLUSTER_PASSWORD) /* set password */
-                        .withEnv("ES_JAVA_OPTS", "-Xms2g -Xmx2g")
+                        .withEnv("ES_JAVA_OPTS", "-Xms1g -Xmx1g")
                         .withLogConsumer(new Slf4jLogConsumer(LOG));
-
-        // Set log message based wait strategy as the default wait strategy is not aware of TLS
         container
                 .withEnv("logger.org.elasticsearch", "INFO")
                 .setWaitStrategy(

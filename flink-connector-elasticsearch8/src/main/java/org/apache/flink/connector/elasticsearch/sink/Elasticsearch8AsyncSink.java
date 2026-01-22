@@ -36,26 +36,31 @@ import java.util.Collection;
 import java.util.Collections;
 
 /**
- * Elasticsearch8AsyncSink Apache Flink's Async Sink that submits Operations into an Elasticsearch
+ * Elasticsearch8AsyncSink Apache Flink's Async Sink that submits Retryable operations into an Elasticsearch
  * cluster.
  *
- * @param <InputT> type of records that will be converted into {@link Operation} see {@link
- *     Elasticsearch8AsyncSinkBuilder} on how to construct valid instances
+ * @param <InputT> type of records that will be converted into {@link RetryableOperation} see {@link
+ *         Elasticsearch8AsyncSinkBuilder} on how to construct valid instances
  */
-public class Elasticsearch8AsyncSink<InputT> extends AsyncSinkBase<InputT, Operation> {
+public class Elasticsearch8AsyncSink<InputT> extends AsyncSinkBase<InputT, RetryableOperation> {
     private static final Logger LOG = LoggerFactory.getLogger(Elasticsearch8AsyncSink.class);
 
-    @VisibleForTesting protected final NetworkConfig networkConfig;
+    @VisibleForTesting
+    protected final NetworkConfig networkConfig;
+    private final boolean emergencyMode;
+    private final int maxRetries;
 
     protected Elasticsearch8AsyncSink(
-            ElementConverter<InputT, Operation> converter,
+            ElementConverter<InputT, RetryableOperation> converter,
             int maxBatchSize,
             int maxInFlightRequests,
             int maxBufferedRequests,
             long maxBatchSizeInBytes,
             long maxTimeInBufferMS,
             long maxRecordSizeInByte,
-            NetworkConfig networkConfig) {
+            NetworkConfig networkConfig,
+            boolean emergencyMode,
+            int maxRetries) {
         super(
                 converter,
                 maxBatchSize,
@@ -66,10 +71,12 @@ public class Elasticsearch8AsyncSink<InputT> extends AsyncSinkBase<InputT, Opera
                 maxRecordSizeInByte);
 
         this.networkConfig = networkConfig;
+        this.emergencyMode = emergencyMode;
+        this.maxRetries = maxRetries;
     }
 
     @Override
-    public StatefulSinkWriter<InputT, BufferedRequestState<Operation>> createWriter(
+    public StatefulSinkWriter<InputT, BufferedRequestState<RetryableOperation>> createWriter(
             WriterInitContext context) {
         return new Elasticsearch8AsyncWriter<>(
                 getElementConverter(),
@@ -81,12 +88,15 @@ public class Elasticsearch8AsyncSink<InputT> extends AsyncSinkBase<InputT, Opera
                 getMaxTimeInBufferMS(),
                 getMaxRecordSizeInBytes(),
                 networkConfig,
-                Collections.emptyList());
+                Collections.emptyList(),
+                emergencyMode,
+                maxRetries);
     }
 
     @Override
-    public StatefulSinkWriter<InputT, BufferedRequestState<Operation>> restoreWriter(
-            WriterInitContext context, Collection<BufferedRequestState<Operation>> recoveredState) {
+    public StatefulSinkWriter<InputT, BufferedRequestState<RetryableOperation>> restoreWriter(
+            WriterInitContext context,
+            Collection<BufferedRequestState<RetryableOperation>> recoveredState) {
         return new Elasticsearch8AsyncWriter<>(
                 getElementConverter(),
                 context,
@@ -97,11 +107,13 @@ public class Elasticsearch8AsyncSink<InputT> extends AsyncSinkBase<InputT, Opera
                 getMaxTimeInBufferMS(),
                 getMaxRecordSizeInBytes(),
                 networkConfig,
-                recoveredState);
+                recoveredState,
+                emergencyMode,
+                maxRetries);
     }
 
     @Override
-    public SimpleVersionedSerializer<BufferedRequestState<Operation>> getWriterStateSerializer() {
+    public SimpleVersionedSerializer<BufferedRequestState<RetryableOperation>> getWriterStateSerializer() {
         return new Elasticsearch8AsyncSinkSerializer();
     }
 }
