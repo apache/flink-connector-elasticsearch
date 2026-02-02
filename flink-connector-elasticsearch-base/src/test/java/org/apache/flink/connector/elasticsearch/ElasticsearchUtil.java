@@ -26,9 +26,11 @@ import org.apache.flink.table.types.logical.LogicalType;
 
 import org.slf4j.Logger;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
+import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 import org.testcontainers.utility.DockerImageName;
 
+import java.time.Duration;
 import java.util.Optional;
 
 /** Collection of utility methods for Elasticsearch tests. */
@@ -62,10 +64,16 @@ public class ElasticsearchUtil {
             logLevel = "OFF";
         }
 
-        return new ElasticsearchContainer(DockerImageName.parse(dockerImageVersion))
-                .withEnv("ES_JAVA_OPTS", "-Xms2g -Xmx2g")
-                .withEnv("logger.org.elasticsearch", logLevel)
-                .withLogConsumer(new Slf4jLogConsumer(log));
+        ElasticsearchContainer container =
+                new ElasticsearchContainer(DockerImageName.parse(dockerImageVersion))
+                        .withEnv("ES_JAVA_OPTS", "-Xms2g -Xmx2g")
+                        .withEnv("logger.org.elasticsearch", logLevel)
+                        .withLogConsumer(new Slf4jLogConsumer(log));
+
+        container.setWaitStrategy(
+                Wait.defaultWaitStrategy().withStartupTimeout(Duration.ofMinutes(1)));
+
+        return container;
     }
 
     /** A mock {@link DynamicTableSink.Context} for Elasticsearch tests. */
