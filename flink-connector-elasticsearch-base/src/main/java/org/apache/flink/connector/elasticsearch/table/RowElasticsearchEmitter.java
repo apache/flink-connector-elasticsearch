@@ -50,17 +50,20 @@ class RowElasticsearchEmitter implements ElasticsearchEmitter<RowData> {
     private final XContentType contentType;
     @Nullable private final String documentType;
     private final Function<RowData, String> createKey;
+    private final int retryOnConflict;
 
     public RowElasticsearchEmitter(
             IndexGenerator indexGenerator,
             SerializationSchema<RowData> serializationSchema,
             XContentType contentType,
             @Nullable String documentType,
+            int retryOnConflict,
             Function<RowData, String> createKey) {
         this.indexGenerator = checkNotNull(indexGenerator);
         this.serializationSchema = checkNotNull(serializationSchema);
         this.contentType = checkNotNull(contentType);
         this.documentType = documentType;
+        this.retryOnConflict = retryOnConflict;
         this.createKey = checkNotNull(createKey);
     }
 
@@ -110,6 +113,9 @@ class RowElasticsearchEmitter implements ElasticsearchEmitter<RowData> {
                     new UpdateRequest(indexGenerator.generate(row), documentType, key)
                             .doc(document, contentType)
                             .upsert(document, contentType);
+            if (retryOnConflict != -1) {
+                updateRequest.retryOnConflict(retryOnConflict);
+            }
             indexer.add(updateRequest);
         } else {
             final IndexRequest indexRequest =
