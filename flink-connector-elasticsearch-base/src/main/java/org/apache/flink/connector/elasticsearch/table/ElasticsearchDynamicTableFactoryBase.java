@@ -128,6 +128,7 @@ abstract class ElasticsearchDynamicTableFactoryBase
                 capitalize(factoryIdentifier),
                 sinkBuilderSupplier,
                 getDocumentType(config),
+                config.getRetryOnConflict(),
                 getLocalTimeZoneId(context.getConfiguration()));
     }
 
