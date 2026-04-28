@@ -120,7 +120,6 @@ class RowElasticsearchEmitter implements ElasticsearchEmitter<RowData> {
         } else {
             final IndexRequest indexRequest =
                     new IndexRequest(indexGenerator.generate(row), documentType)
-                            .id(key)
                             .source(document, contentType);
             indexer.add(indexRequest);
         }
