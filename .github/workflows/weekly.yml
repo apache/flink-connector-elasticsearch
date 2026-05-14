@@ -39,7 +39,7 @@ jobs:
           jdk: '11, 17, 21'
         }, {
           flink: 2.0.2,
-          branch: 4.0,
+          branch: v4.0,
           jdk: '11, 17, 21'
         }, {
           flink: 1.19.3,
