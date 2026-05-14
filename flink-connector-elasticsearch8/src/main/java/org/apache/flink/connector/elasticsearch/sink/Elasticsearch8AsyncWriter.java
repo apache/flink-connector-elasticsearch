@@ -69,6 +69,8 @@ public class Elasticsearch8AsyncWriter<InputT> extends AsyncSinkWriter<InputT, O
     /** A counter to track the number of bulk requests that are sent to Elasticsearch. */
     private final Counter numRequestSubmittedCounter;
 
+    private final OperationSerializer operationSerializer;
+
     private static final FatalExceptionClassifier ELASTICSEARCH_FATAL_EXCEPTION_CLASSIFIER =
             FatalExceptionClassifier.createChain(
                     new FatalExceptionClassifier(
@@ -112,6 +114,7 @@ public class Elasticsearch8AsyncWriter<InputT> extends AsyncSinkWriter<InputT, O
         this.numRecordsSendPartialFailureCounter =
                 metricGroup.counter("numRecordsSendPartialFailure");
         this.numRequestSubmittedCounter = metricGroup.counter("numRequestSubmitted");
+        this.operationSerializer = new OperationSerializer();
     }
 
     @Override
@@ -192,7 +195,7 @@ public class Elasticsearch8AsyncWriter<InputT> extends AsyncSinkWriter<InputT, O
 
     @Override
     protected long getSizeInBytes(Operation requestEntry) {
-        return new OperationSerializer().size(requestEntry);
+        return operationSerializer.size(requestEntry);
     }
 
     @Override
