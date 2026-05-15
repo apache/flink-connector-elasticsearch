@@ -94,8 +94,7 @@ class Elasticsearch8DynamicSinkITCase extends Elasticsearch8DynamicSinkBaseITCas
                                 LocalDateTime.parse("2012-12-12T12:12:12")));
 
         String index = "writing-documents";
-        ElasticSearch8AsyncDynamicTableFactory sinkFactory =
-                new ElasticSearch8AsyncDynamicTableFactory();
+        Elasticsearch8DynamicTableFactory sinkFactory = new Elasticsearch8DynamicTableFactory();
 
         DynamicTableSink.SinkRuntimeProvider runtimeProvider =
                 sinkFactory

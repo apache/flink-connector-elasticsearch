@@ -24,20 +24,20 @@ import javax.annotation.Nullable;
  * from a logical description.
  */
 public class ElasticsearchDynamicSource implements LookupTableSource, SupportsProjectionPushDown {
-    private final DecodingFormat<DeserializationSchema<RowData>> format;
-    private final ElasticsearchConfiguration config;
-    private final int lookupMaxRetryTimes;
+    protected final DecodingFormat<DeserializationSchema<RowData>> format;
+    protected final ElasticsearchConfiguration config;
+    protected final int maxRetryTimes;
     private final LookupCache lookupCache;
     private final String docType;
     private final String summaryString;
-    private final ElasticsearchApiCallBridge<?> apiCallBridge;
-    private DataType physicalRowDataType;
+    protected final ElasticsearchApiCallBridge<?> apiCallBridge;
+    protected DataType physicalRowDataType;
 
     public ElasticsearchDynamicSource(
             DecodingFormat<DeserializationSchema<RowData>> format,
             ElasticsearchConfiguration config,
             DataType physicalRowDataType,
-            int lookupMaxRetryTimes,
+            int maxRetryTimes,
             String summaryString,
             ElasticsearchApiCallBridge<?> apiCallBridge,
             @Nullable LookupCache lookupCache,
@@ -45,7 +45,7 @@ public class ElasticsearchDynamicSource implements LookupTableSource, SupportsPr
         this.format = format;
         this.config = config;
         this.physicalRowDataType = physicalRowDataType;
-        this.lookupMaxRetryTimes = lookupMaxRetryTimes;
+        this.maxRetryTimes = maxRetryTimes;
         this.summaryString = summaryString;
         this.apiCallBridge = apiCallBridge;
         this.lookupCache = lookupCache;
@@ -68,7 +68,7 @@ public class ElasticsearchDynamicSource implements LookupTableSource, SupportsPr
         ElasticsearchRowDataLookupFunction<?> lookupFunction =
                 new ElasticsearchRowDataLookupFunction<>(
                         this.format.createRuntimeDecoder(context, physicalRowDataType),
-                        lookupMaxRetryTimes,
+                        maxRetryTimes,
                         config.getIndex(),
                         docType,
                         DataType.getFieldNames(physicalRowDataType).toArray(new String[0]),
@@ -84,7 +84,7 @@ public class ElasticsearchDynamicSource implements LookupTableSource, SupportsPr
         }
     }
 
-    private NetworkClientConfig buildNetworkClientConfig() {
+    protected NetworkClientConfig buildNetworkClientConfig() {
         NetworkClientConfig.Builder builder = new NetworkClientConfig.Builder();
         if (config.getUsername().isPresent()
                 && !StringUtils.isNullOrWhitespaceOnly(config.getUsername().get())) {
@@ -123,7 +123,7 @@ public class ElasticsearchDynamicSource implements LookupTableSource, SupportsPr
                 format,
                 config,
                 physicalRowDataType,
-                lookupMaxRetryTimes,
+                maxRetryTimes,
                 summaryString,
                 apiCallBridge,
                 lookupCache,

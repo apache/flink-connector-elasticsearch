@@ -1,5 +1,4 @@
 /*
- *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -8,20 +7,19 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.apache.flink.connector.elasticsearch.table;
 
 import org.apache.flink.annotation.Internal;
+import org.apache.flink.api.common.serialization.DeserializationSchema;
 import org.apache.flink.api.common.serialization.SerializationSchema;
 import org.apache.flink.configuration.ConfigOption;
 import org.apache.flink.configuration.ReadableConfig;
@@ -31,9 +29,13 @@ import org.apache.flink.table.api.config.TableConfigOptions;
 import org.apache.flink.table.catalog.Column;
 import org.apache.flink.table.catalog.ResolvedSchema;
 import org.apache.flink.table.connector.Projection;
+import org.apache.flink.table.connector.format.DecodingFormat;
 import org.apache.flink.table.connector.format.EncodingFormat;
 import org.apache.flink.table.connector.sink.DynamicTableSink;
+import org.apache.flink.table.connector.source.DynamicTableSource;
 import org.apache.flink.table.data.RowData;
+import org.apache.flink.table.factories.DeserializationFormatFactory;
+import org.apache.flink.table.factories.DynamicTableSourceFactory;
 import org.apache.flink.table.factories.FactoryUtil;
 import org.apache.flink.table.factories.SerializationFormatFactory;
 import org.apache.flink.table.types.DataType;
@@ -63,23 +65,48 @@ import static org.apache.flink.connector.elasticsearch.table.Elasticsearch8Conne
 import static org.apache.flink.connector.elasticsearch.table.Elasticsearch8ConnectorOptions.HOSTS_OPTION;
 import static org.apache.flink.connector.elasticsearch.table.Elasticsearch8ConnectorOptions.INDEX_OPTION;
 import static org.apache.flink.connector.elasticsearch.table.Elasticsearch8ConnectorOptions.KEY_DELIMITER_OPTION;
+import static org.apache.flink.connector.elasticsearch.table.Elasticsearch8ConnectorOptions.MAX_RETRIES;
+import static org.apache.flink.connector.elasticsearch.table.Elasticsearch8ConnectorOptions.NUM_CANDIDATES;
 import static org.apache.flink.connector.elasticsearch.table.Elasticsearch8ConnectorOptions.PASSWORD_OPTION;
 import static org.apache.flink.connector.elasticsearch.table.Elasticsearch8ConnectorOptions.SOCKET_TIMEOUT;
 import static org.apache.flink.connector.elasticsearch.table.Elasticsearch8ConnectorOptions.SSL_CERTIFICATE_FINGERPRINT;
 import static org.apache.flink.connector.elasticsearch.table.Elasticsearch8ConnectorOptions.USERNAME_OPTION;
 import static org.apache.flink.table.connector.source.lookup.LookupOptions.CACHE_TYPE;
-import static org.apache.flink.table.connector.source.lookup.LookupOptions.MAX_RETRIES;
 import static org.apache.flink.table.connector.source.lookup.LookupOptions.PARTIAL_CACHE_CACHE_MISSING_KEY;
 import static org.apache.flink.table.connector.source.lookup.LookupOptions.PARTIAL_CACHE_EXPIRE_AFTER_ACCESS;
 import static org.apache.flink.table.connector.source.lookup.LookupOptions.PARTIAL_CACHE_EXPIRE_AFTER_WRITE;
 import static org.apache.flink.table.connector.source.lookup.LookupOptions.PARTIAL_CACHE_MAX_ROWS;
 import static org.apache.flink.table.factories.FactoryUtil.SINK_PARALLELISM;
 
-/** Factory for creating {@link ElasticSearch8AsyncDynamicSink} . */
+/**
+ * A factory for discovering both {@link Elasticsearch8DynamicSource} (lookup / vector search) and
+ * {@link ElasticSearch8AsyncDynamicSink} under the same {@code elasticsearch-8} identifier.
+ */
 @Internal
-public class ElasticSearch8AsyncDynamicTableFactory extends AsyncDynamicTableSinkFactory {
-
+public class Elasticsearch8DynamicTableFactory extends AsyncDynamicTableSinkFactory
+        implements DynamicTableSourceFactory {
     private static final String IDENTIFIER = "elasticsearch-8";
+
+    @Override
+    public String factoryIdentifier() {
+        return IDENTIFIER;
+    }
+
+    @Override
+    public DynamicTableSource createDynamicTableSource(Context context) {
+        final FactoryUtil.TableFactoryHelper helper =
+                FactoryUtil.createTableFactoryHelper(this, context);
+
+        final DecodingFormat<DeserializationSchema<RowData>> format =
+                helper.discoverDecodingFormat(DeserializationFormatFactory.class, FORMAT_OPTION);
+
+        Elasticsearch8Configuration config = getConfiguration(helper);
+        helper.validate();
+        validateConfiguration(config);
+
+        return new Elasticsearch8DynamicSource(
+                format, config, context.getPhysicalRowDataType(), capitalize(IDENTIFIER));
+    }
 
     @Override
     public DynamicTableSink createDynamicTableSink(Context context) {
@@ -95,50 +122,14 @@ public class ElasticSearch8AsyncDynamicTableFactory extends AsyncDynamicTableSin
         helper.validate();
         validateConfiguration(config);
 
-        ElasticSearch8AsyncDynamicSink.ElasticSearch8AsyncDynamicSinkBuilder builder =
-                new ElasticSearch8AsyncDynamicSink.ElasticSearch8AsyncDynamicSinkBuilder();
-
-        return builder.setConfig(config)
+        return new ElasticSearch8AsyncDynamicSink.ElasticSearch8AsyncDynamicSinkBuilder()
+                .setConfig(config)
                 .setFormat(format)
                 .setPrimaryKeyLogicalTypesWithIndex(primaryKeyLogicalTypesWithIndex)
                 .setPhysicalRowDataType(context.getPhysicalRowDataType())
                 .setLocalTimeZoneId(getLocalTimeZoneId(context.getConfiguration()))
                 .setSummaryString(capitalize(IDENTIFIER))
                 .build();
-    }
-
-    ZoneId getLocalTimeZoneId(ReadableConfig readableConfig) {
-        final String zone = readableConfig.get(TableConfigOptions.LOCAL_TIME_ZONE);
-
-        return TableConfigOptions.LOCAL_TIME_ZONE.defaultValue().equals(zone)
-                ? ZoneId.systemDefault()
-                : ZoneId.of(zone);
-    }
-
-    List<LogicalTypeWithIndex> getPrimaryKeyLogicalTypesWithIndex(Context context) {
-        DataType physicalRowDataType = context.getPhysicalRowDataType();
-        int[] primaryKeyIndexes = context.getPrimaryKeyIndexes();
-        if (primaryKeyIndexes.length != 0) {
-            DataType pkDataType = Projection.of(primaryKeyIndexes).project(physicalRowDataType);
-
-            ElasticsearchValidationUtils.validatePrimaryKey(pkDataType);
-        }
-
-        ResolvedSchema resolvedSchema = context.getCatalogTable().getResolvedSchema();
-        return Arrays.stream(primaryKeyIndexes)
-                .mapToObj(
-                        index -> {
-                            Optional<Column> column = resolvedSchema.getColumn(index);
-                            if (!column.isPresent()) {
-                                throw new IllegalStateException(
-                                        String.format(
-                                                "No primary key column found with index '%s'.",
-                                                index));
-                            }
-                            LogicalType logicalType = column.get().getDataType().getLogicalType();
-                            return new LogicalTypeWithIndex(index, logicalType);
-                        })
-                .collect(Collectors.toList());
     }
 
     Elasticsearch8Configuration getConfiguration(FactoryUtil.TableFactoryHelper helper) {
@@ -187,9 +178,37 @@ public class ElasticSearch8AsyncDynamicTableFactory extends AsyncDynamicTableSin
         }
     }
 
-    @Override
-    public String factoryIdentifier() {
-        return IDENTIFIER;
+    ZoneId getLocalTimeZoneId(ReadableConfig readableConfig) {
+        final String zone = readableConfig.get(TableConfigOptions.LOCAL_TIME_ZONE);
+
+        return TableConfigOptions.LOCAL_TIME_ZONE.defaultValue().equals(zone)
+                ? ZoneId.systemDefault()
+                : ZoneId.of(zone);
+    }
+
+    List<LogicalTypeWithIndex> getPrimaryKeyLogicalTypesWithIndex(Context context) {
+        DataType physicalRowDataType = context.getPhysicalRowDataType();
+        int[] primaryKeyIndexes = context.getPrimaryKeyIndexes();
+        if (primaryKeyIndexes.length != 0) {
+            DataType pkDataType = Projection.of(primaryKeyIndexes).project(physicalRowDataType);
+            ElasticsearchValidationUtils.validatePrimaryKey(pkDataType);
+        }
+
+        ResolvedSchema resolvedSchema = context.getCatalogTable().getResolvedSchema();
+        return Arrays.stream(primaryKeyIndexes)
+                .mapToObj(
+                        index -> {
+                            Optional<Column> column = resolvedSchema.getColumn(index);
+                            if (!column.isPresent()) {
+                                throw new IllegalStateException(
+                                        String.format(
+                                                "No primary key column found with index '%s'.",
+                                                index));
+                            }
+                            LogicalType logicalType = column.get().getDataType().getLogicalType();
+                            return new LogicalTypeWithIndex(index, logicalType);
+                        })
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -201,16 +220,15 @@ public class ElasticSearch8AsyncDynamicTableFactory extends AsyncDynamicTableSin
     public Set<ConfigOption<?>> optionalOptions() {
         return Stream.of(
                         KEY_DELIMITER_OPTION,
-                        BULK_FLUSH_MAX_SIZE_OPTION,
                         BULK_FLUSH_MAX_ACTIONS_OPTION,
-                        BULK_FLUSH_INTERVAL_OPTION,
                         BULK_FLUSH_MAX_BUFFERED_ACTIONS_OPTION,
                         BULK_FLUSH_MAX_IN_FLIGHT_ACTIONS_OPTION,
+                        BULK_FLUSH_MAX_SIZE_OPTION,
+                        BULK_FLUSH_INTERVAL_OPTION,
                         CONNECTION_PATH_PREFIX_OPTION,
                         CONNECTION_REQUEST_TIMEOUT,
                         CONNECTION_TIMEOUT,
                         SOCKET_TIMEOUT,
-                        SSL_CERTIFICATE_FINGERPRINT,
                         FORMAT_OPTION,
                         DELIVERY_GUARANTEE_OPTION,
                         PASSWORD_OPTION,
@@ -221,7 +239,9 @@ public class ElasticSearch8AsyncDynamicTableFactory extends AsyncDynamicTableSin
                         PARTIAL_CACHE_EXPIRE_AFTER_WRITE,
                         PARTIAL_CACHE_MAX_ROWS,
                         PARTIAL_CACHE_CACHE_MISSING_KEY,
-                        MAX_RETRIES)
+                        MAX_RETRIES,
+                        NUM_CANDIDATES,
+                        SSL_CERTIFICATE_FINGERPRINT)
                 .collect(Collectors.toSet());
     }
 
@@ -234,10 +254,10 @@ public class ElasticSearch8AsyncDynamicTableFactory extends AsyncDynamicTableSin
                         USERNAME_OPTION,
                         KEY_DELIMITER_OPTION,
                         BULK_FLUSH_MAX_ACTIONS_OPTION,
-                        BULK_FLUSH_MAX_SIZE_OPTION,
-                        BULK_FLUSH_INTERVAL_OPTION,
                         BULK_FLUSH_MAX_BUFFERED_ACTIONS_OPTION,
                         BULK_FLUSH_MAX_IN_FLIGHT_ACTIONS_OPTION,
+                        BULK_FLUSH_MAX_SIZE_OPTION,
+                        BULK_FLUSH_INTERVAL_OPTION,
                         CONNECTION_PATH_PREFIX_OPTION,
                         CONNECTION_REQUEST_TIMEOUT,
                         CONNECTION_TIMEOUT,

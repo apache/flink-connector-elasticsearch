@@ -46,6 +46,8 @@ import static org.apache.flink.connector.elasticsearch.table.Elasticsearch8Conne
 import static org.apache.flink.connector.elasticsearch.table.Elasticsearch8ConnectorOptions.HOSTS_OPTION;
 import static org.apache.flink.connector.elasticsearch.table.Elasticsearch8ConnectorOptions.INDEX_OPTION;
 import static org.apache.flink.connector.elasticsearch.table.Elasticsearch8ConnectorOptions.KEY_DELIMITER_OPTION;
+import static org.apache.flink.connector.elasticsearch.table.Elasticsearch8ConnectorOptions.MAX_RETRIES;
+import static org.apache.flink.connector.elasticsearch.table.Elasticsearch8ConnectorOptions.NUM_CANDIDATES;
 import static org.apache.flink.connector.elasticsearch.table.Elasticsearch8ConnectorOptions.PASSWORD_OPTION;
 import static org.apache.flink.connector.elasticsearch.table.Elasticsearch8ConnectorOptions.SOCKET_TIMEOUT;
 import static org.apache.flink.connector.elasticsearch.table.Elasticsearch8ConnectorOptions.SSL_CERTIFICATE_FINGERPRINT;
@@ -130,6 +132,16 @@ public class Elasticsearch8Configuration {
 
     public Optional<Integer> getParallelism() {
         return config.getOptional(SINK_PARALLELISM);
+    }
+
+    // --- Lookup / vector search accessors --------------------------------------------------
+
+    public int getMaxRetries() {
+        return config.get(MAX_RETRIES);
+    }
+
+    public int getNumCandidates() {
+        return config.get(NUM_CANDIDATES);
     }
 
     /**
