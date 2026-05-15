@@ -19,6 +19,7 @@
 package org.apache.flink.streaming.tests;
 
 import org.apache.flink.connector.testframe.container.FlinkContainerTestEnvironment;
+import org.apache.flink.connector.testframe.container.FlinkContainersSettings;
 import org.apache.flink.connector.testframe.external.DefaultContainerizedExternalSystem;
 import org.apache.flink.connector.testframe.external.ExternalSystemDataReader;
 import org.apache.flink.connector.testframe.junit.annotations.TestEnv;
@@ -56,7 +57,12 @@ public abstract class ElasticsearchSinkE2ECaseBase<T extends Comparable<T>>
 
     // Defines TestEnvironment
     @TestEnv
-    protected FlinkContainerTestEnvironment flink = new FlinkContainerTestEnvironment(1, 6);
+    protected FlinkContainerTestEnvironment flink =
+            FlinkContainerTestEnvironment.fromSettings(
+                    FlinkContainersSettings.builder()
+                            .numTaskManagers(1)
+                            .numSlotsPerTaskManager(6)
+                            .build());
 
     // Defines ConnectorExternalSystem
     @TestExternalSystem
