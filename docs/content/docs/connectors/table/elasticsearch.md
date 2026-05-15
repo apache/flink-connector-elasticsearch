@@ -173,7 +173,7 @@ Connector Options
       <td style="word-wrap: break-word;">1000</td>
       <td>Integer</td>
       <td>Maximum number of buffered actions per bulk request.
-      Can be set to <code>'0'</code> to disable it (must be greater than 0 in <code>elasticsearch 8</code>).
+      Can be set to <code>'-1'</code> to disable it (must be greater than 0 in <code>elasticsearch 8</code>).
       </td>
     </tr>
     <tr>
@@ -183,7 +183,7 @@ Connector Options
       <td style="word-wrap: break-word;">2mb</td>
       <td>MemorySize</td>
       <td>Maximum size in memory of buffered actions per bulk request. Must be in MB granularity.
-      Can be set to <code>'0'</code> to disable it (must be greater than 0 in <code>elasticsearch 8</code>).
+      Can be set to <code>'-1'</code> to disable it (must be greater than 0 in <code>elasticsearch 8</code>).
       </td>
     </tr>
     <tr>
@@ -193,7 +193,7 @@ Connector Options
       <td style="word-wrap: break-word;">1s</td>
       <td>Duration</td>
       <td>The interval to flush buffered actions.
-        Can be set to <code>'0'</code> to disable it (must be greater than 0 in <code>elasticsearch 8</code>). Note, both <code>'sink.bulk-flush.max-size'</code> and <code>'sink.bulk-flush.max-actions'</code>
+        Can be set to <code>'-1'</code> to disable it (must be greater than 0 in <code>elasticsearch 8</code>). Note, both <code>'sink.bulk-flush.max-size'</code> and <code>'sink.bulk-flush.max-actions'</code>
         can be set to <code>'0'</code> with the flush interval set allowing for complete async processing of buffered actions (not supported in <code>elasticsearch 8</code>, as its underlying async sink requires all flush parameters to be positive).
       </td>
     </tr>

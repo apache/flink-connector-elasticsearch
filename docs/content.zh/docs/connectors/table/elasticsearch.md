@@ -159,7 +159,7 @@ CREATE TABLE myUserTable (
       <td style="word-wrap: break-word;">1000</td>
       <td>Integer</td>
       <td>每个批量请求的最大缓冲操作数。
-      可以设置为<code>'0'</code>来禁用它（<code>elasticsearch-8</code>中必须大于0）。
+      可以设置为<code>'-1'</code>来禁用它（<code>elasticsearch-8</code>中必须大于0）。
       </td>
     </tr>
     <tr>
@@ -168,7 +168,7 @@ CREATE TABLE myUserTable (
       <td style="word-wrap: break-word;">2mb</td>
       <td>MemorySize</td>
       <td>每个批量请求的缓冲操作在内存中的最大值。单位必须为 MB。
-      可以设置为<code>'0'</code>来禁用它（<code>elasticsearch-8</code>中必须大于0）。
+      可以设置为<code>'-1'</code>来禁用它（<code>elasticsearch-8</code>中必须大于0）。
       </td>
     </tr>
     <tr>
@@ -177,7 +177,7 @@ CREATE TABLE myUserTable (
       <td style="word-wrap: break-word;">1s</td>
       <td>Duration</td>
       <td>flush 缓冲操作的间隔。
-        可以设置为<code>'0'</code>来禁用它（<code>elasticsearch-8</code>中必须大于0）。注意，<code>'sink.bulk-flush.max-size'</code>和<code>'sink.bulk-flush.max-actions'</code>都设置为<code>'0'</code>的这种 flush 间隔设置允许对缓冲操作进行完全异步处理（<code>elasticsearch-8</code>不支持如此配置，因其底层的异步 sink 要求所有 flush 参数必须为正数）。
+        可以设置为<code>'-1'</code>来禁用它（<code>elasticsearch-8</code>中必须大于0）。注意，<code>'sink.bulk-flush.max-size'</code>和<code>'sink.bulk-flush.max-actions'</code>都设置为<code>'0'</code>的这种 flush 间隔设置允许对缓冲操作进行完全异步处理（<code>elasticsearch-8</code>不支持如此配置，因其底层的异步 sink 要求所有 flush 参数必须为正数）。
       </td>
     </tr>
     <tr>
