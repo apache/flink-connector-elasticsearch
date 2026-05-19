@@ -64,6 +64,20 @@ public class Elasticsearch7DynamicSource extends ElasticsearchDynamicSource
 
     @SuppressWarnings("unchecked")
     @Override
+    public DynamicTableSource copy() {
+        return new Elasticsearch7DynamicSource(
+                format,
+                config,
+                physicalRowDataType,
+                maxRetryTimes,
+                summaryString,
+                (ElasticsearchApiCallBridge<RestHighLevelClient>) apiCallBridge,
+                lookupCache,
+                docType);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
     public VectorSearchRuntimeProvider getSearchRuntimeProvider(
             VectorSearchContext vectorSearchContext) {
 

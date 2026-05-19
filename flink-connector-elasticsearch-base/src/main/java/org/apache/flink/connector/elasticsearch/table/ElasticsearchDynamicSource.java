@@ -45,9 +45,9 @@ public class ElasticsearchDynamicSource implements LookupTableSource, SupportsPr
     protected final DecodingFormat<DeserializationSchema<RowData>> format;
     protected final ElasticsearchConfiguration config;
     protected final int maxRetryTimes;
-    private final LookupCache lookupCache;
-    private final String docType;
-    private final String summaryString;
+    protected final LookupCache lookupCache;
+    protected final String docType;
+    protected final String summaryString;
     protected final ElasticsearchApiCallBridge<?> apiCallBridge;
     protected DataType physicalRowDataType;
 
