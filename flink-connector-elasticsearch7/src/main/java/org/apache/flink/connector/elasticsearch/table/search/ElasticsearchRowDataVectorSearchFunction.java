@@ -93,6 +93,14 @@ public class ElasticsearchRowDataVectorSearchFunction
     }
 
     @Override
+    protected void doClose() throws IOException {
+        if (client != null) {
+            client.close();
+            client = null;
+        }
+    }
+
+    @Override
     protected SearchResult[] doSearch(int topK, RowData features) throws IOException {
         // Elasticsearch 7.x doesn't support ANN, we use script score to achieve exact matching.
         Map<String, Object> params =

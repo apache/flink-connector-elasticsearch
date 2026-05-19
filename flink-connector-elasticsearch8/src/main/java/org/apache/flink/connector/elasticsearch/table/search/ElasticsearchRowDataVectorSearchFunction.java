@@ -65,6 +65,14 @@ public class ElasticsearchRowDataVectorSearchFunction
     }
 
     @Override
+    protected void doClose() throws IOException {
+        if (client != null) {
+            client._transport().close();
+            client = null;
+        }
+    }
+
+    @Override
     protected SearchResult[] doSearch(int topK, RowData features) throws IOException {
         List<Float> queryVector = new ArrayList<>();
         for (float feature : features.getArray(0).toFloatArray()) {

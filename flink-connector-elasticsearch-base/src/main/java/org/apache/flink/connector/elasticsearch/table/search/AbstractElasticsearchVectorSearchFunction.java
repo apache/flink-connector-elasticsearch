@@ -73,6 +73,15 @@ public abstract class AbstractElasticsearchVectorSearchFunction extends VectorSe
     }
 
     @Override
+    public void close() throws Exception {
+        try {
+            doClose();
+        } finally {
+            super.close();
+        }
+    }
+
+    @Override
     public Collection<RowData> vectorSearch(int topK, RowData features) throws IOException {
         for (int retry = 0; retry <= maxRetryTimes; retry++) {
             try {
@@ -113,6 +122,9 @@ public abstract class AbstractElasticsearchVectorSearchFunction extends VectorSe
 
     /** Version-specific initialization (e.g., creating the underlying Elasticsearch client). */
     protected abstract void doOpen(FunctionContext context) throws Exception;
+
+    /** Version-specific resource release (e.g., closing the underlying Elasticsearch client). */
+    protected abstract void doClose() throws Exception;
 
     /** Execute a single vector search call and return raw results, excluding nothing. */
     protected abstract SearchResult[] doSearch(int topK, RowData features) throws IOException;
