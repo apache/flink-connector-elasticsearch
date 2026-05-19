@@ -35,6 +35,7 @@ import org.junit.jupiter.api.Test;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
@@ -74,11 +75,12 @@ public class Elasticsearch8AsyncSinkITCase extends ElasticsearchSinkBaseITCase {
                                             ES_CONTAINER.getFirstMappedPort()))
                             .setElementConverter(
                                     (element, ctx) ->
-                                            new IndexOperation.Builder<>()
-                                                    .index(index)
-                                                    .id(element.getId())
-                                                    .document(element)
-                                                    .build())
+                                            Arrays.asList(
+                                                    new IndexOperation.Builder<>()
+                                                            .index(index)
+                                                            .id(element.getId())
+                                                            .document(element)
+                                                            .build()))
                             .build();
 
             env.fromElements("first", "second", "third", "fourth", "fifth")
@@ -110,11 +112,12 @@ public class Elasticsearch8AsyncSinkITCase extends ElasticsearchSinkBaseITCase {
                                             ES_CONTAINER.getFirstMappedPort()))
                             .setElementConverter(
                                     (element, ctx) ->
-                                            new IndexOperation.Builder<>()
-                                                    .index(index)
-                                                    .id(element.getId())
-                                                    .document(element)
-                                                    .build())
+                                            Arrays.asList(
+                                                    new IndexOperation.Builder<>()
+                                                            .index(index)
+                                                            .id(element.getId())
+                                                            .document(element)
+                                                            .build()))
                             .build();
 
             env.fromElements("first", "second", "third", "fourth", "fifth")

@@ -35,6 +35,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.util.Collections;
+import java.util.List;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -43,8 +44,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class OperationSerializerTest {
     @ParameterizedTest
     @MethodSource("operations")
-    public void testSerializeAndDeserialize(BulkOperationVariant operationVariant) {
-        Operation expectedState = new Operation(operationVariant);
+    public void testSerializeAndDeserialize(List<BulkOperationVariant> operationVariants) {
+        Operation expectedState = new Operation(operationVariants);
 
         final ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         final DataOutputStream out = new DataOutputStream(bytes);

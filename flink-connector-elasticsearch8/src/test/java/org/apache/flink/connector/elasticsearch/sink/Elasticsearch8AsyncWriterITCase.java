@@ -34,6 +34,7 @@ import org.junit.jupiter.api.Timeout;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -186,16 +187,18 @@ public class Elasticsearch8AsyncWriterITCase extends ElasticsearchSinkBaseITCase
         Elasticsearch8AsyncSinkBuilder.OperationConverter<DummyData> elementConverter =
                 new Elasticsearch8AsyncSinkBuilder.OperationConverter<>(
                         (element, ctx) ->
-                                new UpdateOperation.Builder<>()
-                                        .id(element.getId())
-                                        .index(index)
-                                        .action(
-                                                ac ->
-                                                        ac.doc(element)
-                                                                .docAsUpsert(
-                                                                        element.getId()
-                                                                                .equals("test-2")))
-                                        .build());
+                                Arrays.asList(
+                                        new UpdateOperation.Builder<>()
+                                                .id(element.getId())
+                                                .index(index)
+                                                .action(
+                                                        ac ->
+                                                                ac.doc(element)
+                                                                        .docAsUpsert(
+                                                                                element.getId()
+                                                                                        .equals(
+                                                                                                "test-2")))
+                                                .build()));
 
         try (final Elasticsearch8AsyncWriter<DummyData> writer =
                 createWriter(index, maxBatchSize, elementConverter)) {
@@ -214,11 +217,12 @@ public class Elasticsearch8AsyncWriterITCase extends ElasticsearchSinkBaseITCase
             getDefaultTestElementConverter(String index) {
         return new Elasticsearch8AsyncSinkBuilder.OperationConverter<>(
                 (element, ctx) ->
-                        new IndexOperation.Builder<DummyData>()
-                                .id(element.getId())
-                                .document(element)
-                                .index(index)
-                                .build());
+                        Collections.singletonList(
+                                new IndexOperation.Builder<DummyData>()
+                                        .id(element.getId())
+                                        .document(element)
+                                        .index(index)
+                                        .build()));
     }
 
     private Elasticsearch8AsyncWriter<DummyData> createWriter(String index, int maxBatchSize)
