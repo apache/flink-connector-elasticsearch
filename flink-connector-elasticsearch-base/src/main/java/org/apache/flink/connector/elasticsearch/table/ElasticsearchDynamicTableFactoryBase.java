@@ -165,7 +165,7 @@ abstract class ElasticsearchDynamicTableFactoryBase
     }
 
     @Nullable
-    private LookupCache getLookupCache(ReadableConfig tableOptions) {
+    protected LookupCache getLookupCache(ReadableConfig tableOptions) {
         LookupCache cache = null;
         if (tableOptions
                 .get(LookupOptions.CACHE_TYPE)

@@ -1,3 +1,21 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.apache.flink.connector.elasticsearch.table;
 
 import org.apache.flink.api.common.serialization.DeserializationSchema;
@@ -24,20 +42,20 @@ import javax.annotation.Nullable;
  * from a logical description.
  */
 public class ElasticsearchDynamicSource implements LookupTableSource, SupportsProjectionPushDown {
-    private final DecodingFormat<DeserializationSchema<RowData>> format;
-    private final ElasticsearchConfiguration config;
-    private final int lookupMaxRetryTimes;
-    private final LookupCache lookupCache;
-    private final String docType;
-    private final String summaryString;
-    private final ElasticsearchApiCallBridge<?> apiCallBridge;
-    private DataType physicalRowDataType;
+    protected final DecodingFormat<DeserializationSchema<RowData>> format;
+    protected final ElasticsearchConfiguration config;
+    protected final int maxRetryTimes;
+    protected final LookupCache lookupCache;
+    protected final String docType;
+    protected final String summaryString;
+    protected final ElasticsearchApiCallBridge<?> apiCallBridge;
+    protected DataType physicalRowDataType;
 
     public ElasticsearchDynamicSource(
             DecodingFormat<DeserializationSchema<RowData>> format,
             ElasticsearchConfiguration config,
             DataType physicalRowDataType,
-            int lookupMaxRetryTimes,
+            int maxRetryTimes,
             String summaryString,
             ElasticsearchApiCallBridge<?> apiCallBridge,
             @Nullable LookupCache lookupCache,
@@ -45,7 +63,7 @@ public class ElasticsearchDynamicSource implements LookupTableSource, SupportsPr
         this.format = format;
         this.config = config;
         this.physicalRowDataType = physicalRowDataType;
-        this.lookupMaxRetryTimes = lookupMaxRetryTimes;
+        this.maxRetryTimes = maxRetryTimes;
         this.summaryString = summaryString;
         this.apiCallBridge = apiCallBridge;
         this.lookupCache = lookupCache;
@@ -68,7 +86,7 @@ public class ElasticsearchDynamicSource implements LookupTableSource, SupportsPr
         ElasticsearchRowDataLookupFunction<?> lookupFunction =
                 new ElasticsearchRowDataLookupFunction<>(
                         this.format.createRuntimeDecoder(context, physicalRowDataType),
-                        lookupMaxRetryTimes,
+                        maxRetryTimes,
                         config.getIndex(),
                         docType,
                         DataType.getFieldNames(physicalRowDataType).toArray(new String[0]),
@@ -84,7 +102,7 @@ public class ElasticsearchDynamicSource implements LookupTableSource, SupportsPr
         }
     }
 
-    private NetworkClientConfig buildNetworkClientConfig() {
+    protected NetworkClientConfig buildNetworkClientConfig() {
         NetworkClientConfig.Builder builder = new NetworkClientConfig.Builder();
         if (config.getUsername().isPresent()
                 && !StringUtils.isNullOrWhitespaceOnly(config.getUsername().get())) {
@@ -123,7 +141,7 @@ public class ElasticsearchDynamicSource implements LookupTableSource, SupportsPr
                 format,
                 config,
                 physicalRowDataType,
-                lookupMaxRetryTimes,
+                maxRetryTimes,
                 summaryString,
                 apiCallBridge,
                 lookupCache,

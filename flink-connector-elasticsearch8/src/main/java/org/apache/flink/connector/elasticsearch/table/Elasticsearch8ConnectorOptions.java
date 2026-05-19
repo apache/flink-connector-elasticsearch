@@ -149,4 +149,21 @@ public class Elasticsearch8ConnectorOptions {
                     .enumType(DeliveryGuarantee.class)
                     .defaultValue(DeliveryGuarantee.AT_LEAST_ONCE)
                     .withDescription("Optional delivery guarantee when committing.");
+
+    // --- Lookup / vector search options ----------------------------------------------------
+
+    public static final ConfigOption<Integer> MAX_RETRIES =
+            ConfigOptions.key("max-retries")
+                    .intType()
+                    .defaultValue(3)
+                    .withFallbackKeys("lookup.max-retries")
+                    .withDescription(
+                            "The maximum allowed retries if a lookup/search operation fails.");
+
+    public static final ConfigOption<Integer> NUM_CANDIDATES =
+            ConfigOptions.key("vector-search.num-candidates")
+                    .intType()
+                    .defaultValue(100)
+                    .withDescription(
+                            "The number of candidate neighbors considered for each shard during the vector search.");
 }

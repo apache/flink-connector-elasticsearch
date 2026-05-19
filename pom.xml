@@ -52,6 +52,7 @@ under the License.
 
 	<properties>
 		<flink.version>2.2.1</flink.version>
+		<scala.binary.version>2.12</scala.binary.version>
 
 		<jackson-bom.version>2.15.3</jackson-bom.version>
 		<junit4.version>4.13.2</junit4.version>
