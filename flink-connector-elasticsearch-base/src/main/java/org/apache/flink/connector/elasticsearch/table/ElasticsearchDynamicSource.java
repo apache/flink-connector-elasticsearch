@@ -121,15 +121,15 @@ public class ElasticsearchDynamicSource implements LookupTableSource, SupportsPr
 
         if (config.getConnectionRequestTimeout().isPresent()) {
             builder.setConnectionRequestTimeout(
-                    (int) config.getConnectionRequestTimeout().get().getSeconds());
+                    (int) config.getConnectionRequestTimeout().get().toMillis());
         }
 
         if (config.getConnectionTimeout().isPresent()) {
-            builder.setConnectionTimeout((int) config.getConnectionTimeout().get().getSeconds());
+            builder.setConnectionTimeout((int) config.getConnectionTimeout().get().toMillis());
         }
 
         if (config.getSocketTimeout().isPresent()) {
-            builder.setSocketTimeout((int) config.getSocketTimeout().get().getSeconds());
+            builder.setSocketTimeout((int) config.getSocketTimeout().get().toMillis());
         }
 
         return builder.build();
