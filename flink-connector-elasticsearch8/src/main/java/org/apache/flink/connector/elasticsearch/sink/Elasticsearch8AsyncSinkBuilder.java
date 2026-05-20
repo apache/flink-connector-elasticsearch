@@ -136,7 +136,7 @@ public class Elasticsearch8AsyncSinkBuilder<InputT>
      * @return {@code Elasticsearch8AsyncSinkBuilder}
      */
     public Elasticsearch8AsyncSinkBuilder<InputT> setHeaders(Header... headers) {
-        checkNotNull(hosts);
+        checkNotNull(headers);
         checkArgument(headers.length > 0, "Headers cannot be empty");
         this.headers = Arrays.asList(headers);
         return this;
