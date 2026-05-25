@@ -55,7 +55,6 @@ under the License.
 		<scala.binary.version>2.12</scala.binary.version>
 
 		<jackson-bom.version>2.15.3</jackson-bom.version>
-		<junit4.version>4.13.2</junit4.version>
 		<junit5.version>5.10.2</junit5.version>
 		<assertj.version>3.25.3</assertj.version>
 		<testcontainers.version>1.19.7</testcontainers.version>
@@ -96,12 +95,6 @@ under the License.
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter</artifactId>
-			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>org.junit.vintage</groupId>
-			<artifactId>junit-vintage-engine</artifactId>
 			<scope>test</scope>
 		</dependency>
 
@@ -333,12 +326,6 @@ under the License.
 				<version>${junit5.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
-			</dependency>
-
-			<dependency>
-				<groupId>junit</groupId>
-				<artifactId>junit</artifactId>
-				<version>${junit4.version}</version>
 			</dependency>
 
 			<dependency>
