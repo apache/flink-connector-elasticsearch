@@ -67,14 +67,14 @@ public abstract class ElasticsearchLookupE2ECase {
     abstract String getEsOptions();
 
     @BeforeEach
-    public void before() {
+    void before() {
         this.streamSettings = EnvironmentSettings.inStreamingMode();
         elasticsearchContainer = new ElasticsearchContainer(getElasticsearchContainerName());
         elasticsearchContainer.start();
     }
 
     @Test
-    public void testEsLookupTableSource() {
+    void testEsLookupTableSource() {
         StreamExecutionEnvironment execEnv = StreamExecutionEnvironment.getExecutionEnvironment();
         StreamTableEnvironment tEnv = StreamTableEnvironment.create(execEnv, streamSettings);
 
