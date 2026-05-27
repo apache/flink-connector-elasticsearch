@@ -187,8 +187,12 @@ abstract class Elasticsearch8DynamicSinkBaseITCase {
     @SuppressWarnings({"unchecked"})
     List<Map<String, Object>> makeSearchRequest(String index)
             throws ExecutionException, InterruptedException {
-        return client.search(new SearchRequest.Builder().index(index).build(), Map.class).get()
-                .hits().hits().stream()
+        return client
+                .search(new SearchRequest.Builder().index(index).build(), Map.class)
+                .get()
+                .hits()
+                .hits()
+                .stream()
                 .map(hit -> (Map<String, Object>) hit.source())
                 .collect(Collectors.toList());
     }

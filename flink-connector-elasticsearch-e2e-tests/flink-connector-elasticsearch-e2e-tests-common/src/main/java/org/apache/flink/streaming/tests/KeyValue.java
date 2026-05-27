@@ -31,6 +31,7 @@ public class KeyValue<K extends Comparable<? super K>, V extends Comparable<? su
 
     /** The key of the key-value pair. */
     public K key;
+
     /** The value the key-value pair. */
     public V value;
 
