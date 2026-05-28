@@ -84,7 +84,7 @@ class KeyExtractor implements SerializableFunction<RowData, String> {
                 return (row) ->
                         LocalTime.ofNanoOfDay((long) row.getInt(index) * 1_000_000L).toString();
             case INTERVAL_YEAR_MONTH:
-                return (row) -> Period.ofDays(row.getInt(index)).toString();
+                return (row) -> Period.ofMonths(row.getInt(index)).toString();
             case INTERVAL_DAY_TIME:
                 return (row) -> Duration.ofMillis(row.getLong(index)).toString();
             case DISTINCT_TYPE:

@@ -26,6 +26,8 @@ import org.apache.flink.table.data.GenericRowData;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.data.StringData;
 import org.apache.flink.table.data.TimestampData;
+import org.apache.flink.table.types.logical.DayTimeIntervalType;
+import org.apache.flink.table.types.logical.YearMonthIntervalType;
 
 import org.junit.jupiter.api.Test;
 
@@ -39,6 +41,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.apache.flink.table.types.logical.DayTimeIntervalType.DayTimeResolution.DAY_TO_SECOND;
+import static org.apache.flink.table.types.logical.YearMonthIntervalType.YearMonthResolution.YEAR_TO_MONTH;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /** Tests for {@link KeyExtractor}. */
@@ -90,6 +94,22 @@ public class KeyExtractorTest {
                                 TimestampData.fromLocalDateTime(
                                         LocalDateTime.parse("2012-12-12T12:12:12"))));
         assertThat(key).isEqualTo("12_2012-12-12T12:12:12");
+    }
+
+    @Test
+    public void testIntervalTypesKey() {
+        List<LogicalTypeWithIndex> logicalTypesWithIndex =
+                Stream.of(
+                                new LogicalTypeWithIndex(
+                                        0, new YearMonthIntervalType(YEAR_TO_MONTH)),
+                                new LogicalTypeWithIndex(1, new DayTimeIntervalType(DAY_TO_SECOND)))
+                        .collect(Collectors.toList());
+
+        Function<RowData, String> keyExtractor =
+                KeyExtractor.createKeyExtractor(logicalTypesWithIndex, "_");
+
+        String key = keyExtractor.apply(GenericRowData.of(13, 3_600_000L));
+        assertThat(key).isEqualTo("P13M_PT1H");
     }
 
     @Test
