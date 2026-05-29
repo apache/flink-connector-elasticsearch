@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>org.apache.flink</groupId>
+		<artifactId>flink-connector-elasticsearch-parent</artifactId>
+		<version>4.1-SNAPSHOT</version>
+	</parent>
+
+	<artifactId>flink-sql-connector-elasticsearch8</artifactId>
+	<name>Flink : Connectors : SQL : Elasticsearch 8</name>
+
+	<packaging>jar</packaging>
+
+	<properties>
+		<japicmp.skip>true</japicmp.skip>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.apache.flink</groupId>
+			<artifactId>flink-connector-elasticsearch8</artifactId>
+			<version>${project.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.eclipse.parsson</groupId>
+					<artifactId>parsson</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.flink</groupId>
+			<artifactId>flink-test-utils</artifactId>
+			<version>${flink.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.flink</groupId>
+			<artifactId>flink-connector-base</artifactId>
+			<version>${flink.version}</version>
+			<scope>provided</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-shade-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>shade-flink</id>
+						<phase>package</phase>
+						<goals>
+							<goal>shade</goal>
+						</goals>
+						<configuration>
+							<artifactSet>
+								<includes>
+									<include>*:*</include>
+								</includes>
+							</artifactSet>
+							<filters>
+								<filter>
+									<artifact>org.apache.httpcomponents:httpclient</artifact>
+									<excludes>
+										<exclude>mozilla/**</exclude>
+									</excludes>
+								</filter>
+								<filter>
+									<artifact>*:*</artifact>
+									<excludes>
+										<!-- exclude Java 9+ multi-release entries; module-info.class breaks shading -->
+										<exclude>META-INF/versions/**</exclude>
+										<exclude>META-INF/services/com.fasterxml.**</exclude>
+										<!-- de-duplicate license/notice/manifest files contributed by bundled deps;
+											 the canonical NOTICE/LICENSE for this uber jar is shipped via
+											 src/main/resources/META-INF -->
+										<exclude>META-INF/LICENSE.txt</exclude>
+										<exclude>META-INF/LICENSE.md</exclude>
+										<exclude>META-INF/NOTICE.md</exclude>
+										<exclude>META-INF/DEPENDENCIES</exclude>
+										<exclude>META-INF/MANIFEST.MF</exclude>
+										<exclude>META-INF/FastDoubleParser-LICENSE</exclude>
+										<exclude>META-INF/FastDoubleParser-NOTICE</exclude>
+										<exclude>META-INF/bigint-LICENSE</exclude>
+									</excludes>
+								</filter>
+							</filters>
+							<relocations>
+								<!-- Relocate everything that is bundled into this uber jar -->
+								<relocation>
+									<pattern>co.elastic.clients</pattern>
+									<shadedPattern>org.apache.flink.elasticsearch8.shaded.co.elastic.clients</shadedPattern>
+								</relocation>
+								<relocation>
+									<pattern>org.elasticsearch</pattern>
+									<shadedPattern>org.apache.flink.elasticsearch8.shaded.org.elasticsearch</shadedPattern>
+								</relocation>
+								<relocation>
+									<pattern>org.apache.http</pattern>
+									<shadedPattern>org.apache.flink.elasticsearch8.shaded.org.apache.http</shadedPattern>
+								</relocation>
+								<relocation>
+									<pattern>org.apache.commons</pattern>
+									<shadedPattern>org.apache.flink.elasticsearch8.shaded.org.apache.commons</shadedPattern>
+								</relocation>
+								<relocation>
+									<pattern>com.fasterxml.jackson</pattern>
+									<shadedPattern>org.apache.flink.elasticsearch8.shaded.com.fasterxml.jackson</shadedPattern>
+								</relocation>
+								<relocation>
+									<pattern>jakarta.json</pattern>
+									<shadedPattern>org.apache.flink.elasticsearch8.shaded.jakarta.json</shadedPattern>
+								</relocation>
+								<relocation>
+									<pattern>org.eclipse.yasson</pattern>
+									<shadedPattern>org.apache.flink.elasticsearch8.shaded.org.eclipse.yasson</shadedPattern>
+								</relocation>
+								<relocation>
+									<pattern>io.opentelemetry</pattern>
+									<shadedPattern>org.apache.flink.elasticsearch8.shaded.io.opentelemetry</shadedPattern>
+								</relocation>
+							</relocations>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>
