@@ -70,6 +70,7 @@ import static org.apache.flink.connector.elasticsearch.table.Elasticsearch8Conne
 import static org.apache.flink.connector.elasticsearch.table.Elasticsearch8ConnectorOptions.SOCKET_TIMEOUT;
 import static org.apache.flink.connector.elasticsearch.table.Elasticsearch8ConnectorOptions.SSL_CERTIFICATE_FINGERPRINT;
 import static org.apache.flink.connector.elasticsearch.table.Elasticsearch8ConnectorOptions.USERNAME_OPTION;
+import static org.apache.flink.connector.elasticsearch.utils.StringUtils.capitalizeFirst;
 import static org.apache.flink.table.connector.source.lookup.LookupOptions.CACHE_TYPE;
 import static org.apache.flink.table.connector.source.lookup.LookupOptions.PARTIAL_CACHE_CACHE_MISSING_KEY;
 import static org.apache.flink.table.connector.source.lookup.LookupOptions.PARTIAL_CACHE_EXPIRE_AFTER_ACCESS;
@@ -263,12 +264,5 @@ public class Elasticsearch8DynamicTableFactory extends AsyncDynamicTableSinkFact
                         SOCKET_TIMEOUT,
                         SSL_CERTIFICATE_FINGERPRINT)
                 .collect(Collectors.toSet());
-    }
-
-    private static String capitalizeFirst(String str) {
-        if (str == null || str.isEmpty()) {
-            return str;
-        }
-        return str.substring(0, 1).toUpperCase() + str.substring(1);
     }
 }
