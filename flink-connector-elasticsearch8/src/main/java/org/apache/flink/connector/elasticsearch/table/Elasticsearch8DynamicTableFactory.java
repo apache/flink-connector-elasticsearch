@@ -51,7 +51,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.apache.commons.lang3.StringUtils.capitalize;
 import static org.apache.flink.connector.elasticsearch.table.Elasticsearch8ConnectorOptions.BULK_FLUSH_INTERVAL_OPTION;
 import static org.apache.flink.connector.elasticsearch.table.Elasticsearch8ConnectorOptions.BULK_FLUSH_MAX_ACTIONS_OPTION;
 import static org.apache.flink.connector.elasticsearch.table.Elasticsearch8ConnectorOptions.BULK_FLUSH_MAX_BUFFERED_ACTIONS_OPTION;
@@ -71,6 +70,7 @@ import static org.apache.flink.connector.elasticsearch.table.Elasticsearch8Conne
 import static org.apache.flink.connector.elasticsearch.table.Elasticsearch8ConnectorOptions.SOCKET_TIMEOUT;
 import static org.apache.flink.connector.elasticsearch.table.Elasticsearch8ConnectorOptions.SSL_CERTIFICATE_FINGERPRINT;
 import static org.apache.flink.connector.elasticsearch.table.Elasticsearch8ConnectorOptions.USERNAME_OPTION;
+import static org.apache.flink.connector.elasticsearch.utils.StringUtils.capitalizeFirst;
 import static org.apache.flink.table.connector.source.lookup.LookupOptions.CACHE_TYPE;
 import static org.apache.flink.table.connector.source.lookup.LookupOptions.PARTIAL_CACHE_CACHE_MISSING_KEY;
 import static org.apache.flink.table.connector.source.lookup.LookupOptions.PARTIAL_CACHE_EXPIRE_AFTER_ACCESS;
@@ -105,7 +105,7 @@ public class Elasticsearch8DynamicTableFactory extends AsyncDynamicTableSinkFact
         validateConfiguration(config);
 
         return new Elasticsearch8DynamicSource(
-                format, config, context.getPhysicalRowDataType(), capitalize(IDENTIFIER));
+                format, config, context.getPhysicalRowDataType(), capitalizeFirst(IDENTIFIER));
     }
 
     @Override
@@ -128,7 +128,7 @@ public class Elasticsearch8DynamicTableFactory extends AsyncDynamicTableSinkFact
                 .setPrimaryKeyLogicalTypesWithIndex(primaryKeyLogicalTypesWithIndex)
                 .setPhysicalRowDataType(context.getPhysicalRowDataType())
                 .setLocalTimeZoneId(getLocalTimeZoneId(context.getConfiguration()))
-                .setSummaryString(capitalize(IDENTIFIER))
+                .setSummaryString(capitalizeFirst(IDENTIFIER))
                 .build();
     }
 
