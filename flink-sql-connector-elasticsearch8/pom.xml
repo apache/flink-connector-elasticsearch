@@ -43,12 +43,6 @@ under the License.
 			<groupId>org.apache.flink</groupId>
 			<artifactId>flink-connector-elasticsearch8</artifactId>
 			<version>${project.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>org.eclipse.parsson</groupId>
-					<artifactId>parsson</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.flink</groupId>
@@ -138,6 +132,10 @@ under the License.
 								<relocation>
 									<pattern>org.eclipse.yasson</pattern>
 									<shadedPattern>org.apache.flink.elasticsearch8.shaded.org.eclipse.yasson</shadedPattern>
+								</relocation>
+								<relocation>
+									<pattern>org.eclipse.parsson</pattern>
+									<shadedPattern>org.apache.flink.elasticsearch8.shaded.org.eclipse.parsson</shadedPattern>
 								</relocation>
 								<relocation>
 									<pattern>io.opentelemetry</pattern>
