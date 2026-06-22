@@ -118,7 +118,7 @@ abstract class ElasticsearchDynamicSinkBaseITCase {
         GenericRowData rowData =
                 GenericRowData.of(
                         1L,
-                        12345,
+                        12000,
                         StringData.fromString("ABCDE"),
                         12.12f,
                         (byte) 2,
@@ -184,7 +184,7 @@ abstract class ElasticsearchDynamicSinkBaseITCase {
                 .fromValues(
                         row(
                                 1L,
-                                LocalTime.ofNanoOfDay(12345L * 1_000_000L),
+                                LocalTime.ofNanoOfDay(12000L * 1_000_000L),
                                 "ABCDE",
                                 12.12f,
                                 (byte) 2,
@@ -230,7 +230,7 @@ abstract class ElasticsearchDynamicSinkBaseITCase {
                 .fromValues(
                         row(
                                 1L,
-                                LocalTime.ofNanoOfDay(12345L * 1_000_000L),
+                                LocalTime.ofNanoOfDay(12000L * 1_000_000L),
                                 "ABCDE",
                                 12.12f,
                                 (byte) 2,
@@ -238,7 +238,7 @@ abstract class ElasticsearchDynamicSinkBaseITCase {
                                 LocalDateTime.parse("2012-12-12T12:12:12")),
                         row(
                                 2L,
-                                LocalTime.ofNanoOfDay(12345L * 1_000_000L),
+                                LocalTime.ofNanoOfDay(12000L * 1_000_000L),
                                 "FGHIJK",
                                 13.13f,
                                 (byte) 4,
