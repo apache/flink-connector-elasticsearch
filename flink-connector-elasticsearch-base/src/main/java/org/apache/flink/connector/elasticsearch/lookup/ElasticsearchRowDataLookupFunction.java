@@ -191,4 +191,21 @@ public class ElasticsearchRowDataLookupFunction<C extends AutoCloseable> extends
 
         return row;
     }
+
+    @Override
+    public void close() throws Exception {
+        try {
+            if (client != null) {
+                try {
+                    callBridge.close(client);
+                } catch (Exception e) {
+                    LOG.warn("Failed to close Elasticsearch client in lookup function.", e);
+                } finally {
+                    client = null;
+                }
+            }
+        } finally {
+            super.close();
+        }
+    }
 }
