@@ -22,6 +22,7 @@
 package org.apache.flink.connector.elasticsearch.sink;
 
 import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.Kryo.DefaultInstantiatorStrategy;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import org.objenesis.strategy.StdInstantiatorStrategy;
@@ -36,7 +37,12 @@ public class OperationSerializer {
 
     public OperationSerializer() {
         kryo.setRegistrationRequired(false);
-        kryo.setInstantiatorStrategy(new StdInstantiatorStrategy());
+        DefaultInstantiatorStrategy instantiatorStrategy = new DefaultInstantiatorStrategy();
+        instantiatorStrategy.setFallbackInstantiatorStrategy(new StdInstantiatorStrategy());
+        kryo.setInstantiatorStrategy(instantiatorStrategy);
+        // Use TCCL so Kryo can resolve classes that live in the user-code
+        // ClassLoader, not the system AppClassLoader.
+        kryo.setClassLoader(Thread.currentThread().getContextClassLoader());
     }
 
     public void serialize(Operation request, DataOutputStream out) {
