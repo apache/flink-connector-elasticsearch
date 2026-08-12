@@ -39,6 +39,7 @@ import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.ConnectException;
 import java.net.NoRouteToHostException;
 import java.util.ArrayList;
@@ -204,7 +205,13 @@ public class Elasticsearch8AsyncWriter<InputT> extends AsyncSinkWriter<InputT, O
     public void close() {
         if (!close) {
             close = true;
-            esClient.shutdown();
+            try {
+                if (esClient != null && esClient._transport() != null) {
+                    esClient._transport().close();
+                }
+            } catch (IOException e) {
+                LOG.warn("Failed to close Elasticsearch transport during sink close", e);
+            }
         }
     }
 }
