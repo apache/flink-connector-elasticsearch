@@ -79,6 +79,7 @@ public class Elasticsearch8AsyncWriterITCase extends ElasticsearchSinkBaseITCase
     public void testBulkOnBufferTimeFlush() throws Exception {
         String index = "test-bulk-on-time-in-buffer";
         int maxBatchSize = 3;
+        this.latch = new CountDownLatch(2);
 
         try (final Elasticsearch8AsyncWriter<DummyData> writer =
                 createWriter(index, maxBatchSize)) {
