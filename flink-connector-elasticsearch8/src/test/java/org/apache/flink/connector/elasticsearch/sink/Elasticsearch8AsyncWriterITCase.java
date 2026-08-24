@@ -37,9 +37,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.CountDownLatch;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -47,13 +45,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class Elasticsearch8AsyncWriterITCase extends ElasticsearchSinkBaseITCase {
     private TestSinkInitContext context;
 
-    private final Lock lock = new ReentrantLock();
-
-    private final Condition completed = lock.newCondition();
+    private CountDownLatch latch;
 
     @BeforeEach
     void setUp() {
         this.context = new TestSinkInitContext();
+        this.latch = new CountDownLatch(1);
     }
 
     @TestTemplate
@@ -287,20 +284,10 @@ public class Elasticsearch8AsyncWriterITCase extends ElasticsearchSinkBaseITCase
     }
 
     private void signal() {
-        lock.lock();
-        try {
-            completed.signal();
-        } finally {
-            lock.unlock();
-        }
+        latch.countDown();
     }
 
     private void await() throws InterruptedException {
-        lock.lock();
-        try {
-            completed.await();
-        } finally {
-            lock.unlock();
-        }
+        latch.await();
     }
 }
