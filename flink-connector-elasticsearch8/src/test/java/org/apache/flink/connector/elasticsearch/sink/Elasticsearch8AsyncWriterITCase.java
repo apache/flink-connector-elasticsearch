@@ -191,9 +191,9 @@ public class Elasticsearch8AsyncWriterITCase extends ElasticsearchSinkBaseITCase
                 createWriter(maxBatchSize, elementConverter)) {
             writer.write(new DummyData("test-1", "test-1-updated"), null);
             writer.write(new DummyData("test-2", "test-2-updated"), null);
-        }
 
-        await();
+            await();
+        }
 
         assertThat(context.metricGroup().getNumRecordsOutErrorsCounter().getCount()).isEqualTo(1);
         assertIdsAreWritten(index, new String[] {"test-2"});
