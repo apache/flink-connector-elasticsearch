@@ -37,9 +37,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.CountDownLatch;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -47,13 +45,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class Elasticsearch8AsyncWriterITCase extends ElasticsearchSinkBaseITCase {
     private TestSinkInitContext context;
 
-    private final Lock lock = new ReentrantLock();
-
-    private final Condition completed = lock.newCondition();
+    private CountDownLatch latch;
 
     @BeforeEach
     void setUp() {
         this.context = new TestSinkInitContext();
+        this.latch = new CountDownLatch(1);
     }
 
     @TestTemplate
@@ -82,6 +79,7 @@ public class Elasticsearch8AsyncWriterITCase extends ElasticsearchSinkBaseITCase
     public void testBulkOnBufferTimeFlush() throws Exception {
         String index = "test-bulk-on-time-in-buffer";
         int maxBatchSize = 3;
+        this.latch = new CountDownLatch(2);
 
         try (final Elasticsearch8AsyncWriter<DummyData> writer =
                 createWriter(index, maxBatchSize)) {
@@ -191,9 +189,9 @@ public class Elasticsearch8AsyncWriterITCase extends ElasticsearchSinkBaseITCase
                 createWriter(maxBatchSize, elementConverter)) {
             writer.write(new DummyData("test-1", "test-1-updated"), null);
             writer.write(new DummyData("test-2", "test-2-updated"), null);
-        }
 
-        await();
+            await();
+        }
 
         assertThat(context.metricGroup().getNumRecordsOutErrorsCounter().getCount()).isEqualTo(1);
         assertIdsAreWritten(index, new String[] {"test-2"});
@@ -287,20 +285,10 @@ public class Elasticsearch8AsyncWriterITCase extends ElasticsearchSinkBaseITCase
     }
 
     private void signal() {
-        lock.lock();
-        try {
-            completed.signal();
-        } finally {
-            lock.unlock();
-        }
+        latch.countDown();
     }
 
     private void await() throws InterruptedException {
-        lock.lock();
-        try {
-            completed.await();
-        } finally {
-            lock.unlock();
-        }
+        latch.await();
     }
 }
