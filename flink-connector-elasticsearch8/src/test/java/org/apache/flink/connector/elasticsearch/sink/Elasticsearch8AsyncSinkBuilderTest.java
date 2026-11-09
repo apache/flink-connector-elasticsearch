@@ -25,6 +25,8 @@ import co.elastic.clients.elasticsearch.core.bulk.DeleteOperation;
 import org.apache.http.HttpHost;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
+
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 /** Tests for {@link Elasticsearch8AsyncSinkBuilder}. */
@@ -46,10 +48,11 @@ public class Elasticsearch8AsyncSinkBuilderTest {
                                 Elasticsearch8AsyncSinkBuilder.<String>builder()
                                         .setElementConverter(
                                                 (element, ctx) ->
-                                                        new DeleteOperation.Builder()
-                                                                .id("test")
-                                                                .index("test")
-                                                                .build())
+                                                        Arrays.asList(
+                                                                new DeleteOperation.Builder()
+                                                                        .id("test")
+                                                                        .index("test")
+                                                                        .build()))
                                         .build())
                 .isInstanceOf(NullPointerException.class);
     }
@@ -62,10 +65,11 @@ public class Elasticsearch8AsyncSinkBuilderTest {
                                         .setHosts(null)
                                         .setElementConverter(
                                                 (element, ctx) ->
-                                                        new DeleteOperation.Builder()
-                                                                .id("test")
-                                                                .index("test")
-                                                                .build())
+                                                        Arrays.asList(
+                                                                new DeleteOperation.Builder()
+                                                                        .id("test")
+                                                                        .index("test")
+                                                                        .build()))
                                         .build())
                 .isInstanceOf(NullPointerException.class);
     }
