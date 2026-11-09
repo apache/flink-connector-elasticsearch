@@ -28,14 +28,16 @@ jobs:
   compile_and_test:
     strategy:
       matrix:
-        flink: [ 1.18-SNAPSHOT ]
+        flink: [ 1.18.1 ]
         jdk: [ '8, 11, 17' ]
         include:
-          - flink: 1.19-SNAPSHOT
+          - flink: 1.19.3
             jdk: '8, 11, 17, 21'
-          - flink: 1.20-SNAPSHOT
+          - flink: 1.20.5
             jdk: '8, 11, 17, 21'
     uses: apache/flink-connector-shared-utils/.github/workflows/ci.yml@ci_utils
     with:
       flink_version: ${{ matrix.flink }}
+      flink_url: https://archive.apache.org/dist/flink/flink-${{ matrix.flink }}/flink-${{ matrix.flink }}-bin-scala_2.12.tgz
+      cache_flink_binary: true
       jdk_version: ${{ matrix.jdk }}
