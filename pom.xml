@@ -57,7 +57,7 @@ under the License.
 		<jackson-bom.version>2.15.3</jackson-bom.version>
 		<junit5.version>5.10.2</junit5.version>
 		<assertj.version>3.25.3</assertj.version>
-		<testcontainers.version>1.19.7</testcontainers.version>
+		<testcontainers.version>2.0.5</testcontainers.version>
 		<mockito.version>3.12.4</mockito.version>
 
 		<japicmp.skip>false</japicmp.skip>
@@ -114,7 +114,7 @@ under the License.
 
 		<dependency>
 			<groupId>org.testcontainers</groupId>
-			<artifactId>junit-jupiter</artifactId>
+			<artifactId>testcontainers-junit-jupiter</artifactId>
 			<scope>test</scope>
 		</dependency>
 
