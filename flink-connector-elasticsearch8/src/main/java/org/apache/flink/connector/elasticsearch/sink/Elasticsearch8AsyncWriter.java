@@ -144,15 +144,14 @@ public class Elasticsearch8AsyncWriter<InputT> extends AsyncSinkWriter<InputT, O
             List<Operation> requestEntries,
             Consumer<List<Operation>> requestResult,
             Throwable error) {
-        LOG.warn(
-                "The BulkRequest of {} operation(s) has failed due to: {}",
-                requestEntries.size(),
-                error.getMessage());
-        LOG.debug("The BulkRequest has failed", error);
+        LOG.debug("The BulkRequest has failed. Error: {}", error);
         numRecordsOutErrorsCounter.inc(requestEntries.size());
 
-        if (isRetryable(error.getCause())) {
+        if (isRetryable(error.getCause() == null ? error : error.getCause())) {
+            LOG.info("The BulkRequest of {} operation(s) has failed due to: {}:{} - retried (cause {})", requestEntries.size(), error.getClass(), error.getMessage(), error.getCause());
             requestResult.accept(requestEntries);
+        } else {
+            LOG.warn("The BulkRequest of {} operation(s) has failed due to: {}:{} - not retried (cause {})", requestEntries.size(), error.getClass(), error.getMessage(), error.getCause());
         }
     }
 
@@ -188,7 +187,8 @@ public class Elasticsearch8AsyncWriter<InputT> extends AsyncSinkWriter<InputT, O
     }
 
     private boolean isRetryable(Throwable error) {
-        return !ELASTICSEARCH_FATAL_EXCEPTION_CLASSIFIER.isFatal(error, getFatalExceptionCons());
+        boolean trueIfExceptionNotThrownElseFalse = ELASTICSEARCH_FATAL_EXCEPTION_CLASSIFIER.isFatal(error, getFatalExceptionCons());
+        return trueIfExceptionNotThrownElseFalse ;
     }
 
     @Override
