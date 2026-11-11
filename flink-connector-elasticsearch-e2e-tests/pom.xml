@@ -68,6 +68,13 @@ under the License.
 									<systemPropertyVariables>
 										<moduleDir>${project.basedir}</moduleDir>
 									</systemPropertyVariables>
+									<environmentVariables>
+										<!-- FlinkImageBuilder reuses an existing flink-base image. Ryuk removes it only
+											shortly after the JVM exits, so the next e2e module can lose it mid-build
+											("pull access denied for flink-base"). Without Ryuk, a shutdown hook removes it
+											before the JVM exits. -->
+										<TESTCONTAINERS_RYUK_DISABLED>true</TESTCONTAINERS_RYUK_DISABLED>
+									</environmentVariables>
 									<argLine>${flink.surefire.baseArgLine} -Xmx${flink.XmxUnitTest}</argLine>
 								</configuration>
 							</execution>
