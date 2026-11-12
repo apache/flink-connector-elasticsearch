@@ -223,6 +223,20 @@ CREATE TABLE myUserTable (
       <td>每次退避尝试之间的延迟。对于 <code>CONSTANT</code> 退避策略，该值是每次重试之间的延迟。对于 <code>EXPONENTIAL</code> 退避策略，该值是初始的延迟。注意<code>elasticsearch-8</code>不支持此配置项。</td>
     </tr>
     <tr>
+      <td><h5>sink.bulk-flush.refresh-policy</h5></td>
+      <td>可选</td>
+      <td style="word-wrap: break-word;">NONE</td>
+      <td>Enum</td>
+      <td>每个 bulk 请求的 refresh 策略，即 Elasticsearch Bulk API 的 <code>refresh</code> 参数。可选值：
+      <ul>
+        <li><code>NONE</code>：等价于 <code>refresh=false</code>。不 refresh，写入的数据在索引下一次周期性 refresh（见 <code>index.refresh_interval</code>）后才可被搜索到。</li>
+        <li><code>IMMEDIATE</code>：等价于 <code>refresh=true</code>。bulk 请求完成后立即 refresh 涉及的分片，请求返回时写入的数据即可被搜索到。</li>
+        <li><code>WAIT_UNTIL</code>：等价于 <code>refresh=wait_for</code>。不主动 refresh，而是等待下一次周期性 refresh 使写入的数据可被搜索到后再返回，每个 bulk 请求最多可能被阻塞 <code>index.refresh_interval</code>。</li>
+      </ul>
+      注意 <code>IMMEDIATE</code> 会产生大量小 segment，<code>WAIT_UNTIL</code> 会拖慢每个 bulk 请求，二者都会降低 sink 的吞吐，仅建议在写入量小且要求数据尽快可被搜索到的场景下使用。
+      </td>
+    </tr>
+    <tr>
       <td><h5>ssl.certificate-fingerprint</h5></td>
       <td>可选</td>
       <td style="word-wrap: break-word;">(none)</td>
