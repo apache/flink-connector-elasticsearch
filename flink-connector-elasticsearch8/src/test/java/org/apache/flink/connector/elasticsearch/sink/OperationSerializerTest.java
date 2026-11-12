@@ -25,7 +25,11 @@ import co.elastic.clients.elasticsearch.core.bulk.BulkOperationVariant;
 import co.elastic.clients.elasticsearch.core.bulk.DeleteOperation;
 import co.elastic.clients.elasticsearch.core.bulk.IndexOperation;
 import co.elastic.clients.elasticsearch.core.bulk.UpdateOperation;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.assertj.core.api.recursive.comparison.RecursiveComparisonConfiguration;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -81,5 +85,34 @@ public class OperationSerializerTest {
 
     private int getRequestSize(Operation requestEntry) {
         return new OperationSerializer().size(requestEntry);
+    }
+
+    @Test
+    public void testSerializeUpdateOperationWithJacksonNodes() throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode doc = mapper.createObjectNode();
+        doc.put("field", "value");
+        doc.putObject("nested").put("foo", "bar");
+        ArrayNode list = mapper.createArrayNode();
+        list.add("first");
+        list.add(mapper.createObjectNode().put("inner", "second"));
+        doc.set("list", list);
+
+        UpdateOperation<Object, Object> updateOp =
+                UpdateOperation.of(b -> b.index("idx").id("id1").action(a -> a.doc(doc)));
+        Operation expectedState = new Operation(updateOp);
+
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        DataOutputStream out = new DataOutputStream(bytes);
+        new OperationSerializer().serialize(expectedState, out);
+
+        ByteArrayInputStream inputBytes = new ByteArrayInputStream(bytes.toByteArray());
+        DataInputStream in = new DataInputStream(inputBytes);
+        Operation actualState =
+                new OperationSerializer().deserialize(getRequestSize(expectedState), in);
+
+        assertThat(actualState.getBulkOperationVariant())
+                .usingRecursiveComparison(RecursiveComparisonConfiguration.builder().build())
+                .isEqualTo(expectedState.getBulkOperationVariant());
     }
 }
