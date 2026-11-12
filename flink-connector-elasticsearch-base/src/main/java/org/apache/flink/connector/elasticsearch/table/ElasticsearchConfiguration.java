@@ -22,6 +22,7 @@ import org.apache.flink.annotation.Internal;
 import org.apache.flink.configuration.MemorySize;
 import org.apache.flink.configuration.ReadableConfig;
 import org.apache.flink.connector.base.DeliveryGuarantee;
+import org.apache.flink.connector.elasticsearch.sink.BulkRefreshPolicy;
 import org.apache.flink.connector.elasticsearch.sink.FlushBackoffType;
 import org.apache.flink.table.api.ValidationException;
 
@@ -38,6 +39,7 @@ import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnec
 import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions.BULK_FLUSH_INTERVAL_OPTION;
 import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions.BULK_FLUSH_MAX_ACTIONS_OPTION;
 import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions.BULK_FLUSH_MAX_SIZE_OPTION;
+import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions.BULK_FLUSH_REFRESH_POLICY_OPTION;
 import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions.CONNECTION_PATH_PREFIX_OPTION;
 import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions.CONNECTION_REQUEST_TIMEOUT;
 import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions.CONNECTION_TIMEOUT;
@@ -95,6 +97,10 @@ public class ElasticsearchConfiguration {
 
     public Optional<Long> getBulkFlushBackoffDelay() {
         return config.getOptional(BULK_FLUSH_BACKOFF_DELAY_OPTION).map(Duration::toMillis);
+    }
+
+    public BulkRefreshPolicy getBulkRefreshPolicy() {
+        return config.get(BULK_FLUSH_REFRESH_POLICY_OPTION);
     }
 
     public String getIndex() {

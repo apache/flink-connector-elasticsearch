@@ -141,6 +141,7 @@ class ElasticsearchDynamicSink implements DynamicTableSink {
         builder.setBulkFlushMaxActions(config.getBulkFlushMaxActions());
         builder.setBulkFlushMaxSizeMb(config.getBulkFlushMaxByteSize().getMebiBytes());
         builder.setBulkFlushInterval(config.getBulkFlushInterval());
+        builder.setBulkRefreshPolicy(config.getBulkRefreshPolicy());
 
         if (config.getBulkFlushBackoffType().isPresent()) {
             FlushBackoffType backoffType = config.getBulkFlushBackoffType().get();

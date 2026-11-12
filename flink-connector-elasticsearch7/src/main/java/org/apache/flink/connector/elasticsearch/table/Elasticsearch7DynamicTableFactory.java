@@ -46,6 +46,7 @@ import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnec
 import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions.BULK_FLUSH_INTERVAL_OPTION;
 import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions.BULK_FLUSH_MAX_ACTIONS_OPTION;
 import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions.BULK_FLUSH_MAX_SIZE_OPTION;
+import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions.BULK_FLUSH_REFRESH_POLICY_OPTION;
 import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions.CONNECTION_PATH_PREFIX_OPTION;
 import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions.CONNECTION_REQUEST_TIMEOUT;
 import static org.apache.flink.connector.elasticsearch.table.ElasticsearchConnectorOptions.CONNECTION_TIMEOUT;
@@ -118,6 +119,7 @@ public class Elasticsearch7DynamicTableFactory extends ElasticsearchDynamicTable
                         BULK_FLUSH_BACKOFF_TYPE_OPTION,
                         BULK_FLUSH_BACKOFF_MAX_RETRIES_OPTION,
                         BULK_FLUSH_BACKOFF_DELAY_OPTION,
+                        BULK_FLUSH_REFRESH_POLICY_OPTION,
                         CONNECTION_PATH_PREFIX_OPTION,
                         CONNECTION_REQUEST_TIMEOUT,
                         CONNECTION_TIMEOUT,

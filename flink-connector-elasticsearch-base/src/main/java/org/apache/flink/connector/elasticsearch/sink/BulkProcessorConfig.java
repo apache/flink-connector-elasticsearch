@@ -30,6 +30,7 @@ class BulkProcessorConfig implements Serializable {
     private final FlushBackoffType flushBackoffType;
     private final int bulkFlushBackoffRetries;
     private final long bulkFlushBackOffDelay;
+    private final BulkRefreshPolicy bulkRefreshPolicy;
 
     BulkProcessorConfig(
             int bulkFlushMaxActions,
@@ -38,12 +39,31 @@ class BulkProcessorConfig implements Serializable {
             FlushBackoffType flushBackoffType,
             int bulkFlushBackoffRetries,
             long bulkFlushBackOffDelay) {
+        this(
+                bulkFlushMaxActions,
+                bulkFlushMaxMb,
+                bulkFlushInterval,
+                flushBackoffType,
+                bulkFlushBackoffRetries,
+                bulkFlushBackOffDelay,
+                BulkRefreshPolicy.NONE);
+    }
+
+    BulkProcessorConfig(
+            int bulkFlushMaxActions,
+            int bulkFlushMaxMb,
+            long bulkFlushInterval,
+            FlushBackoffType flushBackoffType,
+            int bulkFlushBackoffRetries,
+            long bulkFlushBackOffDelay,
+            BulkRefreshPolicy bulkRefreshPolicy) {
         this.bulkFlushMaxActions = bulkFlushMaxActions;
         this.bulkFlushMaxMb = bulkFlushMaxMb;
         this.bulkFlushInterval = bulkFlushInterval;
         this.flushBackoffType = checkNotNull(flushBackoffType);
         this.bulkFlushBackoffRetries = bulkFlushBackoffRetries;
         this.bulkFlushBackOffDelay = bulkFlushBackOffDelay;
+        this.bulkRefreshPolicy = checkNotNull(bulkRefreshPolicy);
     }
 
     public int getBulkFlushMaxActions() {
@@ -68,5 +88,9 @@ class BulkProcessorConfig implements Serializable {
 
     public long getBulkFlushBackOffDelay() {
         return bulkFlushBackOffDelay;
+    }
+
+    public BulkRefreshPolicy getBulkRefreshPolicy() {
+        return bulkRefreshPolicy;
     }
 }

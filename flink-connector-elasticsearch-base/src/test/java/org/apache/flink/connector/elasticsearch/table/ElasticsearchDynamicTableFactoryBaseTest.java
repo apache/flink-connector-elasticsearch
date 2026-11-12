@@ -20,6 +20,7 @@ package org.apache.flink.connector.elasticsearch.table;
 
 import org.apache.flink.api.common.typeutils.base.VoidSerializer;
 import org.apache.flink.connector.elasticsearch.ElasticsearchUtil;
+import org.apache.flink.connector.elasticsearch.sink.BulkRefreshPolicy;
 import org.apache.flink.table.api.ValidationException;
 import org.apache.flink.table.catalog.Column;
 import org.apache.flink.table.catalog.ResolvedSchema;
@@ -252,5 +253,50 @@ abstract class ElasticsearchDynamicTableFactoryBaseTest {
         SinkV2Provider provider =
                 (SinkV2Provider) esSink.getSinkRuntimeProvider(new ElasticsearchUtil.MockContext());
         assertThat(provider.getParallelism()).hasValue(2);
+    }
+
+    @Test
+    public void testDefaultBulkRefreshPolicy() {
+        ElasticsearchDynamicTableFactoryBase sinkFactory = createSinkFactory();
+        DynamicTableSink sink =
+                sinkFactory.createDynamicTableSink(createPrefilledTestContext().build());
+        assertThat(((ElasticsearchDynamicSink) sink).config.getBulkRefreshPolicy())
+                .isEqualTo(BulkRefreshPolicy.NONE);
+    }
+
+    @Test
+    public void testBulkRefreshPolicy() {
+        ElasticsearchDynamicTableFactoryBase sinkFactory = createSinkFactory();
+        DynamicTableSink sink =
+                sinkFactory.createDynamicTableSink(
+                        createPrefilledTestContext()
+                                .withOption(
+                                        ElasticsearchConnectorOptions
+                                                .BULK_FLUSH_REFRESH_POLICY_OPTION
+                                                .key(),
+                                        "wait_until")
+                                .build());
+        ElasticsearchDynamicSink esSink = (ElasticsearchDynamicSink) sink;
+        assertThat(esSink.config.getBulkRefreshPolicy()).isEqualTo(BulkRefreshPolicy.WAIT_UNTIL);
+        assertThat(esSink.getSinkRuntimeProvider(new ElasticsearchUtil.MockContext()))
+                .isInstanceOf(SinkV2Provider.class);
+    }
+
+    @Test
+    public void validateWrongBulkRefreshPolicy() {
+        ElasticsearchDynamicTableFactoryBase sinkFactory = createSinkFactory();
+
+        assertThatThrownBy(
+                        () ->
+                                sinkFactory.createDynamicTableSink(
+                                        createPrefilledTestContext()
+                                                .withOption(
+                                                        ElasticsearchConnectorOptions
+                                                                .BULK_FLUSH_REFRESH_POLICY_OPTION
+                                                                .key(),
+                                                        "always")
+                                                .build()))
+                .isInstanceOf(ValidationException.class)
+                .hasMessage("Invalid value for option 'sink.bulk-flush.refresh-policy'.");
     }
 }
