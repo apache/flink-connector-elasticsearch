@@ -94,6 +94,9 @@ public class Elasticsearch8AsyncSinkBuilder<InputT>
 
     private SerializableSupplier<HostnameVerifier> sslHostnameVerifier;
 
+    /** The refresh policy applied to every bulk request. */
+    private BulkRefreshPolicy bulkRefreshPolicy = BulkRefreshPolicy.NONE;
+
     /**
      * setHosts set the hosts where the Elasticsearch cluster is reachable.
      *
@@ -227,6 +230,19 @@ public class Elasticsearch8AsyncSinkBuilder<InputT>
     }
 
     /**
+     * Sets the refresh policy applied to every bulk request. The default is {@link
+     * BulkRefreshPolicy#NONE}.
+     *
+     * @param bulkRefreshPolicy the refresh policy of each bulk request
+     * @return {@code Elasticsearch8AsyncSinkBuilder}
+     */
+    public Elasticsearch8AsyncSinkBuilder<InputT> setBulkRefreshPolicy(
+            BulkRefreshPolicy bulkRefreshPolicy) {
+        this.bulkRefreshPolicy = checkNotNull(bulkRefreshPolicy);
+        return this;
+    }
+
+    /**
      * setElementConverter set the element converter that will be called at every stream element to
      * be processed and buffered.
      *
@@ -260,7 +276,8 @@ public class Elasticsearch8AsyncSinkBuilder<InputT>
                 Optional.ofNullable(getMaxBatchSizeInBytes()).orElse(DEFAULT_MAX_BATCH_SIZE_IN_B),
                 Optional.ofNullable(getMaxTimeInBufferMS()).orElse(DEFAULT_MAX_TIME_IN_BUFFER_MS),
                 Optional.ofNullable(getMaxRecordSizeInBytes()).orElse(DEFAULT_MAX_RECORD_SIZE_IN_B),
-                buildNetworkConfig());
+                buildNetworkConfig(),
+                bulkRefreshPolicy);
     }
 
     private OperationConverter<InputT> buildOperationConverter(

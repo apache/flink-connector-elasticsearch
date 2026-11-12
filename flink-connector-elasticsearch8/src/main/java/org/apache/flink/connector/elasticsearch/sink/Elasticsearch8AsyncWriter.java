@@ -33,11 +33,14 @@ import org.apache.flink.metrics.groups.SinkWriterMetricGroup;
 import org.apache.flink.util.FlinkRuntimeException;
 
 import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
+import co.elastic.clients.elasticsearch._types.Refresh;
 import co.elastic.clients.elasticsearch.core.BulkRequest;
 import co.elastic.clients.elasticsearch.core.BulkResponse;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nullable;
 
 import java.io.IOException;
 import java.net.ConnectException;
@@ -58,6 +61,9 @@ public class Elasticsearch8AsyncWriter<InputT> extends AsyncSinkWriter<InputT, O
     private static final Logger LOG = LoggerFactory.getLogger(Elasticsearch8AsyncWriter.class);
 
     private final ElasticsearchAsyncClient esClient;
+
+    /** The refresh parameter of every bulk request, {@code null} means not set (refresh=false). */
+    @Nullable private final Refresh refresh;
 
     private boolean close = false;
 
@@ -96,6 +102,32 @@ public class Elasticsearch8AsyncWriter<InputT> extends AsyncSinkWriter<InputT, O
             long maxRecordSizeInBytes,
             NetworkConfig networkConfig,
             Collection<BufferedRequestState<Operation>> state) {
+        this(
+                elementConverter,
+                context,
+                maxBatchSize,
+                maxInFlightRequests,
+                maxBufferedRequests,
+                maxBatchSizeInBytes,
+                maxTimeInBufferMS,
+                maxRecordSizeInBytes,
+                networkConfig,
+                state,
+                BulkRefreshPolicy.NONE);
+    }
+
+    public Elasticsearch8AsyncWriter(
+            ElementConverter<InputT, Operation> elementConverter,
+            WriterInitContext context,
+            int maxBatchSize,
+            int maxInFlightRequests,
+            int maxBufferedRequests,
+            long maxBatchSizeInBytes,
+            long maxTimeInBufferMS,
+            long maxRecordSizeInBytes,
+            NetworkConfig networkConfig,
+            Collection<BufferedRequestState<Operation>> state,
+            BulkRefreshPolicy bulkRefreshPolicy) {
         super(
                 elementConverter,
                 context,
@@ -110,6 +142,7 @@ public class Elasticsearch8AsyncWriter<InputT> extends AsyncSinkWriter<InputT, O
                 state);
 
         this.esClient = networkConfig.createEsClient();
+        this.refresh = toRefresh(checkNotNull(bulkRefreshPolicy));
         final SinkWriterMetricGroup metricGroup = context.metricGroup();
         checkNotNull(metricGroup);
 
@@ -129,6 +162,9 @@ public class Elasticsearch8AsyncWriter<InputT> extends AsyncSinkWriter<InputT, O
         BulkRequest.Builder br = new BulkRequest.Builder();
         for (Operation operation : requestEntries) {
             br.operations(new BulkOperation(operation.getBulkOperationVariant()));
+        }
+        if (refresh != null) {
+            br.refresh(refresh);
         }
 
         esClient.bulk(br.build())
@@ -194,6 +230,20 @@ public class Elasticsearch8AsyncWriter<InputT> extends AsyncSinkWriter<InputT, O
 
     private boolean isRetryable(Throwable error) {
         return !ELASTICSEARCH_FATAL_EXCEPTION_CLASSIFIER.isFatal(error, getFatalExceptionCons());
+    }
+
+    @Nullable
+    private static Refresh toRefresh(BulkRefreshPolicy policy) {
+        switch (policy) {
+            case NONE:
+                return null;
+            case IMMEDIATE:
+                return Refresh.True;
+            case WAIT_UNTIL:
+                return Refresh.WaitFor;
+            default:
+                throw new IllegalArgumentException("Received unknown refresh policy " + policy);
+        }
     }
 
     @Override
