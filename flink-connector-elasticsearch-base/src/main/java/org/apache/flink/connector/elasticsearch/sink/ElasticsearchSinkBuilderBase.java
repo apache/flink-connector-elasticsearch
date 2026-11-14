@@ -32,6 +32,7 @@ import org.apache.flink.util.function.SerializableSupplier;
 import org.apache.http.HttpHost;
 import org.apache.http.conn.ssl.TrustAllStrategy;
 import org.apache.http.ssl.SSLContexts;
+import org.elasticsearch.action.support.WriteRequest;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
@@ -61,6 +62,7 @@ public abstract class ElasticsearchSinkBuilderBase<
     private FlushBackoffType bulkFlushBackoffType = FlushBackoffType.NONE;
     private int bulkFlushBackoffRetries = -1;
     private long bulkFlushBackOffDelay = -1;
+    private BulkRefreshPolicy bulkRefreshPolicy = BulkRefreshPolicy.NONE;
     private DeliveryGuarantee deliveryGuarantee = DeliveryGuarantee.AT_LEAST_ONCE;
     private List<HttpHost> hosts;
     protected ElasticsearchEmitter<? super IN> emitter;
@@ -198,6 +200,18 @@ public abstract class ElasticsearchSinkBuilderBase<
                 "Delay (in milliseconds) between each backoff attempt must be larger "
                         + "than or equal to 0.");
         this.bulkFlushBackOffDelay = delayMillis;
+        return self();
+    }
+
+    /**
+     * Sets the refresh policy applied to every bulk request. The default is {@link
+     * BulkRefreshPolicy#NONE}.
+     *
+     * @param bulkRefreshPolicy the refresh policy of each bulk request
+     * @return this builder
+     */
+    public B setBulkRefreshPolicy(BulkRefreshPolicy bulkRefreshPolicy) {
+        this.bulkRefreshPolicy = checkNotNull(bulkRefreshPolicy);
         return self();
     }
 
@@ -347,6 +361,20 @@ public abstract class ElasticsearchSinkBuilderBase<
         return self();
     }
 
+    /** Converts the bulk refresh policy for the Elasticsearch 6 and 7 clients. */
+    static WriteRequest.RefreshPolicy toRefreshPolicy(BulkRefreshPolicy policy) {
+        switch (policy) {
+            case NONE:
+                return WriteRequest.RefreshPolicy.NONE;
+            case IMMEDIATE:
+                return WriteRequest.RefreshPolicy.IMMEDIATE;
+            case WAIT_UNTIL:
+                return WriteRequest.RefreshPolicy.WAIT_UNTIL;
+            default:
+                throw new IllegalArgumentException("Received unknown refresh policy " + policy);
+        }
+    }
+
     protected abstract BulkProcessorBuilderFactory getBulkProcessorBuilderFactory();
 
     protected BulkResponseInspectorFactory getBulkResponseInspectorFactory() {
@@ -404,7 +432,8 @@ public abstract class ElasticsearchSinkBuilderBase<
                 bulkFlushInterval,
                 bulkFlushBackoffType,
                 bulkFlushBackoffRetries,
-                bulkFlushBackOffDelay);
+                bulkFlushBackOffDelay,
+                bulkRefreshPolicy);
     }
 
     @Override
@@ -422,6 +451,8 @@ public abstract class ElasticsearchSinkBuilderBase<
                 + bulkFlushBackoffRetries
                 + ", bulkFlushBackOffDelay="
                 + bulkFlushBackOffDelay
+                + ", bulkRefreshPolicy="
+                + bulkRefreshPolicy
                 + ", deliveryGuarantee="
                 + deliveryGuarantee
                 + ", hosts="

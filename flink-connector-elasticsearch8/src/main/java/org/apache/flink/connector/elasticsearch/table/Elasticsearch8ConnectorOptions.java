@@ -26,6 +26,7 @@ import org.apache.flink.configuration.ConfigOption;
 import org.apache.flink.configuration.ConfigOptions;
 import org.apache.flink.configuration.MemorySize;
 import org.apache.flink.connector.base.DeliveryGuarantee;
+import org.apache.flink.connector.elasticsearch.sink.BulkRefreshPolicy;
 
 import java.time.Duration;
 import java.util.List;
@@ -101,6 +102,17 @@ public class Elasticsearch8ConnectorOptions {
                     .durationType()
                     .defaultValue(Duration.ofSeconds(1))
                     .withDescription("Bulk flush interval");
+
+    public static final ConfigOption<BulkRefreshPolicy> BULK_FLUSH_REFRESH_POLICY_OPTION =
+            ConfigOptions.key("sink.bulk-flush.refresh-policy")
+                    .enumType(BulkRefreshPolicy.class)
+                    .defaultValue(BulkRefreshPolicy.NONE)
+                    .withDescription(
+                            "Refresh policy of every bulk request. "
+                                    + "'NONE' (refresh=false) does not refresh. "
+                                    + "'IMMEDIATE' (refresh=true) refreshes the affected shards right after the bulk request. "
+                                    + "'WAIT_UNTIL' (refresh=wait_for) waits until the next periodic refresh makes the data searchable. "
+                                    + "Both 'IMMEDIATE' and 'WAIT_UNTIL' reduce the sink throughput.");
 
     public static final ConfigOption<String> CONNECTION_PATH_PREFIX_OPTION =
             ConfigOptions.key("connection.path-prefix")

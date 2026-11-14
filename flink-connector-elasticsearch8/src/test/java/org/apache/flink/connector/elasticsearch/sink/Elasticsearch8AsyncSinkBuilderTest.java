@@ -25,6 +25,7 @@ import co.elastic.clients.elasticsearch.core.bulk.DeleteOperation;
 import org.apache.http.HttpHost;
 import org.junit.jupiter.api.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 /** Tests for {@link Elasticsearch8AsyncSinkBuilder}. */
@@ -97,6 +98,33 @@ public class Elasticsearch8AsyncSinkBuilderTest {
                                 Elasticsearch8AsyncSinkBuilder.<String>builder()
                                         .setHeaders(null)
                                         .build())
+                .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void testBulkRefreshPolicy() {
+        Elasticsearch8AsyncSinkBuilder<String> builder =
+                Elasticsearch8AsyncSinkBuilder.<String>builder()
+                        .setHosts(new HttpHost("localhost", 9200))
+                        .setElementConverter(
+                                (element, ctx) ->
+                                        new DeleteOperation.Builder()
+                                                .id(element)
+                                                .index("test")
+                                                .build());
+        assertThat(builder.build().bulkRefreshPolicy).isEqualTo(BulkRefreshPolicy.NONE);
+        for (BulkRefreshPolicy policy : BulkRefreshPolicy.values()) {
+            assertThat(builder.setBulkRefreshPolicy(policy).build().bulkRefreshPolicy)
+                    .isEqualTo(policy);
+        }
+    }
+
+    @Test
+    void testThrowExceptionIfBulkRefreshPolicyIsNull() {
+        assertThatThrownBy(
+                        () ->
+                                Elasticsearch8AsyncSinkBuilder.<String>builder()
+                                        .setBulkRefreshPolicy(null))
                 .isInstanceOf(NullPointerException.class);
     }
 

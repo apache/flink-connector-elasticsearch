@@ -583,6 +583,17 @@ checkpoint 会进行等待，直到 Elasticsearch 节点队列有足够的容量
 * **setMaxTimeInBufferMS(int maxTimeInBufferMS)**：记录在被刷新前可在 sink 中停留的最长时间（以毫秒为单位）。
 * **setMaxRecordSizeInBytes(int maxRecordSizeInBytes)**：sink 接受的最大记录大小，超过此大小的记录将被自动拒绝。
 
+### 配置 Bulk 请求的 Refresh 策略
+
+默认情况下，sink 写入的数据在索引下一次周期性 refresh（见 `index.refresh_interval`）后才可被搜索到。
+`Elasticsearch6SinkBuilder`、`Elasticsearch7SinkBuilder` 和 `Elasticsearch8AsyncSinkBuilder` 均提供 `setBulkRefreshPolicy(BulkRefreshPolicy bulkRefreshPolicy)`，用于设置每个 bulk 请求的 `refresh` 参数：
+
+* **NONE**（默认，`refresh=false`）：不 refresh。
+* **IMMEDIATE**（`refresh=true`）：bulk 请求完成后立即 refresh 涉及的分片，请求返回时写入的数据即可被搜索到。
+* **WAIT_UNTIL**（`refresh=wait_for`）：不主动 refresh，而是等待下一次周期性 refresh 使写入的数据可被搜索到后再返回，每个 bulk 请求最多可能被阻塞 `index.refresh_interval`。
+
+注意 `IMMEDIATE` 和 `WAIT_UNTIL` 都会降低 sink 的吞吐，仅建议在写入量小且要求数据尽快可被搜索到的场景下使用。
+
 ## 将 Elasticsearch 连接器打包到 Uber-Jar 中
 
 建议构建一个包含所有依赖的 uber-jar (可执行的 jar)，以便更好地执行你的 Flink 程序。

@@ -24,6 +24,7 @@ import org.elasticsearch.action.bulk.BackoffPolicy;
 import org.elasticsearch.action.bulk.BulkProcessor;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
+import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.unit.ByteSizeUnit;
@@ -72,6 +73,8 @@ public class Elasticsearch7SinkBuilder<IN>
                     RestHighLevelClient client,
                     BulkProcessorConfig bulkProcessorConfig,
                     BulkProcessor.Listener listener) {
+                final WriteRequest.RefreshPolicy refreshPolicy =
+                        toRefreshPolicy(bulkProcessorConfig.getBulkRefreshPolicy());
                 BulkProcessor.Builder builder =
                         BulkProcessor.builder(
                                 new BulkRequestConsumerFactory() { // This cannot be inlined as a
@@ -82,6 +85,7 @@ public class Elasticsearch7SinkBuilder<IN>
                                             BulkRequest bulkRequest,
                                             ActionListener<BulkResponse>
                                                     bulkResponseActionListener) {
+                                        bulkRequest.setRefreshPolicy(refreshPolicy);
                                         client.bulkAsync(
                                                 bulkRequest,
                                                 RequestOptions.DEFAULT,

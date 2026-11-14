@@ -35,6 +35,8 @@ import org.slf4j.LoggerFactory;
 import java.util.Collection;
 import java.util.Collections;
 
+import static org.apache.flink.util.Preconditions.checkNotNull;
+
 /**
  * Elasticsearch8AsyncSink Apache Flink's Async Sink that submits Operations into an Elasticsearch
  * cluster.
@@ -47,6 +49,8 @@ public class Elasticsearch8AsyncSink<InputT> extends AsyncSinkBase<InputT, Opera
 
     @VisibleForTesting protected final NetworkConfig networkConfig;
 
+    @VisibleForTesting protected final BulkRefreshPolicy bulkRefreshPolicy;
+
     protected Elasticsearch8AsyncSink(
             ElementConverter<InputT, Operation> converter,
             int maxBatchSize,
@@ -56,6 +60,28 @@ public class Elasticsearch8AsyncSink<InputT> extends AsyncSinkBase<InputT, Opera
             long maxTimeInBufferMS,
             long maxRecordSizeInByte,
             NetworkConfig networkConfig) {
+        this(
+                converter,
+                maxBatchSize,
+                maxInFlightRequests,
+                maxBufferedRequests,
+                maxBatchSizeInBytes,
+                maxTimeInBufferMS,
+                maxRecordSizeInByte,
+                networkConfig,
+                BulkRefreshPolicy.NONE);
+    }
+
+    protected Elasticsearch8AsyncSink(
+            ElementConverter<InputT, Operation> converter,
+            int maxBatchSize,
+            int maxInFlightRequests,
+            int maxBufferedRequests,
+            long maxBatchSizeInBytes,
+            long maxTimeInBufferMS,
+            long maxRecordSizeInByte,
+            NetworkConfig networkConfig,
+            BulkRefreshPolicy bulkRefreshPolicy) {
         super(
                 converter,
                 maxBatchSize,
@@ -66,6 +92,7 @@ public class Elasticsearch8AsyncSink<InputT> extends AsyncSinkBase<InputT, Opera
                 maxRecordSizeInByte);
 
         this.networkConfig = networkConfig;
+        this.bulkRefreshPolicy = checkNotNull(bulkRefreshPolicy);
     }
 
     @Override
@@ -81,7 +108,8 @@ public class Elasticsearch8AsyncSink<InputT> extends AsyncSinkBase<InputT, Opera
                 getMaxTimeInBufferMS(),
                 getMaxRecordSizeInBytes(),
                 networkConfig,
-                Collections.emptyList());
+                Collections.emptyList(),
+                bulkRefreshPolicy);
     }
 
     @Override
@@ -97,7 +125,8 @@ public class Elasticsearch8AsyncSink<InputT> extends AsyncSinkBase<InputT, Opera
                 getMaxTimeInBufferMS(),
                 getMaxRecordSizeInBytes(),
                 networkConfig,
-                recoveredState);
+                recoveredState,
+                bulkRefreshPolicy);
     }
 
     @Override

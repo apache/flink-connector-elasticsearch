@@ -111,4 +111,9 @@ public class ElasticsearchSink<IN> implements Sink<IN> {
     NetworkClientConfig getNetworkClientConfig() {
         return networkClientConfig;
     }
+
+    @VisibleForTesting
+    BulkProcessorConfig getBulkProcessorConfig() {
+        return buildBulkProcessorConfig;
+    }
 }

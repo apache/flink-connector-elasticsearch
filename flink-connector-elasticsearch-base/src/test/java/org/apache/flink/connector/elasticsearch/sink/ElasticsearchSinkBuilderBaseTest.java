@@ -153,6 +153,31 @@ abstract class ElasticsearchSinkBuilderBaseTest<B extends ElasticsearchSinkBuild
         assertThat(called).isTrue();
     }
 
+    @Test
+    void testDefaultBulkRefreshPolicy() {
+        assertThat(createMinimalBuilder().build().getBulkProcessorConfig().getBulkRefreshPolicy())
+                .isEqualTo(BulkRefreshPolicy.NONE);
+    }
+
+    @Test
+    void testThrowIfBulkRefreshPolicyIsNull() {
+        assertThatThrownBy(() -> createMinimalBuilder().setBulkRefreshPolicy(null))
+                .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void testBulkRefreshPolicy() {
+        for (BulkRefreshPolicy policy : BulkRefreshPolicy.values()) {
+            assertThat(
+                            createMinimalBuilder()
+                                    .setBulkRefreshPolicy(policy)
+                                    .build()
+                                    .getBulkProcessorConfig()
+                                    .getBulkRefreshPolicy())
+                    .isEqualTo(policy);
+        }
+    }
+
     abstract B createEmptyBuilder();
 
     abstract B createMinimalBuilder();

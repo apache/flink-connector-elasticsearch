@@ -245,6 +245,21 @@ Connector Options
       <td>Delay between each backoff attempt. For <code>CONSTANT</code> backoff, this is simply the delay between each retry. For <code>EXPONENTIAL</code> backoff, this is the initial base delay. Note that this option is NOT supported in <code>elasticsearch-8</code>.</td>
     </tr>
     <tr>
+      <td><h5>sink.bulk-flush.refresh-policy</h5></td>
+      <td>optional</td>
+      <td>yes</td>
+      <td style="word-wrap: break-word;">NONE</td>
+      <td>Enum</td>
+      <td>Refresh policy of every bulk request, i.e. the <code>refresh</code> parameter of the Elasticsearch Bulk API. Valid values are:
+      <ul>
+        <li><code>NONE</code>: equal to <code>refresh=false</code>. Do not refresh, the written data becomes searchable after the next periodic refresh of the index (see <code>index.refresh_interval</code>).</li>
+        <li><code>IMMEDIATE</code>: equal to <code>refresh=true</code>. Refresh the affected shards right after the bulk request, so the written data is searchable once the request returns.</li>
+        <li><code>WAIT_UNTIL</code>: equal to <code>refresh=wait_for</code>. Do not force a refresh, but wait until the next periodic refresh makes the written data searchable before the request returns. Each bulk request may be blocked for up to <code>index.refresh_interval</code>.</li>
+      </ul>
+      Note that <code>IMMEDIATE</code> creates many small segments and <code>WAIT_UNTIL</code> slows down every bulk request, so both of them reduce the sink throughput. They are only recommended for low-throughput scenarios that require the written data to be searchable soon.
+      </td>
+    </tr>
+    <tr>
       <td><h5>ssl.certificate-fingerprint</h5></td>
       <td>optional</td>
       <td>yes</td>

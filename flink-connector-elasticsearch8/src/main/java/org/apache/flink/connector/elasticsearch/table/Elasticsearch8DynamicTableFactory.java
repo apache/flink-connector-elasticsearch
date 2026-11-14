@@ -56,6 +56,7 @@ import static org.apache.flink.connector.elasticsearch.table.Elasticsearch8Conne
 import static org.apache.flink.connector.elasticsearch.table.Elasticsearch8ConnectorOptions.BULK_FLUSH_MAX_BUFFERED_ACTIONS_OPTION;
 import static org.apache.flink.connector.elasticsearch.table.Elasticsearch8ConnectorOptions.BULK_FLUSH_MAX_IN_FLIGHT_ACTIONS_OPTION;
 import static org.apache.flink.connector.elasticsearch.table.Elasticsearch8ConnectorOptions.BULK_FLUSH_MAX_SIZE_OPTION;
+import static org.apache.flink.connector.elasticsearch.table.Elasticsearch8ConnectorOptions.BULK_FLUSH_REFRESH_POLICY_OPTION;
 import static org.apache.flink.connector.elasticsearch.table.Elasticsearch8ConnectorOptions.CONNECTION_PATH_PREFIX_OPTION;
 import static org.apache.flink.connector.elasticsearch.table.Elasticsearch8ConnectorOptions.CONNECTION_REQUEST_TIMEOUT;
 import static org.apache.flink.connector.elasticsearch.table.Elasticsearch8ConnectorOptions.CONNECTION_TIMEOUT;
@@ -225,6 +226,7 @@ public class Elasticsearch8DynamicTableFactory extends AsyncDynamicTableSinkFact
                         BULK_FLUSH_MAX_IN_FLIGHT_ACTIONS_OPTION,
                         BULK_FLUSH_MAX_SIZE_OPTION,
                         BULK_FLUSH_INTERVAL_OPTION,
+                        BULK_FLUSH_REFRESH_POLICY_OPTION,
                         CONNECTION_PATH_PREFIX_OPTION,
                         CONNECTION_REQUEST_TIMEOUT,
                         CONNECTION_TIMEOUT,
@@ -258,6 +260,7 @@ public class Elasticsearch8DynamicTableFactory extends AsyncDynamicTableSinkFact
                         BULK_FLUSH_MAX_IN_FLIGHT_ACTIONS_OPTION,
                         BULK_FLUSH_MAX_SIZE_OPTION,
                         BULK_FLUSH_INTERVAL_OPTION,
+                        BULK_FLUSH_REFRESH_POLICY_OPTION,
                         CONNECTION_PATH_PREFIX_OPTION,
                         CONNECTION_REQUEST_TIMEOUT,
                         CONNECTION_TIMEOUT,

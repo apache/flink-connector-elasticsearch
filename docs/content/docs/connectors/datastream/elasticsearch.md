@@ -542,6 +542,17 @@ Note that the Elasticsearch 8 sink uses `AsyncSinkWriter` instead of the legacy 
 * **setMaxTimeInBufferMS(int maxTimeInBufferMS)**: The maximum time (in milliseconds) a record may stay in the sink before being flushed.
 * **setMaxRecordSizeInBytes(int maxRecordSizeInBytes)**: The maximum record size that the sink will accept, records larger than this will be automatically rejected.
 
+### Configuring Bulk Request Refresh
+
+By default, the data written by the sink becomes searchable after the next periodic refresh of the index (see `index.refresh_interval`).
+`Elasticsearch6SinkBuilder`, `Elasticsearch7SinkBuilder` and `Elasticsearch8AsyncSinkBuilder` provide `setBulkRefreshPolicy(BulkRefreshPolicy bulkRefreshPolicy)` to set the `refresh` parameter of every bulk request:
+
+* **NONE** (default, `refresh=false`): Do not refresh.
+* **IMMEDIATE** (`refresh=true`): Refresh the affected shards right after the bulk request, so the written data is searchable once the request returns.
+* **WAIT_UNTIL** (`refresh=wait_for`): Do not force a refresh, but wait until the next periodic refresh makes the written data searchable before the request returns. Each bulk request may be blocked for up to `index.refresh_interval`.
+
+Note that both `IMMEDIATE` and `WAIT_UNTIL` reduce the sink throughput. They are only recommended for low-throughput scenarios that require the written data to be searchable soon.
+
 ## Packaging the Elasticsearch Connector into an Uber-Jar
 
 For the execution of your Flink program, it is recommended to build a
